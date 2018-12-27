@@ -1,16 +1,19 @@
-import prevalMacro from 'preval.macro';
+import React from 'react';
+import { Router } from '@reach/router';
 
-import React from 'react'; // tslint:disable-line import-name
-
-import { ProjectList } from './components/ProjectList';
-
-// const value = prevalMacro<String>`module.exports = 'hello macro'`;
-// const alertHi = () => alert('hi');
+import { Home } from './routes/Home';
+import { User } from './routes/User';
+import { Project } from './routes/Project';
+import { Debug } from './routes/Debug';
 
 type Props = {};
 
 export const App: React.SFC<Props> = ({}) => (
-  <div>
-    <ProjectList />
-  </div>
+  <Router>
+    <Home path="/" />
+    <Debug path="debug" />
+    <User path=":userId">
+      <Project path=":projectId" />
+    </User>
+  </Router>
 );

@@ -32,3 +32,5 @@ Good reference: https://github.com/damassi/babel-7-typescript-example
 i18n https://www.youtube.com/watch?v=soAEB7ltQPk
 
 letsencrypt support https://github.com/Daplie/greenlock-express
+
+reach router + typescript: https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/reach__router/reach__router-tests.tsx
