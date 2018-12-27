@@ -1,0 +1,74 @@
+import React from 'react';
+import {
+  types,
+  IAnyStateTreeNode,
+  getSnapshot,
+  Instance,
+  getPath,
+  splitJsonPath,
+} from 'mobx-state-tree';
+import SubscribableEvent from 'subscribableevent';
+
+import {
+  BaseRootEnv,
+  baseRootEnv,
+  BaseRoot,
+  Request as RequestType,
+  Notification as NotificationType,
+  Response as ResponseType,
+} from './base';
+import { getDeviceId, getSessionId, instanceId } from '../utils/id';
+
+import { Project } from '../models/Project';
+import { Plan } from '../models/Plan';
+
+export const Store = BaseRoot.named('Store')
+  .props({
+    deviceId: types.optional(types.string, getDeviceId),
+    sessionId: types.optional(types.string, getSessionId),
+    instanceId: types.optional(types.string, instanceId),
+
+    shared: types.map(
+      types.union(
+        {
+          dispatcher: snapshot => {
+            switch (snapshot.type) {
+              case 'project':
+                return Project;
+              case 'plan':
+                return Plan;
+            }
+            throw new Error('could not dispatch');
+          },
+        },
+        Project,
+        Plan
+      )
+    ),
+  })
+  .volatile(() => ({
+    subState: 0,
+    snapshots: new SubscribableEvent<
+      (mapName: string, snapshot: any) => void
+    >(),
+  }))
+  .actions(self => {
+    return {
+      notifyHamChange(obj: IAnyStateTreeNode) {
+        self.subState += 1;
+        const path = splitJsonPath(getPath(obj));
+        self.snapshots.fire(path[0], getSnapshot(obj));
+      },
+    };
+  });
+
+export interface IStore extends Instance<typeof Store> {}
+
+export type RootEnv = BaseRootEnv;
+export const rootEnv = baseRootEnv;
+export type Request = RequestType;
+export type Notification = NotificationType;
+export type Response = ResponseType;
+
+export const StoreContext = React.createContext<IStore>(null as any);
+export const Context = StoreContext;
