@@ -3,9 +3,9 @@ import * as React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Box, Flex, Heading, Text } from '../components/base';
+import { NLSfB } from '../components/NLSfB';
 
 interface HomeParams {}
-
 export const Home = observer((props: RouteComponentProps<HomeParams>) => (
   <Flex flexDirection="column">
     <Heading fontSize={[4, 5]}>Home</Heading>
@@ -25,5 +25,7 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => (
       <br />
       <Link to="/nlsfb">Nlsfb</Link> -
     </Text>
+
+    <NLSfB />
   </Flex>
 ));

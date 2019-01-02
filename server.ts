@@ -29,13 +29,17 @@ if (isDevelopment) {
     // find the file that the browser is looking for
     const file = reqPath.split('/').pop()!;
 
-    if (file.match(/^(index\.html)|(.*\.bundle\.js)|(.*\.worker\.js)$/)) {
+    if (
+      file.match(
+        /^(index\.html)|(.*\.bundle\.js)|(.*\.worker\.js)|(.*\.hot-update\.js(on)?)$/
+      )
+    ) {
       res.end(
         devMiddleware.fileSystem.readFileSync(
           path.join(webpackConfig.output!.path!, file)
         )
       );
-    } else if (file.indexOf('.') === -1) {
+    } else if (file.indexOf('.') === -1 && !file.match(/^__webpack_hmr$/)) {
       // if the url does not have an extension, assume they've navigated to something like /home and want index.html
       res.end(
         devMiddleware.fileSystem.readFileSync(
