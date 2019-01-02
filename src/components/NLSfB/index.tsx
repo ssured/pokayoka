@@ -18,8 +18,9 @@ const ListItem = styled(Box)<{}>``;
 const ListContent = styled(Box)<{}>``;
 const ListHeader = Heading;
 
+// https://rebassjs.org/Flex
 const Step = styled(Flex)<{ active: boolean }>`
-  background-color: ${({ active }) => (active ? '#ccf' : undefined)};
+  background-color: ${({ active }) => (active ? 'red' : undefined)};
 `;
 const StepGroup = styled(Flex)<{}>``;
 const StepContent = styled(Flex)<{}>``;
@@ -35,12 +36,12 @@ const ElementCard: React.SFC<{
 }> = ({ elementId, element, ...props }) => (
   <Card {...props}>
     <Image src={element.image} />
-    <CardContent>
-      <CardHeader>
+    <Box>
+      <Text p={1}>
         {elementId} {element.naam}
-      </CardHeader>
+      </Text>
       <CardDescription>{element.omschrijving}</CardDescription>
-    </CardContent>
+    </Box>
   </Card>
 );
 
@@ -200,9 +201,9 @@ export const NLSfB: React.SFC<{}> = () => {
 
       <Segment>
         {group == null ? (
-          <CardGroup>
+          <Flex flexWrap={true}>
             {Array.from(Object.entries(nlsfb)).map(([groupId, group]) => (
-              <Card key={groupId} onClick={() => setGroup(groupId)}>
+              <Card m={2} p={2} key={groupId} onClick={() => setGroup(groupId)}>
                 <Image src={group.image} />
                 <CardContent>
                   <CardHeader>
@@ -212,7 +213,7 @@ export const NLSfB: React.SFC<{}> = () => {
                 </CardContent>
               </Card>
             ))}
-          </CardGroup>
+          </Flex>
         ) : subGroup == null ? (
           <CardGroup>
             {groupId &&
