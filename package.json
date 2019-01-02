@@ -13,6 +13,11 @@
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-react": "7.0.0",
     "@babel/preset-typescript": "^7.1.0",
+    "@storybook/addon-actions": "^4.1.4",
+    "@storybook/addon-info": "^4.1.4",
+    "@storybook/addon-links": "^4.1.4",
+    "@storybook/addons": "^4.1.4",
+    "@storybook/react": "^4.1.4",
     "@types/clean-webpack-plugin": "^0.1.2",
     "@types/express": "^4.16.0",
     "@types/express-ws": "^3.0.0",
@@ -20,6 +25,7 @@
     "@types/jest": "^23.3.5",
     "@types/node": "^10.11.4",
     "@types/puppeteer": "^1.10.0",
+    "@types/storybook__react": "^4.0.0",
     "@types/webpack": "^4.4.14",
     "@types/webpack-dev-middleware": "^2.0.2",
     "@types/webpack-hot-middleware": "^2.16.4",
@@ -39,6 +45,7 @@
     "nano": "^7.1.1",
     "preval.macro": "^3.0.0",
     "puppeteer": "^1.10.0",
+    "react-docgen-typescript-loader": "^3.0.0",
     "ts-node": "^7.0.1",
     "ts-node-dev": "^1.0.0-pre.30",
     "tsconfig-paths": "^3.6.0",
@@ -65,7 +72,9 @@
     "couchdb": "mkdir -p \"$(pwd)/couchdb\" && mkdir -p \"$(pwd)/couchdb.d\" && touch \"$(pwd)/couchdb.d/local.ini\" && docker run -p 5984:5984 -v \"$(pwd)/couchdb:/opt/couchdb/data\" -v \"$(pwd)/couchdb.d:/opt/couchdb/etc/local.d\" -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=admin couchdb",
     "server": "concurrently \"npm run couchdb\" \"ts-node-dev server.ts\"",
     "gen": "yarn run hygen",
-    "test": "jest"
+    "test": "jest",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
   },
   "dependencies": {
     "@reach/router": "^1.2.1",
