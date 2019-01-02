@@ -6,8 +6,12 @@ import { TicTacToeCell } from './TicTacToeCell';
 
 const stories = storiesOf('Components', module);
 
+stories.add('Empty cell', () => (
+  <TicTacToeCell position={{ x: 0, y: 0 }} onClick={action('onClick')} />
+));
+
 stories.add(
-  'TicTacToeCell',
+  'Full Info',
   withInfo({ inline: true })(() => (
     <TicTacToeCell
       value="X"
