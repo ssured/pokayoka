@@ -1,3 +1,11 @@
+Navigatie
+Editor voor elementen codering (= MVP = alles is nlsfb)
+Editor voor guide (ifixit)
+Editor voor checklist / audit (iAuditor)
+Editor voor issues (snagtracker)
+Editor voor planning projecten (gantt)
+Editor voor bestandsbeheer + slugs
+
 https://pokayoka.com/bgdd
 https://pokayoka.com/vanwijnen
 https://pokayoka.com/spijkerbv
@@ -19,6 +27,52 @@ Kies werk:
 - Projecten overzicht
 /bgdd/guides
 /bgdd/checklists
+
+Project start = kopie van alle vragenlijsten naar project
+
+# nlsfb/ hoogste niveau
+  [yn]!top = op de hoogte van veiligheidsinstructie BGDD?
+
+## nlsfb/2 ruwbouw
+  [yn] = is opdracht toegankelijk
+
+### nlsfb/22 binnenwand
+
+#### nlsfb/22.1 dragende binnenwand
+  [yn] = sparingen gesloten
+    Toelichting voor het *element*.
+
+##### nlsfb/22.11 spouw
+
+ <Switch value={}>
+  ## Afgerond
+  <Checkbox default=true na={true} shape={'slider'}/>
+  <Photo required=false / >
+
+</Switch>
+
+  [photo]bottom = toon afgerond werk
+  [sign]bottom = paraaf bij afgerond
+
+--> nlsfb heeft een functie nodig die de parent geeft op basis van een code.
+nlsfb/ +
+nlsfb/2 +
+nlsfb/22 + 
+<!-- nlsfb/22. +  -->
+nlsfb/22.1 + 
+nlsfb/22.11 = spouw
+  [number]! = gemeten isolatie waarde
+
+Checklist Ruwbouw dragende binnenwand spouw
+  [yn]!top = op de hoogte van veiligheidsinstructie BGDD?
+  ----
+  [yn] = is opdracht toegankelijk
+  [yn] = sparingen gesloten
+  [number]! = gemeten isolatie waarde
+  ----
+  [photo]bottom = toon afgerond werk
+  [sign]bottom = paraaf bij afgerond
+
 
 /bgdd/nlsfb/22.11 - toont checklists, audits, guide (per rol?)
 
