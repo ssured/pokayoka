@@ -119,11 +119,21 @@ Button.defaultProps = {
   borderRadius: 4,
 };
 
-export const Image = styled(Box)(
+export const Image = styled.img(
   {
+    boxSizing: 'border-box',
     maxWidth: '100%',
     height: 'auto',
   },
+  space,
+  width,
+  fontSize,
+  color,
+  flex,
+  order,
+  alignSelf,
+  //   themed('Box'),
+  //   css
   height,
   borderRadius
   //   themed('Image')
