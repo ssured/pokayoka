@@ -4,16 +4,16 @@
 - [x] babel-plugin-macros
 - [ ] storybook
 - [ ] jest-puppeteer
-- [ ] wallaby
+- [x] wallaby
 - [ ] code splitting
-- [ ] server side sharing of domain & model layer
+- [x] server side sharing of domain & model layer
 - [x] https://webpack.js.org/guides/hot-module-replacement/
 - [ ] husky
   - [ ] lint staged
 - [ ] https://github.com/joelparkerhenderson/architecture_decision_record
-- [ ] https://github.com/jondot/hygen
-- [ ] web worker support
-- [ ] offline support
+- [x] https://github.com/jondot/hygen
+- [x] web worker support
+- [x] offline support
 - [ ] sensible logging strategy
 - [ ] database and object model version increment strategy implemented
 
