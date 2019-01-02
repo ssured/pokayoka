@@ -23,9 +23,7 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => (
       <Link to="/sjoerd/project1">Project 1</Link> -
       <Link to="/sjoerd/project2">Project 2</Link> -
       <br />
-      <Link to="/sander">Sander</Link> -
-      <Link to="/sander/project1">Project 1</Link> -
-      <Link to="/sander/project2">Project 2</Link> -
+      <Link to="/nlsfb">Nlsfb</Link> -
     </Text>
   </Flex>
 ));
