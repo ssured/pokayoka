@@ -18,6 +18,7 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => (
 
     <Text>
       <Link to="/debug">Debug information</Link>
+      <Link to="/guide">Guide editor</Link>
       <br />
       <Link to="/sjoerd">Sjoerd</Link> -
       <Link to="/sjoerd/project1">Project 1</Link> -

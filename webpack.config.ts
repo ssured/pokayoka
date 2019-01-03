@@ -46,6 +46,10 @@ const config: webpack.Configuration = {
           cacheDirectory: true,
         },
       },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
     ],
   },
 };

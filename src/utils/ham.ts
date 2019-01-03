@@ -199,5 +199,5 @@ export const createHAMProxy = <T extends HAMObject>(source: T): UnHam<T> => {
   if (!isHAMObject(source)) {
     throw new Error('Non ham object passed to proxy creator');
   }
-  return new Proxy(source, hamHandler);
+  return (new Proxy(source, hamHandler) as unknown) as UnHam<T>;
 };

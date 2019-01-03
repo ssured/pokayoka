@@ -18,6 +18,9 @@ import {
 
 import { startClient } from './utils/mux';
 
+import 'codemirror/lib/codemirror.css';
+import 'codemirror/mode/markdown/markdown';
+
 const isProduction = false; // FIXME implement this
 configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });
 setLivelynessChecking(isProduction ? 'ignore' : 'error');
