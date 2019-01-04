@@ -10,11 +10,10 @@ import {
   Instance,
   getRoot,
   isStateTreeNode,
-  getParent,
   getType,
   typecheck,
 } from 'mobx-state-tree';
-import { get, set } from 'mobx';
+import { get, set, entries } from 'mobx';
 import { merge, HamValue, isObject } from './merge';
 
 const hamType: IAnyComplexType = types.map(
@@ -47,7 +46,7 @@ const hamDlv = (_ham: THam, state: number, path: string[]): THam => {
 function initHam(state: number, obj: any): HamValue {
   if (isObject(obj)) {
     const ham: HamValue = [state, {}];
-    for (const [key, value] of Object.entries(obj)) {
+    for (const [key, value] of entries(obj)) {
       if (key === HAM_PATH) continue;
       ham[1][key] = initHam(state, value);
     }
