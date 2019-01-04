@@ -1,4 +1,4 @@
-import { entries } from 'mobx';
+import { safeEntries } from '../utils/mobx';
 
 export type THam = { [key: string]: number | [number, THam] };
 export type HamValue = THam['any'];
@@ -88,7 +88,7 @@ export function merge(
     let currentChanged = false;
     let deferUntilState: number | undefined = undefined;
 
-    for (const [key, incomingSubHam] of entries(incomingHam[1])) {
+    for (const [key, incomingSubHam] of safeEntries(incomingHam[1])) {
       const incomingSubValue = (incomingValue as any)[key];
 
       const currentSubHam = replace ? EMPTY_HAM_STATE : resultHam[1][key];

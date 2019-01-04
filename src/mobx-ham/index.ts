@@ -6,10 +6,10 @@ import {
   runInAction,
   set,
   get,
-  entries,
 } from 'mobx';
 
 import { deepObserve } from './deep-observe';
+import { safeEntries } from '../utils/mobx';
 
 type THam = { [key: string]: number | [number, THam] };
 
@@ -28,7 +28,7 @@ export function getDeepObservable<T extends object>(o: T) {
 function appendToHam(ham: THam, prop: string, object: any, state: number) {
   if (isObservableObject(object)) {
     set(ham, prop, [state, {}]);
-    for (const [key, value] of entries(object)) {
+    for (const [key, value] of safeEntries(object)) {
       // do not simplify the statements in this block
       // order does something with the mobx administration, probably because of deep observability
       appendToHam((get(ham, prop) as [number, THam])[1], key, value, state);

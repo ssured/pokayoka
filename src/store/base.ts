@@ -12,7 +12,7 @@ import {
   isMapType,
   typecheck,
 } from 'mobx-state-tree';
-import { set, observable, autorun, IObservableArray, entries } from 'mobx';
+import { set, observable, autorun, IObservableArray } from 'mobx';
 import SubscribableEvent from 'subscribableevent';
 
 import {
@@ -20,6 +20,7 @@ import {
   ReferenceObjectEvent,
   intentionalSideEffect,
 } from './utils';
+import { safeEntries } from '../utils/mobx';
 
 export { hamProperties, hamActions } from '../mst-ham';
 
@@ -66,7 +67,7 @@ export const BaseRoot = t
   .views(self => ({
     // reflect to find my maps and which union types are in these maps
     get myMapsToTypes() {
-      return entries(getMembers(self).properties)
+      return safeEntries(getMembers(self).properties)
         .filter(([, property]) => isMapType((property as any).type))
         .reduce(
           (map, [key, mapType]) => {
@@ -104,7 +105,7 @@ export const BaseRoot = t
   .actions(self => {
     return {
       add(obj: IAnyStateTreeNode): string | null {
-        for (const [mapName, type] of entries(self.myMapsToTypes)) {
+        for (const [mapName, type] of safeEntries(self.myMapsToTypes)) {
           try {
             typecheck(type, obj);
             // TODO we should do a merge here
@@ -123,7 +124,7 @@ export const BaseRoot = t
             // answer to a fetch request
             // find the correct map and add the snapshot to the map
             const { snapshot } = response;
-            for (const [mapName, type] of entries(self.myMapsToTypes)) {
+            for (const [mapName, type] of safeEntries(self.myMapsToTypes)) {
               try {
                 typecheck(type, snapshot);
                 // TODO we should do a merge here
