@@ -1,9 +1,9 @@
 import { RouteComponentProps } from '@reach/router';
-import React, { useState, CSSProperties } from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { css } from 'react-emotion';
 import Markdown from 'react-markdown';
-import { FaGripVertical, FaCircle } from 'react-icons/fa';
+import { FaGripVertical } from 'react-icons/fa';
 
 import {
   DragDropContext,
@@ -18,6 +18,7 @@ import { Box, Flex, Heading } from '../components/base';
 import { Step, StepBullet } from '../models/Step';
 import { getSnapshot, Instance } from 'mobx-state-tree';
 import { Dot } from '../components/elements/Dot/Dot';
+import { RatioBox } from '../components/elements/RatioBox/index';
 
 const cssCodeMirrorAutosize = css`
   .CodeMirror {
@@ -133,15 +134,54 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
 
       <Flex>
         <Flex flexDirection="column" p={1} width={1 / 2}>
-          <Box>image</Box>
-          <Box>images</Box>
-          <pre>
-            {JSON.stringify(
-              Object.assign({}, { ...getSnapshot(step), '#': undefined }),
-              null,
-              2
-            )}
-          </pre>
+          <Box width={1} p={1}>
+            <RatioBox
+              image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
+              border="1px solid"
+              borderColor="blue"
+              p={1}
+            />
+          </Box>
+          <Flex
+            width={1}
+            flexWrap="nowrap"
+            css={css`
+              overflow-x: scroll;
+            `}
+          >
+            <Box width={1 / 3} p={1} flex="0 0 auto">
+              <RatioBox
+                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
+                border="1px solid"
+                borderColor="blue"
+                p={1}
+              />
+            </Box>
+            <Box width={1 / 3} p={1} flex="0 0 auto">
+              <RatioBox
+                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
+                border="1px solid"
+                borderColor="blue"
+                p={1}
+              />
+            </Box>
+            <Box width={1 / 3} p={1} flex="0 0 auto">
+              <RatioBox
+                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
+                border="1px solid"
+                borderColor="blue"
+                p={1}
+              />
+            </Box>
+            <Box width={1 / 3} p={1} flex="0 0 auto">
+              <RatioBox
+                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
+                border="1px solid"
+                borderColor="blue"
+                p={1}
+              />
+            </Box>
+          </Flex>
         </Flex>
         <Flex flexDirection="column" p={1} width={1 / 2}>
           <DragDropContext onDragEnd={onDragEnd}>
@@ -204,6 +244,13 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
           </DragDropContext>
         </Flex>
       </Flex>
+      <pre>
+        {JSON.stringify(
+          Object.assign({}, { ...getSnapshot(step), '#': undefined }),
+          null,
+          2
+        )}
+      </pre>
     </Flex>
   );
 });
