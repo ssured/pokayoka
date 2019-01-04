@@ -5,6 +5,7 @@ import {
   SnapshotOut,
   IStateTreeNode,
   isStateTreeNode,
+  getParent,
 } from 'mobx-state-tree';
 import { base, referenceHandler } from './base';
 import { ImageRef } from './Image';
@@ -22,7 +23,7 @@ const Step_Image = t.model({
   image: ImageRef,
 });
 
-const Step_Step_Annotation = t.model({
+const Step_Bullet_Annotation = t.model({
   id: identifier,
   sortIndex: t.optional(t.number, () => Date.now()),
 
@@ -30,20 +31,28 @@ const Step_Step_Annotation = t.model({
   geoJson: t.frozen(),
 });
 
-const Step_Step = t
+export const StepBullet = t
   .model({
     id: identifier,
     sortIndex: t.optional(t.number, () => Date.now()),
 
     markdown: t.string,
     color: t.maybe(t.string),
-    annotations_: t.map(Step_Step_Annotation),
+    annotations_: t.map(Step_Bullet_Annotation),
   })
   .views(self => ({
+    get step() {
+      return getParent<TStepInstance>(self, 2);
+    },
     get annotations() {
       return Array.from(self.annotations_.values()).sort(
         ({ sortIndex: a }, { sortIndex: b }) => b - a
       );
+    },
+  }))
+  .actions(self => ({
+    setMarkdown(markdown: string) {
+      self.markdown = markdown;
     },
   }));
 
@@ -52,23 +61,73 @@ export const Step = base(stepType)
   .props({
     title: t.string,
     images_: t.map(Step_Image),
-    steps_: t.map(Step_Step),
+    bullets_: t.map(StepBullet),
   })
+  .volatile(() => ({
+    addedBullet: null as Instance<typeof StepBullet> | null,
+  }))
   // .preProcessSnapshot(snapshot => ({...snapshot}))
   .views(self => {
     return {
       get images() {
         return Array.from(self.images_.values()).sort(
-          ({ sortIndex: a }, { sortIndex: b }) => b - a
+          ({ sortIndex: a }, { sortIndex: b }) => a - b
         );
       },
-      get steps() {
-        return Array.from(self.steps_.values()).sort(
-          ({ sortIndex: a }, { sortIndex: b }) => b - a
+      get bullets() {
+        return Array.from(self.bullets_.values()).sort(
+          ({ sortIndex: a }, { sortIndex: b }) => a - b
         );
       },
     };
-  });
+  })
+  .actions(self => ({
+    reorderBullets(fromIndex: number, toIndex: number) {
+      const { bullets } = self;
+      const moved = bullets[fromIndex];
+      if (moved == null) return;
+      const before = bullets[toIndex];
+      const after = bullets[toIndex + 1];
+
+      if (before == null) {
+        if (after == null) {
+          throw new Error(`invalid reorderBullets`);
+        } else {
+          moved.sortIndex = after.sortIndex - 10000;
+        }
+      } else {
+        if (after == null) {
+          moved.sortIndex = Math.max(Date.now(), before.sortIndex + 10000);
+        } else {
+          moved.sortIndex = (before.sortIndex + after.sortIndex) / 2;
+        }
+      }
+    },
+    addBullet(atIndex: number, markdown: string = '') {
+      const { bullets } = self;
+      const before = bullets[atIndex - 1];
+      const after = bullets[atIndex];
+
+      let sortIndex: number;
+
+      if (before == null) {
+        if (after == null) {
+          sortIndex = Date.now();
+        } else {
+          sortIndex = after.sortIndex - 10000;
+        }
+      } else {
+        if (after == null) {
+          sortIndex = Math.max(Date.now(), before.sortIndex + 10000);
+        } else {
+          sortIndex = (before.sortIndex + after.sortIndex) / 2;
+        }
+      }
+      self.addedBullet = StepBullet.create({ sortIndex, markdown });
+      self.bullets_.put(self.addedBullet);
+      return self.addedBullet;
+    },
+  }));
 
 // --- hygen generated code
 

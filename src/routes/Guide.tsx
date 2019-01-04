@@ -10,72 +10,146 @@ import {
   DropResult,
 } from 'react-beautiful-dnd';
 
-import { Controlled as CodeMirror } from 'react-codemirror2';
+import { UnControlled as CodeMirror } from 'react-codemirror2';
 
 import { Box, Flex, Heading } from '../components/base';
+import { Step, StepBullet } from '../models/Step';
+import { getSnapshot, Instance } from 'mobx-state-tree';
+
+const cssCodeMirrorAutosize = css`
+  .CodeMirror {
+    border: 1px solid #eee;
+    height: auto;
+  }
+`;
+const cssCodeMirrorMarkdownHeight = css`
+  .cm-s-default {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  .cm-header-1 {
+    font-size: 150%;
+  }
+  .cm-header-2 {
+    font-size: 130%;
+  }
+  .cm-header-3 {
+    font-size: 120%;
+  }
+  .cm-header-4 {
+    font-size: 110%;
+  }
+  .cm-header-5 {
+    font-size: 100%;
+  }
+  .cm-header-6 {
+    font-size: 90%;
+  }
+`;
+
+const step = Step.create({
+  _id: 'step',
+  title: 'Voorbeeld',
+  bullets_: {
+    '1': {
+      id: '1',
+      sortIndex: 1,
+      markdown: '# Regel 1',
+    },
+    '2': {
+      id: '2',
+      sortIndex: 2,
+      markdown: 'Regel 2',
+    },
+    '3': {
+      id: '3',
+      sortIndex: 3,
+      markdown: 'Regel 3',
+    },
+  },
+});
 
 type MDEditorProps = {
   initialValue: string;
+  initialFocus?: boolean;
   onChange?: (value: string) => void;
+  onEnter?: () => boolean | void;
 };
-const MDEditor = ({ initialValue, onChange = s => {} }: MDEditorProps) => {
-  const [value, setValue] = useState<string>(initialValue);
+const MDEditor = ({
+  initialValue,
+  initialFocus = false,
+  onChange = s => {},
+  onEnter = () => {},
+}: MDEditorProps) => {
+  if (initialFocus) {
+    console.log('initialFocus');
+  }
   return (
     <CodeMirror
-      value={value}
+      value={initialValue}
       options={{
         lineWrapping: true,
         mode: 'markdown',
         viewportMargin: Infinity,
       }}
-      onBeforeChange={(editor, data, value) => {
-        setValue(value);
+      editorDidMount={editor => {
+        if (initialFocus) {
+          editor.focus();
+        }
       }}
       onChange={(editor, data, value) => onChange(value)}
+      onKeyDown={(editor, event) => {
+        const keyEvent = (event as unknown) as KeyboardEvent;
+        if (keyEvent.keyCode === 13 && !keyEvent.shiftKey && onEnter()) {
+          event.preventDefault();
+        }
+      }}
     />
   );
 };
 
-// fake data generator
-const getItems = (count: number) =>
-  Array.from({ length: count }, (v, k) => k).map(k => ({
-    id: `item-${k}`,
-    content: `item ${k}`,
-  }));
-
-// a little function to help us with reordering the result
-const reorder = function<T>(
-  list: Iterable<T>,
-  startIndex: number,
-  endIndex: number
-) {
-  const result = Array.from(list);
-  const [removed] = result.splice(startIndex, 1);
-  result.splice(endIndex, 0, removed);
-
-  return result;
+type BulletEditorProps = { bullet: Instance<typeof StepBullet> };
+const BulletEditor: React.SFC<BulletEditorProps> = ({ bullet }) => {
+  return (
+    <MDEditor
+      initialValue={bullet.markdown}
+      initialFocus={bullet === bullet.step.addedBullet}
+      onChange={bullet.setMarkdown}
+      onEnter={() => {
+        const index = bullet.step.bullets.indexOf(bullet);
+        if (index === -1) return;
+        bullet.step.addBullet(index + 1, ``);
+        return true;
+      }}
+    />
+  );
 };
 
 interface GuideParams {}
 
 export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
-  const [items, setItems] = useState(getItems(10));
-
+  const [newBullet, setNewBullet] = useState<Instance<
+    typeof StepBullet
+  > | null>(null);
   const onDragEnd = (result: DropResult) => {
-    // dropped outside the list
-    if (!result.destination) return;
-
-    setItems(reorder(items, result.source.index, result.destination.index));
+    if (!result.destination) return; // dropped outside the list
+    step.reorderBullets(result.source.index, result.destination.index);
   };
 
   return (
     <Flex flexDirection="column">
-      <Heading fontSize={[4, 5]}>Guide</Heading>
+      <Heading fontSize={[4, 5]}>Stap: {step.title}</Heading>
 
       <Flex>
         <Flex flexDirection="column" p={1} width={1 / 2}>
-          <div>image</div>
-          <div>images</div>
+          <Box>image</Box>
+          <Box>images</Box>
+          <pre>
+            {JSON.stringify(
+              Object.assign({}, { ...getSnapshot(step), '#': undefined }),
+              null,
+              2
+            )}
+          </pre>
         </Flex>
         <Flex flexDirection="column" p={1} width={1 / 2}>
           <DragDropContext onDragEnd={onDragEnd}>
@@ -92,17 +166,16 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                     }
                   `}
                 >
-                  {items.map((item, index) => (
+                  {step.bullets.map((bullet, index) => (
                     <Draggable
-                      key={item.id}
-                      draggableId={item.id}
+                      key={bullet.id}
+                      draggableId={bullet.id}
                       index={index}
                     >
                       {(provided, snapshot) => (
                         <Flex
                           innerRef={provided.innerRef}
                           {...provided.draggableProps}
-                          {...provided.dragHandleProps}
                           p={1}
                           mb={1}
                           bg={
@@ -115,38 +188,15 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                               userSelect: 'none',
                               ...provided.draggableProps.style,
                             },
-                            css`
-                              .CodeMirror {
-                                border: 1px solid #eee;
-                                height: auto;
-                              }
-                              .cm-s-default {
-                                font-family: Arial, Helvetica, sans-serif;
-                              }
-                              .cm-header-1 {
-                                font-size: 150%;
-                              }
-                              .cm-header-2 {
-                                font-size: 130%;
-                              }
-                              .cm-header-3 {
-                                font-size: 120%;
-                              }
-                              .cm-header-4 {
-                                font-size: 110%;
-                              }
-                              .cm-header-5 {
-                                font-size: 100%;
-                              }
-                              .cm-header-6 {
-                                font-size: 90%;
-                              }
-                            `
+                            cssCodeMirrorAutosize,
+                            cssCodeMirrorMarkdownHeight
                           )}
                         >
-                          <Box flex="0 0 auto">{item.content}</Box>
+                          <Box flex="0 0 auto" {...provided.dragHandleProps}>
+                            {bullet.markdown} {bullet.sortIndex}
+                          </Box>
                           <Box flex="1 1 auto">
-                            <MDEditor initialValue={item.content} />
+                            <BulletEditor bullet={bullet} />
                           </Box>
                         </Flex>
                       )}

@@ -82,6 +82,7 @@
   },
   "dependencies": {
     "@reach/router": "^1.2.1",
+    "@types/codemirror": "^0.0.71",
     "@types/lodash.clonedeepwith": "^4.5.4",
     "@types/lodash.escaperegexp": "^4.1.4",
     "@types/lodash.isequalwith": "^4.4.4",

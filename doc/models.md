@@ -8,7 +8,9 @@ versions[]:
 - guideVersionUUID
 - parents[]
 - approvals[]: - email - state
-  approvalProcess[]:
+
+approvalProcess[]:
+
 - email
 
 # Guide
