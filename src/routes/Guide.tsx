@@ -68,57 +68,30 @@ const step = Step.create({
   },
 });
 
-type MDEditorProps = {
-  initialValue: string;
-  initialFocus?: boolean;
-  onChange?: (value: string) => void;
-  onEnter?: () => boolean | void;
-};
-const MDEditor = ({
-  initialValue,
-  initialFocus = false,
-  onChange = s => {},
-  onEnter = () => {},
-}: MDEditorProps) => {
-  if (initialFocus) {
-    console.log('initialFocus');
-  }
+type BulletEditorProps = { bullet: Instance<typeof StepBullet> };
+const BulletEditor: React.SFC<BulletEditorProps> = ({ bullet }) => {
   return (
     <CodeMirror
-      value={initialValue}
+      value={bullet.markdown}
       options={{
         lineWrapping: true,
         mode: 'markdown',
         viewportMargin: Infinity,
       }}
       editorDidMount={editor => {
-        if (initialFocus) {
+        if (bullet === bullet.step.addedBullet) {
           editor.focus();
         }
       }}
-      onChange={(editor, data, value) => onChange(value)}
+      onChange={(editor, data, value) => bullet.setMarkdown(value)}
       onKeyDown={(editor, event) => {
         const keyEvent = (event as unknown) as KeyboardEvent;
-        if (keyEvent.keyCode === 13 && !keyEvent.shiftKey && onEnter()) {
+        if (keyEvent.keyCode === 13 && !keyEvent.shiftKey) {
+          const index = bullet.step.bullets.indexOf(bullet);
+          if (index === -1) return;
+          bullet.step.addBullet(index + 1, ``);
           event.preventDefault();
         }
-      }}
-    />
-  );
-};
-
-type BulletEditorProps = { bullet: Instance<typeof StepBullet> };
-const BulletEditor: React.SFC<BulletEditorProps> = ({ bullet }) => {
-  return (
-    <MDEditor
-      initialValue={bullet.markdown}
-      initialFocus={bullet === bullet.step.addedBullet}
-      onChange={bullet.setMarkdown}
-      onEnter={() => {
-        const index = bullet.step.bullets.indexOf(bullet);
-        if (index === -1) return;
-        bullet.step.addBullet(index + 1, ``);
-        return true;
       }}
     />
   );

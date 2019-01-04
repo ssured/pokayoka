@@ -83,11 +83,14 @@ export const Step = base(stepType)
   })
   .actions(self => ({
     reorderBullets(fromIndex: number, toIndex: number) {
-      const { bullets } = self;
+      const bullets = self.bullets.slice();
+
       const moved = bullets[fromIndex];
       if (moved == null) return;
-      const before = bullets[toIndex];
-      const after = bullets[toIndex + 1];
+
+      bullets.splice(fromIndex, 1);
+      const before = bullets[toIndex - 1];
+      const after = bullets[toIndex];
 
       if (before == null) {
         if (after == null) {
