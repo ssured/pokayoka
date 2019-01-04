@@ -115,6 +115,8 @@
     "react-codemirror2": "^5.1.0",
     "react-dom": "^16.7.0-alpha.2",
     "react-emotion": "^9.2.12",
+    "react-icons": "^3.2.2",
+    "react-markdown": "^4.0.6",
     "styled-system": "^3.1.11",
     "subscribableevent": "^1.0.1",
     "tuplerone": "^2.1.2",

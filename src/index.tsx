@@ -3,23 +3,19 @@ import { render } from 'react-dom';
 
 import { App } from './App';
 import { Store, StoreContext, rootEnv } from './store';
-import { generateId } from './utils/id';
 
 import { client } from './worker/client';
-import { ensureNever, objectFromPatchStream } from './utils';
+import { ensureNever } from './utils';
 import { AskMessageType, TellMessageType } from '../server/protocolv1';
-import { configure, autorun } from 'mobx';
-import {
-  setLivelynessChecking,
-  onSnapshot,
-  getSnapshot,
-  getType,
-} from 'mobx-state-tree';
+import { configure } from 'mobx';
+import { setLivelynessChecking } from 'mobx-state-tree';
 
 import { startClient } from './utils/mux';
 
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/markdown/markdown';
+
+import { IconContext } from 'react-icons';
 
 const isProduction = false; // FIXME implement this
 configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });
@@ -42,7 +38,6 @@ client.subscribe(message => {
   }
 });
 
-const _id = generateId();
 const store = Store.create(
   {
     shared: {
@@ -96,9 +91,11 @@ document.body.appendChild(elemDiv);
 
 function renderApp() {
   render(
-    <StoreContext.Provider value={store}>
-      <App />
-    </StoreContext.Provider>,
+    <IconContext.Provider value={{ style: { verticalAlign: 'middle' } }}>
+      <StoreContext.Provider value={store}>
+        <App />
+      </StoreContext.Provider>
+    </IconContext.Provider>,
     document.getElementById('root')
   );
 }

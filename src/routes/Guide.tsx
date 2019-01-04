@@ -2,6 +2,8 @@ import { RouteComponentProps } from '@reach/router';
 import React, { useState, CSSProperties } from 'react';
 import { observer } from 'mobx-react-lite';
 import { css } from 'react-emotion';
+import Markdown from 'react-markdown';
+import { FaGripVertical, FaCircle } from 'react-icons/fa';
 
 import {
   DragDropContext,
@@ -10,11 +12,12 @@ import {
   DropResult,
 } from 'react-beautiful-dnd';
 
-import { UnControlled as CodeMirror } from 'react-codemirror2';
+import { Controlled as CodeMirror } from 'react-codemirror2';
 
 import { Box, Flex, Heading } from '../components/base';
 import { Step, StepBullet } from '../models/Step';
 import { getSnapshot, Instance } from 'mobx-state-tree';
+import { Dot } from '../components/elements/Dot/Dot';
 
 const cssCodeMirrorAutosize = css`
   .CodeMirror {
@@ -70,20 +73,25 @@ const step = Step.create({
 
 type BulletEditorProps = { bullet: Instance<typeof StepBullet> };
 const BulletEditor: React.SFC<BulletEditorProps> = ({ bullet }) => {
-  return (
+  const [value, setValue] = useState<string>(bullet.markdown);
+  const [isEditing, setIsEditing] = useState<boolean>(
+    bullet === bullet.step.addedBullet
+  );
+
+  return isEditing ? (
     <CodeMirror
-      value={bullet.markdown}
+      value={value}
       options={{
         lineWrapping: true,
         mode: 'markdown',
         viewportMargin: Infinity,
       }}
-      editorDidMount={editor => {
-        if (bullet === bullet.step.addedBullet) {
-          editor.focus();
-        }
+      editorDidMount={editor => editor.focus()}
+      onBeforeChange={(editor, data, value) => {
+        setValue(value);
       }}
       onChange={(editor, data, value) => bullet.setMarkdown(value)}
+      onBlur={() => setIsEditing(false)}
       onKeyDown={(editor, event) => {
         const keyEvent = (event as unknown) as KeyboardEvent;
         if (keyEvent.keyCode === 13 && !keyEvent.shiftKey) {
@@ -94,15 +102,26 @@ const BulletEditor: React.SFC<BulletEditorProps> = ({ bullet }) => {
         }
       }}
     />
+  ) : (
+    <Box
+      onClick={() => setIsEditing(true)}
+      css={css`
+        > *:first-of-type {
+          margin-top: 0;
+        }
+        > *:last-of-type {
+          margin-bottom: 0;
+        }
+      `}
+    >
+      <Markdown source={bullet.markdown} />
+    </Box>
   );
 };
 
 interface GuideParams {}
 
 export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
-  const [newBullet, setNewBullet] = useState<Instance<
-    typeof StepBullet
-  > | null>(null);
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return; // dropped outside the list
     step.reorderBullets(result.source.index, result.destination.index);
@@ -131,7 +150,7 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                 <Box
                   innerRef={provided.innerRef}
                   p={1}
-                  bg={`rgba(0,0,${snapshot.isDraggingOver ? 255 : 0},0.2)`}
+                  bg={snapshot.isDraggingOver ? `rgba(0,255,0,0.2)` : undefined}
                   css={css`
                     transition: background-color 300ms linear;
                     & > div:last-of-type {
@@ -153,8 +172,8 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                           mb={1}
                           bg={
                             snapshot.isDragging
-                              ? 'lightgreen'
-                              : 'rgba(0,0,0,0.3)'
+                              ? 'rgba(0,0,0,0.2)'
+                              : 'rgba(0,0,0,0.05)'
                           }
                           css={css(
                             {
@@ -164,9 +183,12 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                             cssCodeMirrorAutosize,
                             cssCodeMirrorMarkdownHeight
                           )}
+                          justifyContent="center"
+                          alignItems="center"
                         >
                           <Box flex="0 0 auto" {...provided.dragHandleProps}>
-                            {bullet.markdown} {bullet.sortIndex}
+                            <FaGripVertical />
+                            <Dot bg={bullet.color || 'black'} />
                           </Box>
                           <Box flex="1 1 auto">
                             <BulletEditor bullet={bullet} />
