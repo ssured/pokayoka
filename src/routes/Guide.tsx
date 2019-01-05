@@ -17,8 +17,8 @@ import { Controlled as CodeMirror } from 'react-codemirror2';
 import { Box, Flex, Heading } from '../components/base';
 import { Step, StepBullet } from '../models/Step';
 import { getSnapshot, Instance } from 'mobx-state-tree';
-import { Dot } from '../components/elements/Dot/Dot';
-import { RatioBox } from '../components/elements/RatioBox/index';
+import { RatioBox } from '../components/elements/RatioBox';
+import { ColorPicker } from '../components/elements/Dot';
 
 const cssCodeMirrorAutosize = css`
   .CodeMirror {
@@ -190,9 +190,9 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                 <Box
                   innerRef={provided.innerRef}
                   p={1}
-                  bg={snapshot.isDraggingOver ? `rgba(0,255,0,0.2)` : undefined}
+                  bg={snapshot.isDraggingOver ? `rgba(0,255,0,0.1)` : undefined}
                   css={css`
-                    transition: background-color 300ms linear;
+                    transition: background-color 100ms linear;
                     & > div:last-of-type {
                       margin-bottom: 0;
                     }
@@ -228,7 +228,20 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                         >
                           <Box flex="0 0 auto" {...provided.dragHandleProps}>
                             <FaGripVertical />
-                            <Dot bg={bullet.color || 'black'} />
+
+                            <ColorPicker
+                              color={bullet.color || 'black'}
+                              setColor={bullet.setColor}
+                              colors={[
+                                'black',
+                                'red',
+                                'orange',
+                                'yellow',
+                                'green',
+                                'blue',
+                                'purple',
+                              ]}
+                            />
                           </Box>
                           <Box flex="1 1 auto">
                             <BulletEditor bullet={bullet} />

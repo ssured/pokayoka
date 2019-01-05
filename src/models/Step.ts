@@ -54,6 +54,9 @@ export const StepBullet = t
     setMarkdown(markdown: string) {
       self.markdown = markdown;
     },
+    setColor(color: string | undefined) {
+      self.color = color;
+    },
   }));
 
 export const stepType = 'step';
