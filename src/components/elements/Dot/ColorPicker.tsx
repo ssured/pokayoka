@@ -1,29 +1,8 @@
-import React, { useState } from 'react';
-import { Manager, Reference, Popper } from 'react-popper';
-
-import useOnClickOutside from 'use-onclickoutside';
-
-const Modal: React.SFC<{ onClose: () => void }> = ({ onClose, children }) => {
-  const ref = React.useRef<any>(null);
-  useOnClickOutside(ref, onClose);
-
-  return (
-    <Box
-      innerRef={ref}
-      p={2}
-      bg="white"
-      css={css`
-        border: 1px solid rgba(0, 0, 0, 0.5);
-        border-radius: 6px;
-      `}
-    >
-      {children}
-    </Box>
-  );
-};
-
-import { Dot } from './Dot';
 import { css } from 'emotion';
+import React, { useState } from 'react';
+import { Manager, Popper, Reference } from 'react-popper';
+import { Dot } from './Dot';
+import { WhenClickedOutside } from '../../utils';
 import { Box } from '../../base';
 
 export const ColorPicker: React.SFC<{
@@ -47,20 +26,29 @@ export const ColorPicker: React.SFC<{
         <Popper>
           {({ ref, style, placement, arrowProps }) => (
             <div ref={ref} style={style} data-placement={placement}>
-              <Modal onClose={() => setIsOpen(false)}>
-                {colors.map(color => (
-                  <Dot
-                    key={color}
-                    bg={color}
-                    onClick={() => {
-                      setColor(color);
-                      setIsOpen(false);
-                    }}
-                    size={size * 1.5}
-                    css={css({ cursor: 'pointer' })}
-                  />
-                ))}
-              </Modal>
+              <WhenClickedOutside trigger={() => setIsOpen(false)}>
+                <Box
+                  p={2}
+                  bg="white"
+                  css={css`
+                    border: 1px solid rgba(0, 0, 0, 0.5);
+                    border-radius: 6px;
+                  `}
+                >
+                  {colors.map(color => (
+                    <Dot
+                      key={color}
+                      bg={color}
+                      onClick={() => {
+                        setColor(color);
+                        setIsOpen(false);
+                      }}
+                      size={size * 1.5}
+                      css={css({ cursor: 'pointer' })}
+                    />
+                  ))}
+                </Box>
+              </WhenClickedOutside>
               <div ref={arrowProps.ref} style={arrowProps.style} />
             </div>
           )}

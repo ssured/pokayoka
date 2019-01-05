@@ -17,7 +17,7 @@ import { Controlled as CodeMirror } from 'react-codemirror2';
 import { Box, Flex, Heading } from '../components/base';
 import { Step, StepBullet } from '../models/Step';
 import { getSnapshot, Instance } from 'mobx-state-tree';
-import { RatioBox } from '../components/elements/RatioBox';
+import { RatioBox } from '../components/elements/Box';
 import { ColorPicker } from '../components/elements/Dot';
 
 const cssCodeMirrorAutosize = css`
