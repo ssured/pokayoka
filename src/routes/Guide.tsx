@@ -1,9 +1,9 @@
 import { RouteComponentProps } from '@reach/router';
-import React, { useState } from 'react';
+import React, { useState, Component } from 'react';
 import { observer } from 'mobx-react-lite';
 import { css } from 'react-emotion';
 import Markdown from 'react-markdown';
-import { FaGripVertical } from 'react-icons/fa';
+import { FaGripVertical, FaGripHorizontal } from 'react-icons/fa';
 
 import {
   DragDropContext,
@@ -19,6 +19,7 @@ import { Step, StepBullet } from '../models/Step';
 import { getSnapshot, Instance } from 'mobx-state-tree';
 import { RatioBox } from '../components/elements/Box';
 import { ColorPicker } from '../components/elements/Dot';
+import { Interpolation } from 'emotion';
 
 const cssCodeMirrorAutosize = css`
   .CodeMirror {
@@ -68,6 +69,28 @@ const step = Step.create({
       id: '3',
       sortIndex: 3,
       markdown: 'Regel 3',
+    },
+  },
+  images_: {
+    i1: {
+      id: 'i1',
+      sortIndex: 1,
+      image: 'image1',
+    },
+    i2: {
+      id: 'i2',
+      sortIndex: 2,
+      image: 'image2',
+    },
+    i3: {
+      id: 'i3',
+      sortIndex: 3,
+      image: 'image3',
+    },
+    i4: {
+      id: 'i4',
+      sortIndex: 4,
+      image: 'image4',
     },
   },
 });
@@ -120,12 +143,89 @@ const BulletEditor: React.SFC<BulletEditorProps> = ({ bullet }) => {
   );
 };
 
+interface SortableImagesParams {}
+export const SortableImages = observer(
+  (props: RouteComponentProps<SortableImagesParams>) => {
+    const onDragImageEnd = (result: DropResult) => {
+      if (!result.destination) return; // dropped outside the list
+      step.reorderImages(result.source.index, result.destination.index);
+    };
+    return (
+      <DragDropContext onDragEnd={onDragImageEnd}>
+        <Droppable droppableId="droppable" direction="horizontal">
+          {(provided, snapshot) => (
+            <Flex
+              innerRef={provided.innerRef}
+              bg={snapshot.isDraggingOver ? `rgba(0,255,0,0.1)` : undefined}
+              css={css`
+                overflow: scroll;
+                & > div {
+                  flex: 0 0 auto;
+                }
+              `}
+              {...provided.droppableProps}
+            >
+              {step.images.map((image, index) => (
+                <Draggable key={image.id} draggableId={image.id} index={index}>
+                  {(provided, snapshot) => (
+                    <Box
+                      innerRef={provided.innerRef}
+                      {...provided.draggableProps}
+                      width={1 / 3}
+                      p={2}
+                      m={0}
+                      bg={
+                        snapshot.isDragging
+                          ? 'rgba(0,0,0,0.2)'
+                          : 'rgba(0,0,0,0.05)'
+                      }
+                      css={css({
+                        userSelect: 'none',
+                        ...provided.draggableProps.style,
+                      })}
+                    >
+                      <RatioBox
+                        image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
+                        border="1px solid"
+                        borderColor="blue"
+                        p={1}
+                      >
+                        <Box
+                          css={css`
+                            display: inline-block;
+                          `}
+                          {...provided.dragHandleProps}
+                        >
+                          <FaGripHorizontal />
+                        </Box>
+                        {/* <h1>{image.id}+</h1> */}
+                      </RatioBox>
+                    </Box>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              {/* fixes jittering when dragging to end of list */}
+              <Box width={'1px'} p={0} m={0} />
+            </Flex>
+          )}
+        </Droppable>
+      </DragDropContext>
+    );
+  }
+);
+
 interface GuideParams {}
 
 export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
-  const onDragEnd = (result: DropResult) => {
+  const onDragBulletEnd = (result: DropResult) => {
     if (!result.destination) return; // dropped outside the list
     step.reorderBullets(result.source.index, result.destination.index);
+  };
+
+  const onDragImageEnd = (result: DropResult) => {
+    if (!result.destination) return; // dropped outside the list
+    step.reorderImages(result.source.index, result.destination.index);
   };
 
   return (
@@ -134,7 +234,7 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
 
       <Flex>
         <Flex flexDirection="column" p={1} width={1 / 2}>
-          <Box width={1} p={1}>
+          <Box p={1}>
             <RatioBox
               image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
               border="1px solid"
@@ -142,49 +242,12 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
               p={1}
             />
           </Box>
-          <Flex
-            width={1}
-            flexWrap="nowrap"
-            css={css`
-              overflow-x: scroll;
-            `}
-          >
-            <Box width={1 / 3} p={1} flex="0 0 auto">
-              <RatioBox
-                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
-                border="1px solid"
-                borderColor="blue"
-                p={1}
-              />
-            </Box>
-            <Box width={1 / 3} p={1} flex="0 0 auto">
-              <RatioBox
-                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
-                border="1px solid"
-                borderColor="blue"
-                p={1}
-              />
-            </Box>
-            <Box width={1 / 3} p={1} flex="0 0 auto">
-              <RatioBox
-                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
-                border="1px solid"
-                borderColor="blue"
-                p={1}
-              />
-            </Box>
-            <Box width={1 / 3} p={1} flex="0 0 auto">
-              <RatioBox
-                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
-                border="1px solid"
-                borderColor="blue"
-                p={1}
-              />
-            </Box>
-          </Flex>
+          <Box p={1}>
+            <SortableImages />
+          </Box>
         </Flex>
         <Flex flexDirection="column" p={1} width={1 / 2}>
-          <DragDropContext onDragEnd={onDragEnd}>
+          <DragDropContext onDragEnd={onDragBulletEnd}>
             <Droppable droppableId="droppable">
               {(provided, snapshot) => (
                 <Box
@@ -197,6 +260,7 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                       margin-bottom: 0;
                     }
                   `}
+                  {...provided.droppableProps}
                 >
                   {step.bullets.map((bullet, index) => (
                     <Draggable

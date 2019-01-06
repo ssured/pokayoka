@@ -21,7 +21,11 @@ export const referenceHandler = {
     identifier: string, // | number,
     parent: Instance<any> | null
   ): Instance<any> | null {
-    return parent && (getRoot(parent) as any).findOrFetch(identifier);
+    return (
+      parent &&
+      (getRoot(parent) as any).findOrFetch &&
+      (getRoot(parent) as any).findOrFetch(identifier)
+    );
   },
   set(
     value: any

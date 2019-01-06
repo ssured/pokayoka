@@ -16,17 +16,15 @@ const identifier = t.optional(t.identifier, () =>
     .substr(2)
 );
 
-const Step_Image = t.model({
+const StepImage = t.model({
   id: identifier,
   sortIndex: t.optional(t.number, () => Date.now()),
 
   image: ImageRef,
 });
 
-const Step_Bullet_Annotation = t.model({
+const StepBulletAnnotation = t.model({
   id: identifier,
-  sortIndex: t.optional(t.number, () => Date.now()),
-
   image: ImageRef,
   geoJson: t.frozen(),
 });
@@ -38,7 +36,7 @@ export const StepBullet = t
 
     markdown: t.string,
     color: t.maybe(t.string),
-    annotations_: t.map(Step_Bullet_Annotation),
+    annotations_: t.map(StepBulletAnnotation),
   })
   .views(self => ({
     get step() {
@@ -63,11 +61,12 @@ export const stepType = 'step';
 export const Step = base(stepType)
   .props({
     title: t.string,
-    images_: t.map(Step_Image),
+    images_: t.map(StepImage),
     bullets_: t.map(StepBullet),
   })
   .volatile(() => ({
     addedBullet: null as Instance<typeof StepBullet> | null,
+    addedImage: null as Instance<typeof StepImage> | null,
   }))
   // .preProcessSnapshot(snapshot => ({...snapshot}))
   .views(self => {
@@ -132,6 +131,54 @@ export const Step = base(stepType)
       self.addedBullet = StepBullet.create({ sortIndex, markdown });
       self.bullets_.put(self.addedBullet);
       return self.addedBullet;
+    },
+    reorderImages(fromIndex: number, toIndex: number) {
+      const images = self.images.slice();
+
+      const moved = images[fromIndex];
+      if (moved == null) return;
+
+      images.splice(fromIndex, 1);
+      const before = images[toIndex - 1];
+      const after = images[toIndex];
+
+      if (before == null) {
+        if (after == null) {
+          throw new Error(`invalid reorderImages`);
+        } else {
+          moved.sortIndex = after.sortIndex - 10000;
+        }
+      } else {
+        if (after == null) {
+          moved.sortIndex = Math.max(Date.now(), before.sortIndex + 10000);
+        } else {
+          moved.sortIndex = (before.sortIndex + after.sortIndex) / 2;
+        }
+      }
+    },
+    addImage(atIndex: number, image: string = '') {
+      const { images } = self;
+      const before = images[atIndex - 1];
+      const after = images[atIndex];
+
+      let sortIndex: number;
+
+      if (before == null) {
+        if (after == null) {
+          sortIndex = Date.now();
+        } else {
+          sortIndex = after.sortIndex - 10000;
+        }
+      } else {
+        if (after == null) {
+          sortIndex = Math.max(Date.now(), before.sortIndex + 10000);
+        } else {
+          sortIndex = (before.sortIndex + after.sortIndex) / 2;
+        }
+      }
+      self.addedImage = StepImage.create({ sortIndex, image });
+      self.images_.put(self.addedImage);
+      return self.addedImage;
     },
   }));
 
