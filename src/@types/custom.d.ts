@@ -9,6 +9,7 @@ declare module 'worker-loader!*' {
 
 declare module '@rebass/grid/emotion' {
   // Type definitions for @rebass/grid 6.0
+  // Adapted to Emotion
   // Project: https://github.com/rebassjs/grid
   // Definitions by: Anton Vasin <https://github.com/antonvasin>
   //                 Victor Orlov <https://github.com/vittorio>
@@ -74,13 +75,13 @@ declare module '@rebass/grid/emotion' {
 
   export type BoxComponent<Theme extends object> = StyledComponent<
     Partial<BoxProps>,
-    any,
+    {},
     Theme
   >;
 
   export type FlexComponent<Theme extends object> = StyledComponent<
     Partial<FlexProps>,
-    any,
+    {},
     Theme
   >;
 

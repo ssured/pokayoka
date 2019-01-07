@@ -26,6 +26,7 @@ const cssCodeMirrorAutosize = css`
     height: auto;
   }
 `;
+
 const cssCodeMirrorMarkdownHeight = css`
   .cm-s-default {
     font-family: Arial, Helvetica, sans-serif;
@@ -154,7 +155,7 @@ export const SortableImages = observer(
         <Droppable droppableId="droppable" direction="horizontal">
           {(provided, snapshot) => (
             <Flex
-              innerRef={provided.innerRef}
+              ref={provided.innerRef}
               bg={snapshot.isDraggingOver ? `rgba(0,255,0,0.1)` : undefined}
               css={css`
                 overflow: scroll;
@@ -168,7 +169,7 @@ export const SortableImages = observer(
                 <Draggable key={image.id} draggableId={image.id} index={index}>
                   {(provided, snapshot) => (
                     <Box
-                      innerRef={provided.innerRef}
+                      ref={provided.innerRef}
                       {...provided.draggableProps}
                       width={1 / 3}
                       p={2}
@@ -250,7 +251,7 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
             <Droppable droppableId="droppable">
               {(provided, snapshot) => (
                 <Box
-                  innerRef={provided.innerRef}
+                  ref={provided.innerRef}
                   p={1}
                   bg={snapshot.isDraggingOver ? `rgba(0,255,0,0.1)` : undefined}
                   css={css`
@@ -269,7 +270,7 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
                     >
                       {(provided, snapshot) => (
                         <Flex
-                          innerRef={provided.innerRef}
+                          ref={provided.innerRef}
                           {...provided.draggableProps}
                           p={1}
                           mb={1}
