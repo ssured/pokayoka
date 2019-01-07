@@ -2,7 +2,7 @@ import { RouteComponentProps } from '@reach/router';
 import * as React from 'react';
 import { observer } from 'mobx-react-lite';
 
-import { Box, Flex, Heading } from 'rebass';
+import { Box, Flex, Heading } from '../components/base';
 
 interface ProjectParams {
   projectId: string;

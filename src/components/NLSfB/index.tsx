@@ -3,7 +3,7 @@ import styled from 'react-emotion';
 
 import { tabel1 as nlsfb, NLSfBElement, NLSfBSubCategorie } from './nlsfb';
 
-import { Box, Flex, Text, Image, Button, Card, Heading } from 'rebass';
+import { Box, Flex, Text, Image, Button, Card, Heading } from '../base';
 
 const CardContent = styled(Box)<{}>``;
 const CardHeader = styled(Box)<{}>``;

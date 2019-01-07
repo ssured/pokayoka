@@ -2,7 +2,7 @@ import { RouteComponentProps, Link } from '@reach/router';
 import * as React from 'react';
 import { observer } from 'mobx-react-lite';
 
-import { Box, Flex, Heading, Text } from 'rebass';
+import { Box, Flex, Heading, Text } from '../components/base';
 import { NLSfB } from '../components/NLSfB';
 
 interface HomeParams {}
