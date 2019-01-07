@@ -14,8 +14,10 @@ export const App: React.SFC<Props> = ({}) => (
     <Home path="/" />
     <Debug path="debug" />
     <Guide path="guide" />
-    <User path=":userId">
+    <User path=":userId" />
+
+    {/* <User path=":userId">
       <Project path=":projectId" />
-    </User>
+    </User> */}
   </Router>
 );
