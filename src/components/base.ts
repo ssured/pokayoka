@@ -34,34 +34,11 @@ import {
   variant,
 } from 'styled-system';
 
+import { Box, Flex } from '@rebass/grid/emotion';
+
+export { Box, Flex };
 // const css = props => props.css
 // const themed = key => props => props.theme[key]
-
-export const Box = styled.div(
-  {
-    boxSizing: 'border-box',
-  },
-  space,
-  width,
-  fontSize,
-  color,
-  flex,
-  order,
-  alignSelf
-  //   themed('Box'),
-  //   css
-);
-
-export const Flex = styled(Box)(
-  {
-    display: 'flex',
-  },
-  flexWrap,
-  flexDirection,
-  alignItems,
-  justifyContent
-  //   themed('Flex')
-);
 
 export const Text = styled(Box)(
   fontFamily,
