@@ -3,27 +3,48 @@ import { Box } from '../../base';
 import styled from '@emotion/styled';
 
 import {
-  ratio,
   style,
+  ratio,
+  RatioProps,
   backgroundSize,
+  BackgroundSizeProps,
   backgroundPosition,
-  borders,
+  BackgroundPositionProps,
+  border,
+  BorderProps,
   borderColor,
+  BorderColorProps,
   borderRadius,
+  BorderRadiusProps,
+  ResponsiveValue,
 } from 'styled-system';
+import { BackgroundImageProperty } from 'csstype';
 
-const bgImage = style({
+interface BackgroundImageProps {
+  image: ResponsiveValue<BackgroundImageProperty>;
+}
+
+const backgroundImage = style({
   prop: 'image',
   cssProperty: 'backgroundImage',
   transformValue: n => `url(${n})`,
 });
 
-export const RatioBox = styled(Box)(
-  bgImage,
+export const RatioBox = styled<
+  typeof Box,
+  BackgroundImageProps &
+    RatioProps &
+    BackgroundSizeProps &
+    BackgroundPositionProps &
+    BorderProps &
+    BorderColorProps &
+    BorderRadiusProps
+>(Box)(
+  backgroundImage,
   ratio,
   backgroundSize,
   backgroundPosition,
-  borders,
+  border,
   borderColor,
   borderRadius
 );

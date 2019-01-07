@@ -48,20 +48,20 @@ export const Text = styled(Box)(
 export const Heading = styled(Text)();
 //   themed('Heading')
 
-Heading.defaultProps = {
+Heading.defaultProps = ({
   as: 'h2',
   m: 0,
   fontSize: 4,
   fontWeight: 'bold',
-};
+} as unknown) as any;
 
 export const Link = styled(Box)();
 //   themed('Link')
 
-Link.defaultProps = {
+Link.defaultProps = ({
   as: 'a',
   color: 'blue',
-};
+} as unknown) as any;
 
 export const Button = styled(Box)(
   {
@@ -79,7 +79,7 @@ export const Button = styled(Box)(
   //   themed('Button')
 );
 
-Button.defaultProps = {
+Button.defaultProps = ({
   as: 'button',
   fontSize: 'inherit',
   fontWeight: 'bold',
@@ -90,7 +90,7 @@ Button.defaultProps = {
   bg: 'blue',
   border: 0,
   borderRadius: 4,
-};
+} as unknown) as any;
 
 export const Image = styled.img(
   {
@@ -112,10 +112,10 @@ export const Image = styled.img(
   //   themed('Image')
 );
 
-Image.defaultProps = {
+Image.defaultProps = ({
   as: 'img',
   m: 0,
-};
+} as unknown) as any;
 
 const cards = variant({ key: 'cards' });
 

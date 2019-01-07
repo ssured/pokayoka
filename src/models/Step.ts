@@ -20,7 +20,7 @@ const StepImage = t.model({
   id: identifier,
   sortIndex: t.optional(t.number, () => Date.now()),
 
-  image: ImageRef,
+  image: t.string, // ImageRef,
 });
 
 const StepBulletAnnotation = t.model({

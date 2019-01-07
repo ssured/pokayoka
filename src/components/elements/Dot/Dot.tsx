@@ -16,27 +16,34 @@ import {
   SizeProps,
 } from 'styled-system';
 
-const componentName = 'button';
-
 export const Dot = styled<
-  typeof componentName,
+  'button',
   SpaceProps &
     ColorProps &
     BorderProps &
     BorderColorProps &
     BorderRadiusProps &
     SizeProps
->(componentName)`
-  ${space};
-  ${color};
-  ${borders};
-  ${borderColor};
-  ${borderRadius};
-  ${size};
+>('button')(
+  { appearance: 'none', backgroundClip: 'padding-box' },
+  space,
+  color,
+  borders,
+  borderColor,
+  borderRadius,
+  size
+);
+// `
+//   ${space};
+//   ${color};
+//   ${borders};
+//   ${borderColor};
+//   ${borderRadius};
+//   ${size};
 
-  appearance: none;
-  background-clip: padding-box;
-`;
+//   appearance: none;
+//   background-clip: padding-box;
+// `;
 
 Dot.defaultProps = {
   m: 0,

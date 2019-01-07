@@ -75,22 +75,26 @@ const step = Step.create({
     i1: {
       id: 'i1',
       sortIndex: 1,
-      image: 'image1',
+      image:
+        'https://images.unsplash.com/photo-1482731215275-a1f151646268?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1024&q=80',
     },
     i2: {
       id: 'i2',
       sortIndex: 2,
-      image: 'image2',
+      image:
+        'https://images.unsplash.com/photo-1503708928676-1cb796a0891e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1024&q=80',
     },
     i3: {
       id: 'i3',
       sortIndex: 3,
-      image: 'image3',
+      image:
+        'https://images.unsplash.com/photo-1497897271578-5f45bb7a8400?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1024&q=80',
     },
     i4: {
       id: 'i4',
       sortIndex: 4,
-      image: 'image4',
+      image:
+        'https://images.unsplash.com/photo-1523182009640-130ccf847b03?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1024&q=80',
     },
   },
 });
@@ -185,7 +189,7 @@ export const SortableImages = observer(
                       })}
                     >
                       <RatioBox
-                        image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
+                        image={image.image}
                         border="1px solid"
                         borderColor="blue"
                         p={1}
