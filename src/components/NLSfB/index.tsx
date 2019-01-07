@@ -3,7 +3,7 @@ import styled from 'react-emotion';
 
 import { tabel1 as nlsfb, NLSfBElement, NLSfBSubCategorie } from './nlsfb';
 
-import { Box, Flex, Text, Image, Button, Card, Heading } from '../base';
+import { Box, Flex, Text, Image, Button, Card, Heading } from 'rebass';
 
 const CardContent = styled(Box)<{}>``;
 const CardHeader = styled(Box)<{}>``;
@@ -22,14 +22,16 @@ const ListHeader = Heading;
 const Step = styled(Flex)<{ active: boolean }>`
   background-color: ${({ active }) => (active ? 'red' : undefined)};
 `;
-const StepGroup = styled(Flex)<{}>``;
+const StepGroup = styled(Flex)<{}>`
+  border: 1px solid red;
+`;
 const StepContent = styled(Flex)<{}>``;
 const StepTitle = styled(Box)<{}>``;
 
 const Segment = styled(Box)<{}>``;
 const Icon = Text;
 
-const ElementCard: React.SFC<{
+const ElementCard: React.FunctionComponent<{
   elementId: string;
   element: NLSfBElement;
   onClick?: () => void;
@@ -45,7 +47,7 @@ const ElementCard: React.SFC<{
   </Card>
 );
 
-const SubGroupCard: React.SFC<{
+const SubGroupCard: React.FunctionComponent<{
   groupId: string;
   subGroupId: string;
   subGroup: NLSfBSubCategorie;
@@ -72,7 +74,7 @@ const SubGroupCard: React.SFC<{
   </Card>
 );
 
-export const NLSfB: React.SFC<{}> = () => {
+export const NLSfB: React.FunctionComponent<{}> = () => {
   const [groupId, _setGroup] = useState<string | null>(null);
   const [subGroupId, _setSubGroup] = useState<string | null>(null);
   const [elementId, _setElement] = useState<string | null>(null);

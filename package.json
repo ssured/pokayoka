@@ -81,8 +81,11 @@
     "build-storybook": "build-storybook"
   },
   "dependencies": {
+    "@emotion/core": "^10.0.5",
+    "@emotion/styled": "^10.0.5",
     "@reach/router": "^1.2.1",
     "@types/codemirror": "^0.0.71",
+    "@rebass/emotion": "^3.0.0",
     "@types/lodash.clonedeepwith": "^4.5.4",
     "@types/lodash.escaperegexp": "^4.1.4",
     "@types/lodash.isequalwith": "^4.4.4",
@@ -93,6 +96,7 @@
     "@types/react-dom": "^16.0.9",
     "@types/styled-system": "^3.1.0",
     "codemirror": "^5.42.2",
+    "@types/rebass": "^0.3.3",
     "dlv": "^1.1.2",
     "emotion": "^9.2.12",
     "fast-json-patch": "^2.0.7",
@@ -118,6 +122,8 @@
     "react-icons": "^3.2.2",
     "react-markdown": "^4.0.6",
     "react-popper": "^1.3.2",
+    "rebass": "^3.0.0",
+    "styled-components": "^4.1.3",
     "styled-system": "^3.1.11",
     "subscribableevent": "^1.0.1",
     "tuplerone": "^2.1.2",
