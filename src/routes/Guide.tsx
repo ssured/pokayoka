@@ -1,7 +1,7 @@
 import { RouteComponentProps } from '@reach/router';
-import React, { useState, Component } from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { css } from 'react-emotion';
+import { css } from '@emotion/core';
 import Markdown from 'react-markdown';
 import { FaGripVertical, FaGripHorizontal } from 'react-icons/fa';
 
@@ -19,7 +19,6 @@ import { Step, StepBullet } from '../models/Step';
 import { getSnapshot, Instance } from 'mobx-state-tree';
 import { RatioBox } from '../components/elements/Box';
 import { ColorPicker } from '../components/elements/Dot';
-import { Interpolation } from 'emotion';
 
 const cssCodeMirrorAutosize = css`
   .CodeMirror {

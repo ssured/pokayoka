@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styled from 'react-emotion';
+import styled from '@emotion/styled';
 
 import { tabel1 as nlsfb, NLSfBElement, NLSfBSubCategorie } from './nlsfb';
 

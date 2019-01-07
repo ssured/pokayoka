@@ -1,4 +1,4 @@
-import { css } from 'emotion';
+import { css } from '@emotion/core';
 import React, { useState } from 'react';
 import { Manager, Popper, Reference } from 'react-popper';
 import { Dot } from './Dot';

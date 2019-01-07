@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import styled from 'react-emotion';
+import styled from '@emotion/styled';
 
 const Button = styled.button<{ disabled: boolean }>`
   padding: 2rem;
