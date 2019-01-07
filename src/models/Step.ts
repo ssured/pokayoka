@@ -43,9 +43,7 @@ export const StepBullet = t
       return getParent<TStepInstance>(self, 2);
     },
     get annotations() {
-      return Array.from(self.annotations_.values()).sort(
-        ({ sortIndex: a }, { sortIndex: b }) => b - a
-      );
+      return Array.from(self.annotations_.values());
     },
   }))
   .actions(self => ({
