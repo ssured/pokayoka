@@ -16,7 +16,7 @@ const identifier = t.optional(t.identifier, () =>
     .substr(2)
 );
 
-const StepImage = t.model({
+export const StepImage = t.model({
   id: identifier,
   sortIndex: t.optional(t.number, () => Date.now()),
 

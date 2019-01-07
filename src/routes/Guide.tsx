@@ -15,7 +15,7 @@ import {
 import { Controlled as CodeMirror } from 'react-codemirror2';
 
 import { Box, Flex, Heading } from '../components/base';
-import { Step, StepBullet } from '../models/Step';
+import { Step, StepBullet, StepImage } from '../models/Step';
 import { getSnapshot, Instance } from 'mobx-state-tree';
 import { RatioBox } from '../components/elements/Box';
 import { ColorPicker } from '../components/elements/Dot';
@@ -147,9 +147,16 @@ const BulletEditor: React.SFC<BulletEditorProps> = ({ bullet }) => {
   );
 };
 
-interface SortableImagesParams {}
+type InstanceOfStepImage = Instance<typeof StepImage>;
+interface SortableImagesParams {
+  selectedImage: InstanceOfStepImage | null;
+  setSelectedImage: (image: InstanceOfStepImage) => void;
+}
 export const SortableImages = observer(
-  (props: RouteComponentProps<SortableImagesParams>) => {
+  ({
+    setSelectedImage,
+    selectedImage,
+  }: RouteComponentProps<{}> & SortableImagesParams) => {
     const onDragImageEnd = (result: DropResult) => {
       if (!result.destination) return; // dropped outside the list
       step.reorderImages(result.source.index, result.destination.index);
@@ -190,11 +197,18 @@ export const SortableImages = observer(
                     >
                       <RatioBox
                         image={image.image}
-                        border="1px solid"
-                        borderColor="blue"
-                        p={1}
+                        border="2px solid"
+                        borderColor="white"
+                        onClick={() => setSelectedImage(image)}
+                        css={css`
+                          transition: transform 100ms ease;
+                          transform: scale(
+                            ${image === selectedImage ? 1.2 : 1}
+                          );
+                        `}
                       >
                         <Box
+                          m={1}
                           css={css`
                             display: inline-block;
                           `}
@@ -222,6 +236,13 @@ export const SortableImages = observer(
 interface GuideParams {}
 
 export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
+  const [
+    selectedImage,
+    setSelectedImage,
+  ] = useState<InstanceOfStepImage | null>(
+    step.images.length > 0 ? step.images[0] : null
+  );
+
   const onDragBulletEnd = (result: DropResult) => {
     if (!result.destination) return; // dropped outside the list
     step.reorderBullets(result.source.index, result.destination.index);
@@ -239,15 +260,27 @@ export const Guide = observer((props: RouteComponentProps<GuideParams>) => {
       <Flex>
         <Flex flexDirection="column" p={1} width={1 / 2}>
           <Box p={1}>
-            <RatioBox
-              image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
-              border="1px solid"
-              borderColor="blue"
-              p={1}
-            />
+            {selectedImage ? (
+              <RatioBox
+                image={selectedImage.image}
+                border="1px solid"
+                borderColor="blue"
+                p={1}
+              />
+            ) : (
+              <RatioBox
+                image="https://cdn4.iconfinder.com/data/icons/social-communication/142/add_photo-512.png"
+                border="1px solid"
+                borderColor="transparent"
+                p={1}
+              />
+            )}
           </Box>
           <Box p={1}>
-            <SortableImages />
+            <SortableImages
+              selectedImage={selectedImage}
+              setSelectedImage={setSelectedImage}
+            />
           </Box>
         </Flex>
         <Flex flexDirection="column" p={1} width={1 / 2}>
