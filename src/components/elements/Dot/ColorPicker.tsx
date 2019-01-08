@@ -19,7 +19,7 @@ export const ColorPicker: React.SFC<{
     <Manager>
       <Reference>
         {({ ref }) => (
-          <Dot innerRef={ref} onClick={toggleIsOpen} bg={color} size={size} />
+          <Dot ref={ref} onClick={toggleIsOpen} bg={color} size={size} />
         )}
       </Reference>
       {isOpen && (
