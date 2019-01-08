@@ -110,6 +110,7 @@
     "mobx-state-tree": "^3.10.0",
     "mobx-utils": "^5.1.0",
     "muxrpc": "6.4.2",
+    "polished": "^2.3.1",
     "pouchdb": "^7.0.0",
     "pull-stream": "^3.6.9",
     "pull-ws": "^3.3.1",
