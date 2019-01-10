@@ -27,6 +27,7 @@ export const ColorPicker: React.SFC<{
           {({ ref, style, placement, arrowProps }) => (
             <div ref={ref} style={style} data-placement={placement}>
               <WhenClickedOutside trigger={() => setIsOpen(false)}>
+                {/* refactor to ColorPickerDropdown component implementing OnClickOutside so the warpper can be removed */}
                 <Box
                   p={2}
                   bg="white"
