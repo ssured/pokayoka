@@ -14,6 +14,7 @@ import { startClient } from './utils/mux';
 
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/markdown/markdown';
+import 'tailwindcss/css/preflight.css';
 
 import { IconContext } from 'react-icons';
 
