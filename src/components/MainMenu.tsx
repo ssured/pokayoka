@@ -4,30 +4,36 @@ import { jsx, div, nav, span } from '../utils/nano';
 import { useToggle, useMedia } from 'react-use';
 import styled from '@emotion/styled';
 
-const Navbar = styled.nav(tw`block bg-cyan
+const Base = nav(tw`block bg-cyan relative
   lg:flex lg:items-stretch
 `);
-const NavbarBrand = styled.div(
-  tw`flex items-stretch flex-no-shrink text-light`
-);
-const NavbarBurger = styled.div(
-  tw`flex items-center flex-no-shrink text-light ml-auto cursor-pointer mr-1
+
+export const Navbar = Base as typeof Base & {
+  Brand: typeof NavbarBrand;
+};
+
+const NavbarBrand = div(tw`flex items-stretch flex-no-shrink text-light`);
+Navbar.Brand = NavbarBrand;
+
+const NavbarBurger = div(
+  tw`flex items-center flex-no-shrink ml-auto
+  text-light cursor-pointer mr-1
   lg:hidden`
 );
-const NavbarMenu = styled.div(tw`block shadow-lg -mx-1 px-1
+const NavbarMenu = div(tw`block shadow-lg -mx-1 px-1
   lg:flex lg:items-stretch lg:flex-grow lg:flex-no-shrink lg:shadow-none`);
-const NavbarStart = styled.div(tw`justify-start
+const NavbarStart = div(tw`justify-start
   lg:flex lg:items-stretch lg:mr-auto`);
-const NavbarEnd = styled.div(tw`justify-end
+const NavbarEnd = div(tw`justify-end
   lg:flex lg:items-stretch lg:ml-auto`);
-const NavbarItem = styled.div(tw`block p-1 relative leading-normal
+const NavbarItem = div(tw`block p-1 relative leading-normal
   lg:flex lg:items-center flex-no-grow flex-no-shrink`);
-const NavbarLink = styled.div(tw`block p-1 relative leading-normal
+const NavbarLink = div(tw`block p-1 relative leading-normal
   lg:flex lg:items-center`);
 
-const AppName = styled.span(tw`font-semibold text-3xl tracking-tight`);
+const AppName = span(tw`font-semibold text-3xl tracking-tight`);
 
-const NavbarIconSVG = styled.svg(tw`fill-current h-2 w-2`);
+const NavbarIconSVG = jsx('svg', tw`fill-current h-2 w-2`);
 const Hamburger: React.SFC<{ title?: string }> = ({ title }) => (
   <NavbarIconSVG viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
     {title && <title>{title}</title>}
@@ -41,14 +47,14 @@ export const MainMenu: React.FunctionComponent<{}> = ({ children }) => {
   return (
     <React.Fragment>
       <Navbar>
-        <NavbarBrand>
+        <Navbar.Brand>
           <NavbarItem>
             <AppName>Pokayoka</AppName>
           </NavbarItem>
           <NavbarBurger onClick={() => toggleMenuOpen()}>
             <Hamburger title="Menu" />
           </NavbarBurger>
-        </NavbarBrand>
+        </Navbar.Brand>
         {(isLg || menuOpen) && (
           <NavbarMenu>
             <NavbarStart>
