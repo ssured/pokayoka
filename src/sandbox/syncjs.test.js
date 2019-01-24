@@ -42,6 +42,7 @@ describe('sublevel with index', () => {
 
     await api.put(['yo'], 'dude updated');
     await api.put('yo3', { dude: 'dude3' });
+    await api.put('yo3', { dude: 'dude3' });
 
     const changesSince = since =>
       pull(
@@ -53,6 +54,7 @@ describe('sublevel with index', () => {
 
     pull(
       changesSince(lastServerSync),
+      pull.unique('key'),
       pull.collect((err, data) => {
         console.log(data);
         expect(data.length).toBe(2);
