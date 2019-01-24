@@ -1,4 +1,4 @@
-import { HamModel, HAM_PATH } from './index';
+import { HamModel, HAM_PATH, maxStateFromHam } from './index';
 
 import {
   types,
@@ -74,6 +74,9 @@ describe('integrates with mst', () => {
         name: 1,
       },
     ]);
+    expect(currentSnapshot && maxStateFromHam(currentSnapshot[HAM_PATH])).toBe(
+      1
+    );
   });
 
   it('works with nested models', () => {
@@ -203,6 +206,8 @@ describe('integrates with mst', () => {
       ],
       name: { first: 'J', last: 'Rowlings' },
     });
+
+    expect(maxStateFromHam((getSnapshot(author2) as any)[HAM_PATH])).toBe(3);
   });
 
   it('notifies on changes', () => {

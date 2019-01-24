@@ -14,7 +14,7 @@ import {
   typecheck,
 } from 'mobx-state-tree';
 import { get, set, entries } from 'mobx';
-import { merge, HamValue, isObject } from './merge';
+import { merge, HamValue, isObject, THam } from './merge';
 
 const hamType: IAnyComplexType = types.map(
   types.union(
@@ -23,9 +23,16 @@ const hamType: IAnyComplexType = types.map(
   )
 );
 
-type THam = { [key: string]: number | [number, THam] };
-
 export const HAM_PATH = '#';
+
+export const maxStateFromHam = (ham: HamValue): number => {
+  if (typeof ham === 'number') return ham;
+  const [max, subHams] = ham;
+  return Math.max(
+    max,
+    ...Array.from(Object.values(subHams)).map(maxStateFromHam)
+  );
+};
 
 const hamDlv = (_ham: THam, state: number, path: string[]): THam => {
   let ham = _ham;
