@@ -66,6 +66,10 @@ const notifyChange = (self: Instance<typeof _HamModel>) => {
   if (typeof root.notifyHamChange === 'function') {
     root.notifyHamChange(self);
   }
+  const env = getEnv(root);
+  if (typeof env.onSnapshot === 'function') {
+    env.onSnapshot(getSnapshot(self));
+  }
 };
 
 export const hamActions = (self: Instance<typeof _HamModel>) => {

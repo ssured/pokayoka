@@ -37,6 +37,43 @@ describe('integrates with mst', () => {
     ]);
   });
 
+  it('works with composed models', () => {
+    const Author = types.compose(
+      'Author',
+      HamModel,
+      types
+        .model({
+          name: types.string,
+        })
+        .actions(self => ({
+          setName(name: string) {
+            self.name = name;
+          },
+        }))
+    );
+
+    state = 1;
+
+    let currentSnapshot: undefined | SnapshotOut<typeof Author> = undefined;
+
+    const author = Author.create(
+      { name: 'Rowling' },
+      {
+        machineState: () => state,
+        onSnapshot: (snapshot: SnapshotOut<typeof Author>) =>
+          (currentSnapshot = snapshot),
+      }
+    );
+    author.setName('JK Rowling');
+
+    expect(currentSnapshot && currentSnapshot[HAM_PATH]).toEqual([
+      1,
+      {
+        name: 1,
+      },
+    ]);
+  });
+
   it('works with nested models', () => {
     const Author = HamModel.named('Author')
       .props({
