@@ -59,6 +59,7 @@ describe('multilevel', () => {
     expect(data.length).toBe(0);
     await serverDb.put('key', 'value');
 
+    await new Promise(r => setTimeout(r, 1));
     expect(data.length).toBe(1);
   });
 });
