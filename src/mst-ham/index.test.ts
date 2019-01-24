@@ -59,6 +59,8 @@ describe('integrates with mst', () => {
     const author = Author.create(
       { name: 'Rowling' },
       {
+        waitUntilState: (state: number, cb: () => void) =>
+          setTimeout(cb, state - Date.now() + 1),
         machineState: () => state,
         onSnapshot: (snapshot: SnapshotOut<typeof Author>) =>
           (currentSnapshot = snapshot),

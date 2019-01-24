@@ -47,7 +47,7 @@ const effect = () => {
 };
 
 describe('async generator proxy', () => {
-  test('it works', async () => {
+  test.skip('it works', async () => {
     const db = levelup(memdown());
 
     const _root = (key, value = notSet) =>
