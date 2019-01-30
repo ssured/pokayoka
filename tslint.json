@@ -8,7 +8,8 @@
     "import-name": false,
     "no-default-export": true,
     "jsx-no-lambda": false,
-    "jsx-boolean-value": false
+    "jsx-boolean-value": false,
+    "object-shorthand-properties-first": false
   },
   "rulesDirectory": [],
   "linterOptions": {
