@@ -114,20 +114,6 @@ export const ErrMsg = styled('p')`
   color: var(--color-err);
 `;
 
-export const MetaWrapper = styled('div')`
-  padding: 1rem;
-
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  color: white;
-  background: hsla(0, 0%, 0%, 0.6);
-`;
-
 export const Authenticated = styled('div')`
   width: 100%;
   height: 100vh;
@@ -141,13 +127,4 @@ export const Authenticated = styled('div')`
   align-items: center;
 
   background-color: var(--color-background);
-`;
-
-export const Pre = styled('pre')`
-  margin-bottom: 1rem;
-
-  font-size: var(--font-size-s);
-  b {
-    font-weight: bold;
-  }
 `;

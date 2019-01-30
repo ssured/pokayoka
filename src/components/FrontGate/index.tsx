@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import { useMachine } from 'use-machine';
 import { signInMachineConfig, signInAssign } from '../../machines/signIn';
 import { isEmail } from 'validator';
+import axios from 'axios';
 
 import { Loader } from '../Loader';
 
@@ -15,8 +16,6 @@ import {
   ErrMsg,
   Button,
   Authenticated,
-  MetaWrapper,
-  Pre,
 } from './styles';
 
 const delay = (func: (...args: any[]) => any) => setTimeout(() => func());
@@ -35,6 +34,19 @@ const contactAuthService = (email: string, password: string) =>
       | typeof WrongPasswordError
       | typeof NoResponseError;
   }>((resolve, reject) => {
+    return axios
+      .create({ auth: { username: email, password } })
+      .post('/auth/token')
+      .then(
+        (data: any) => {
+          console.log('got data', data);
+          resolve(data);
+        },
+        (data: any) => {
+          console.log('error data', data);
+          reject(data);
+        }
+      );
     console.log(`email: ${email}`);
     console.log(`password: ${password}`);
 
@@ -75,30 +87,18 @@ export const FrontGate: React.FunctionComponent<{}> = ({}) => {
       guards: {
         isBadEmailFormat: ctx => !isEmail(ctx.email),
         isPasswordShort: ctx => ctx.password.length <= 6,
-        isNoAccount: (ctx, evt) => {
-          console.log(evt);
-          return !!(
-            evt.type === 'error.execution' &&
-            evt.src === 'requestSignIn' &&
-            evt.data.code === 1
-          );
-        },
-        isIncorrectPassword: (ctx, evt) => {
-          console.log(evt);
-          return !!(
-            evt.type === 'error.execution' &&
-            evt.src === 'requestSignIn' &&
-            evt.data.code === 2
-          );
-        },
-        isServiceErr: (ctx, evt) => {
-          console.log(evt);
-          return !!(
-            evt.type === 'error.execution' &&
-            evt.src === 'requestSignIn' &&
-            evt.data.code === 3
-          );
-        },
+        isNoAccount: (ctx, evt) =>
+          evt.type === 'error.execution' &&
+          evt.src === 'requestSignIn' &&
+          evt.data.code === NoAccountError,
+        isIncorrectPassword: (ctx, evt) =>
+          evt.type === 'error.execution' &&
+          evt.src === 'requestSignIn' &&
+          evt.data.code === WrongPasswordError,
+        isServiceErr: (ctx, evt) =>
+          evt.type === 'error.execution' &&
+          evt.src === 'requestSignIn' &&
+          evt.data.code === NoResponseError,
       },
       services: {
         requestSignIn: ctx => contactAuthService(ctx.email, ctx.password),
@@ -119,11 +119,6 @@ export const FrontGate: React.FunctionComponent<{}> = ({}) => {
     state.matches('emailErr') ||
     state.matches('passwordErr') ||
     state.matches('awaitingResponse');
-  const fadeHeading =
-    state.matches('emailErr') ||
-    state.matches('passwordErr') ||
-    state.matches('awaitingResponse') ||
-    state.matches('serviceErr');
 
   return (
     <Form
@@ -133,7 +128,7 @@ export const FrontGate: React.FunctionComponent<{}> = ({}) => {
       }}
       noValidate
     >
-      <H1 fade={fadeHeading}>Pokayoka</H1>
+      <H1>Pokayoka</H1>
 
       {/* email ---------------------- */}
       <Label htmlFor="email" disabled={disableEmail}>
@@ -142,7 +137,7 @@ export const FrontGate: React.FunctionComponent<{}> = ({}) => {
       <Input
         id="email"
         type="email"
-        placeholder="charlie@gmail.com"
+        placeholder="pokayoka@gmail.com"
         onBlur={() => {
           send({ type: 'EMAIL_BLUR' });
         }}
@@ -173,7 +168,7 @@ export const FrontGate: React.FunctionComponent<{}> = ({}) => {
       <Input
         id="password"
         type="password"
-        placeholder="Passw0rd!"
+        placeholder="P@ssw0rd!"
         value={state.context.password}
         err={state.matches('passwordErr')}
         disabled={disablePassword}
@@ -218,20 +213,9 @@ export const FrontGate: React.FunctionComponent<{}> = ({}) => {
       {/* authenticated -------------------------- */}
       {state.matches('signedIn') && (
         <Authenticated>
-          <H1>authenticated</H1>
+          <H1>Welkom</H1>
         </Authenticated>
       )}
-
-      {/* meta -------------------------- */}
-      <MetaWrapper>
-        <Pre>
-          <b>state:</b> {JSON.stringify(state.value, null, 2)}
-        </Pre>
-
-        <Pre>
-          <b>context (ctx):</b> {JSON.stringify(state.context, null, 2)}
-        </Pre>
-      </MetaWrapper>
     </Form>
   );
 };

@@ -4,18 +4,36 @@ import webpack from 'webpack';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 import expressWs from 'express-ws';
+import bodyParser from 'body-parser';
 
 import webpackConfig from './webpack.config';
 import { wsRouterFor } from './server/websocket';
 
 import { startServer } from './server/mux/server';
 
+import authRouter from './server/auth';
+
 const { app, getWss } = expressWs(express());
+app.use(
+  bodyParser.json({
+    limit: '50mb',
+  })
+);
+app.use(
+  bodyParser.urlencoded({
+    limit: '50mb',
+    extended: true,
+  })
+);
+
 const compiler = webpack(webpackConfig);
 
 const isDevelopment = true;
 
 app.use(wsRouterFor(getWss()));
+
+// @ts-ignore
+app.use('/auth', authRouter);
 
 if (isDevelopment) {
   // Tell express to use the webpack-dev-middleware and use the webpack.config.js
