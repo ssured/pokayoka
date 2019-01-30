@@ -8,7 +8,7 @@ import { Debug } from './routes/Debug';
 import { Guide } from './routes/Guide';
 import { MainMenu } from './components/MainMenu';
 import { CapabilitiesCheck } from './components/CapabilitiesCheck';
-import { FrontGate } from './components/FrontGate';
+import { FrontGate } from './components/FrontGate/index';
 
 type Props = {};
 

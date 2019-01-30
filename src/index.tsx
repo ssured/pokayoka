@@ -17,6 +17,7 @@ import 'codemirror/mode/markdown/markdown';
 import 'tailwindcss/css/preflight.css';
 
 import { IconContext } from 'react-icons';
+import { GlobalStyles } from './GlobalStyles';
 
 const isProduction = false; // FIXME implement this
 configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });
@@ -94,6 +95,7 @@ function renderApp() {
   render(
     <IconContext.Provider value={{ style: { verticalAlign: 'middle' } }}>
       <StoreContext.Provider value={store}>
+        <GlobalStyles />
         <App />
       </StoreContext.Provider>
     </IconContext.Provider>,
