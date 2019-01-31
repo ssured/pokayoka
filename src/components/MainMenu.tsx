@@ -3,6 +3,7 @@ import tw from 'tailwind.macro';
 import { jsx, div, nav, span } from '../utils/nano';
 import { useToggle, useMedia } from 'react-use';
 import styled from '@emotion/styled';
+import { useAuthentication } from '../contexts/index';
 
 const Base = nav(tw`block bg-cyan relative
   lg:flex lg:items-stretch
@@ -43,6 +44,7 @@ const Hamburger: React.SFC<{ title?: string }> = ({ title }) => (
 
 export const MainMenu: React.FunctionComponent<{}> = ({ children }) => {
   const [menuOpen, toggleMenuOpen] = useToggle(false);
+  const { isAuthenticated, authentication, logout } = useAuthentication();
   const isLg = useMedia('(min-width: 992px');
   return (
     <React.Fragment>
@@ -65,7 +67,13 @@ export const MainMenu: React.FunctionComponent<{}> = ({ children }) => {
               </NavbarItem>
             </NavbarStart>
             <NavbarEnd>
-              <NavbarItem $as="a">Login</NavbarItem>
+              {isAuthenticated ? (
+                <NavbarItem $as="a" onClick={logout}>
+                  {authentication.email}
+                </NavbarItem>
+              ) : (
+                <NavbarItem $as="a">Login</NavbarItem>
+              )}
             </NavbarEnd>
           </NavbarMenu>
         )}

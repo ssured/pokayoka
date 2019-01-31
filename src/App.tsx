@@ -23,17 +23,18 @@ const IfAnonymous: React.FunctionComponent<{}> = ({ children }) => {
 };
 
 export const App: React.SFC<Props> = ({}) => {
-  const { setAuthentication } = useAuthentication();
+  const { isAuthenticated, login } = useAuthentication();
   return (
     <CapabilitiesCheck>
-      <IfAnonymous>
+      {!isAuthenticated && (
         <LoginForm
           onAuthentication={(email, token, expires) =>
-            setAuthentication({ email, token, expires })
+            login({ email, token, expires })
           }
         />
-      </IfAnonymous>
-      <IfAuthenticated>
+      )}
+
+      {isAuthenticated && (
         <MainMenu>
           <Router>
             <Home path="/" />
@@ -46,7 +47,7 @@ export const App: React.SFC<Props> = ({}) => {
     </User> */}
           </Router>
         </MainMenu>
-      </IfAuthenticated>
+      )}
     </CapabilitiesCheck>
   );
 };

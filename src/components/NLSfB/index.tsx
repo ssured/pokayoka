@@ -203,7 +203,7 @@ export const NLSfB: React.FunctionComponent<{}> = () => {
 
       <Segment>
         {group == null ? (
-          <Flex flexWrap={true}>
+          <Flex>
             {Array.from(Object.entries(nlsfb)).map(([groupId, group]) => (
               <Card m={2} p={2} key={groupId} onClick={() => setGroup(groupId)}>
                 <Image src={group.image} />

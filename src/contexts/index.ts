@@ -14,19 +14,23 @@ export const AuthenticationContainer = createContainer(() => {
   const [authentication, setAuthentication] = useLocalStorage<AuthContextValue>(
     LocalStorageAuthKey
   );
-  return { authentication, setAuthentication };
+  const isAuthenticated =
+    authentication &&
+    !!authentication.token &&
+    new Date() < new Date(authentication.expires);
+  const logout = () => {
+    setAuthentication((undefined as unknown) as AuthContextValue);
+  };
+  return { authentication, isAuthenticated, login: setAuthentication, logout };
 });
 
 export const useAuthentication = () =>
   useContext(AuthenticationContainer.Context);
 
 export const useToken = () => {
-  const { authentication } = useAuthentication();
-  if (!authentication || !authentication.token) {
-    throw new Error('token is not defined, user is not logged in');
-  }
-  if (new Date() < new Date(authentication.expires)) {
-    throw new Error('token expired');
+  const { isAuthenticated, authentication } = useAuthentication();
+  if (!isAuthenticated) {
+    throw new Error('not authenticated');
   }
   return authentication.token;
 };
