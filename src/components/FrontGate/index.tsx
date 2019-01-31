@@ -17,6 +17,7 @@ import {
   Button,
   Authenticated,
 } from './styles';
+import { ServerAPIPost_Token_Response } from '../../../server/auth';
 
 const delay = (func: (...args: any[]) => any) => setTimeout(() => func());
 
@@ -28,19 +29,22 @@ const isSuccess = () => Math.random() >= 0.8;
 const generateErrCode = () => Math.floor(Math.random() * 3) + 1;
 
 const contactAuthService = (email: string, password: string) =>
-  new Promise<void | {
-    code:
-      | typeof NoAccountError
-      | typeof WrongPasswordError
-      | typeof NoResponseError;
-  }>((resolve, reject) => {
+  new Promise<
+    | ServerAPIPost_Token_Response
+    | {
+        code:
+          | typeof NoAccountError
+          | typeof WrongPasswordError
+          | typeof NoResponseError;
+      }
+  >((resolve, reject) => {
     return axios
       .create({ auth: { username: email, password } })
       .post('/auth/token')
       .then(
         (data: any) => {
           console.log('got data', data);
-          resolve(data);
+          resolve(data.data);
         },
         (data: any) => {
           console.log('error data', data);
@@ -80,8 +84,13 @@ export const FrontGate: React.FunctionComponent<{}> = ({}) => {
           password: (ctx, evt) =>
             evt.type === 'ENTER_PASSWORD' ? evt.value : '',
         }),
-        onAuthentication: () => {
-          console.log('user authenticated');
+        cacheToken: signInAssign({
+          password: '',
+          token: (ctx, evt) =>
+            evt.type === 'done.invoke.requestSignIn' ? evt.data : undefined,
+        }),
+        onAuthentication: (ctx, evt) => {
+          console.log('user authenticated', { ctx, evt });
         },
       },
       guards: {

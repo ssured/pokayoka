@@ -1,4 +1,5 @@
 import { MachineConfig, assign, Assigner, AssignAction } from 'xstate';
+import { ServerAPIPost_Token_Response } from '../../server/auth';
 
 // from https://codesandbox.io/embed/239lj2xzqp
 
@@ -29,11 +30,16 @@ export type SignInEvent =
   | { type: 'EMAIL_BLUR' }
   | { type: 'PASSWORD_BLUR' }
   | { type: 'SUBMIT' }
-  | { type: 'error.execution'; src: 'requestSignIn'; data: { code: number } };
+  | { type: 'error.execution'; src: 'requestSignIn'; data: { code: number } }
+  | {
+      type: 'done.invoke.requestSignIn';
+      data: ServerAPIPost_Token_Response;
+    };
 
 export interface SignInContext {
   email: string;
   password: string;
+  token?: ServerAPIPost_Token_Response;
 }
 
 export const signInAssign: (
@@ -153,6 +159,7 @@ export const signInMachineConfig: MachineConfig<
       },
     },
     signedIn: {
+      onEntry: 'cacheToken',
       type: 'final',
     },
   },
