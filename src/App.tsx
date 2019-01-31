@@ -9,7 +9,7 @@ import { Sync as SyncStatus } from './routes/Sync';
 
 import { CapabilitiesCheck } from './components/CapabilitiesCheck';
 import { LoginForm } from './components/LoginForm/index';
-import { useAuthentication } from './contexts/index';
+import { useAuthentication } from './contexts/authentication';
 import { Grommet, Grid, Box, Button, Text } from 'grommet';
 import { Menu, Home as HomeIcon, Sync } from 'grommet-icons';
 import { useToggle } from 'react-use';

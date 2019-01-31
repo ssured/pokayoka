@@ -17,7 +17,7 @@ import 'codemirror/mode/markdown/markdown';
 import 'tailwindcss/css/preflight.css';
 
 import { IconContext } from 'react-icons';
-import { AuthenticationContainer } from './contexts/index';
+import { AuthenticationContainer } from './contexts/authentication';
 
 const isProduction = false; // FIXME implement this
 configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });

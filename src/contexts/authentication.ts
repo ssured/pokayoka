@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { useContext } from 'react';
 import createContainer from 'constate';
 import { useLocalStorage } from 'react-use';
 
@@ -9,6 +9,7 @@ type AuthContextValue = {
 };
 
 const LocalStorageAuthKey = 'auth';
+const LocalStorageDbPrefix = 'db-';
 
 export const AuthenticationContainer = createContainer(() => {
   const [authentication, setAuthentication] = useLocalStorage<AuthContextValue>(

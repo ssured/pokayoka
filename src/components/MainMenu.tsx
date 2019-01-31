@@ -3,7 +3,7 @@ import tw from 'tailwind.macro';
 import { jsx, div, nav, span } from '../utils/nano';
 import { useToggle, useMedia } from 'react-use';
 import styled from '@emotion/styled';
-import { useAuthentication } from '../contexts/index';
+import { useAuthentication } from '../contexts/authentication';
 
 const Base = nav(tw`block bg-cyan relative
   lg:flex lg:items-stretch
