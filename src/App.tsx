@@ -3,30 +3,50 @@ import { Router } from '@reach/router';
 
 import { Home } from './routes/Home';
 import { User } from './routes/User';
-import { Project } from './routes/Project';
 import { Debug } from './routes/Debug';
 import { Guide } from './routes/Guide';
 import { MainMenu } from './components/MainMenu';
 import { CapabilitiesCheck } from './components/CapabilitiesCheck';
-import { FrontGate } from './components/FrontGate/index';
+import { LoginForm } from './components/LoginForm/index';
+import { useAuthentication } from './contexts/index';
 
 type Props = {};
 
-export const App: React.SFC<Props> = ({}) => (
-  <CapabilitiesCheck>
-    <FrontGate>
-      <MainMenu>
-        <Router>
-          <Home path="/" />
-          <Debug path="debug" />
-          <Guide path="guide" />
-          <User path=":userId" />
+const IfAuthenticated: React.FunctionComponent<{}> = ({ children }) => {
+  const { authentication } = useAuthentication();
+  return !!authentication ? <>{children}</> : null;
+};
 
-          {/* <User path=":userId">
+const IfAnonymous: React.FunctionComponent<{}> = ({ children }) => {
+  const { authentication } = useAuthentication();
+  return !!authentication ? null : <>{children}</>;
+};
+
+export const App: React.SFC<Props> = ({}) => {
+  const { setAuthentication } = useAuthentication();
+  return (
+    <CapabilitiesCheck>
+      <IfAnonymous>
+        <LoginForm
+          onAuthentication={(email, token, expires) =>
+            setAuthentication({ email, token, expires })
+          }
+        />
+      </IfAnonymous>
+      <IfAuthenticated>
+        <MainMenu>
+          <Router>
+            <Home path="/" />
+            <Debug path="debug" />
+            <Guide path="guide" />
+            <User path=":userId" />
+
+            {/* <User path=":userId">
       <Project path=":projectId" />
     </User> */}
-        </Router>
-      </MainMenu>
-    </FrontGate>
-  </CapabilitiesCheck>
-);
+          </Router>
+        </MainMenu>
+      </IfAuthenticated>
+    </CapabilitiesCheck>
+  );
+};

@@ -17,7 +17,7 @@ import 'codemirror/mode/markdown/markdown';
 import 'tailwindcss/css/preflight.css';
 
 import { IconContext } from 'react-icons';
-import { GlobalStyles } from './GlobalStyles';
+import { AuthenticationContainer } from './contexts/index';
 
 const isProduction = false; // FIXME implement this
 configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });
@@ -95,8 +95,9 @@ function renderApp() {
   render(
     <IconContext.Provider value={{ style: { verticalAlign: 'middle' } }}>
       <StoreContext.Provider value={store}>
-        <GlobalStyles />
-        <App />
+        <AuthenticationContainer.Provider>
+          <App />
+        </AuthenticationContainer.Provider>
       </StoreContext.Provider>
     </IconContext.Provider>,
     document.getElementById('root')

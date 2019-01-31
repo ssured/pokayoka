@@ -39,7 +39,7 @@ export type SignInEvent =
 export interface SignInContext {
   email: string;
   password: string;
-  token?: ServerAPIPost_Token_Response;
+  tokens: ServerAPIPost_Token_Response | null;
 }
 
 export const signInAssign: (
@@ -66,6 +66,7 @@ export const signInMachineConfig: MachineConfig<
   context: {
     email: '',
     password: '',
+    tokens: null,
   },
   initial: 'dataEntry',
   states: {

@@ -112,6 +112,7 @@
     "axios": "^0.18.0",
     "charwise": "^3.0.1",
     "codemirror": "^5.42.2",
+    "constate": "^1.0.0-alpha.7",
     "dlv": "^1.1.2",
     "encoding-down": "^6.0.1",
     "fast-json-patch": "^2.0.7",
