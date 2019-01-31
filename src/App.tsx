@@ -1,29 +1,22 @@
 import React from 'react';
-import { Router } from '@reach/router';
+import { Router, Link, navigate } from '@reach/router';
 
 import { Home } from './routes/Home';
 import { User } from './routes/User';
 import { Debug } from './routes/Debug';
 import { Guide } from './routes/Guide';
-import { MainMenu } from './components/MainMenu';
+import { Sync as SyncStatus } from './routes/Sync';
+
 import { CapabilitiesCheck } from './components/CapabilitiesCheck';
 import { LoginForm } from './components/LoginForm/index';
 import { useAuthentication } from './contexts/index';
+import { Grommet, Grid, Box, Button, Text } from 'grommet';
+import { Menu, Home as HomeIcon, Sync } from 'grommet-icons';
+import { useToggle } from 'react-use';
 
-type Props = {};
-
-const IfAuthenticated: React.FunctionComponent<{}> = ({ children }) => {
-  const { authentication } = useAuthentication();
-  return !!authentication ? <>{children}</> : null;
-};
-
-const IfAnonymous: React.FunctionComponent<{}> = ({ children }) => {
-  const { authentication } = useAuthentication();
-  return !!authentication ? null : <>{children}</>;
-};
-
-export const App: React.SFC<Props> = ({}) => {
-  const { isAuthenticated, login } = useAuthentication();
+export const App: React.SFC<{}> = ({}) => {
+  const { isAuthenticated, login, authentication } = useAuthentication();
+  const [sidebar, toggleSidebar] = useToggle(true);
   return (
     <CapabilitiesCheck>
       {!isAuthenticated && (
@@ -35,18 +28,86 @@ export const App: React.SFC<Props> = ({}) => {
       )}
 
       {isAuthenticated && (
-        <MainMenu>
-          <Router>
-            <Home path="/" />
-            <Debug path="debug" />
-            <Guide path="guide" />
-            <User path=":userId" />
+        <Grommet full>
+          <Grid
+            fill
+            rows={['auto', 'flex']}
+            columns={['flex', 'auto']}
+            areas={[
+              { name: 'header', start: [0, 0], end: [1, 0] },
+              { name: 'main', start: [0, 1], end: [0, 1] },
+              { name: 'sidebar', start: [1, 1], end: [1, 1] },
+            ]}
+          >
+            <Box
+              gridArea="header"
+              direction="row"
+              align="center"
+              justify="between"
+              pad="medium"
+              background="dark-2"
+            >
+              <Text>Pokayoka</Text>
 
-            {/* <User path=":userId">
-      <Project path=":projectId" />
-    </User> */}
-          </Router>
-        </MainMenu>
+              <Button
+                plain
+                focusIndicator={false}
+                icon={<Menu />}
+                label={authentication.email}
+                reverse
+                hoverIndicator
+                onClick={() => toggleSidebar()}
+              />
+            </Box>
+            {sidebar && (
+              <Box
+                gridArea="sidebar"
+                background="dark-3"
+                width="small"
+                animation={[
+                  { type: 'fadeIn', duration: 300 },
+                  { type: 'slideLeft', size: 'xlarge', duration: 150 },
+                ]}
+              >
+                <Button onClick={() => navigate('/sync')} hoverIndicator>
+                  <Box direction="row" justify="between" pad="small">
+                    <Text>Sync</Text>
+                    <Sync />
+                  </Box>
+                </Button>
+
+                {['First', 'Second', 'Third'].map(name => (
+                  <Button
+                    key={name}
+                    href="#"
+                    // icon={<HomeIcon />}
+                    hoverIndicator
+                  >
+                    <Box direction="row" justify="between" pad="small">
+                      <Text>
+                        {name} {name} {name}
+                      </Text>
+                      <HomeIcon />
+                    </Box>
+                  </Button>
+                ))}
+              </Box>
+            )}
+            <Box gridArea="main" justify="center" align="center">
+              <Router>
+                <Home path="/" />
+                <Debug path="debug" />
+                <Guide path="guide" />
+                <SyncStatus path="sync" />
+                <User path=":userId" />
+
+                {/* <User path=":userId">
+                  <Project path=":projectId" />
+                </User> */}
+              </Router>
+            </Box>
+          </Grid>
+        </Grommet>
       )}
     </CapabilitiesCheck>
   );

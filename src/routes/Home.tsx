@@ -3,7 +3,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Box, Flex, Heading, Text } from '../components/base';
-import { NLSfB } from '../components/NLSfB';
+// import { NLSfB } from '../components/NLSfB';
 
 interface HomeParams {}
 export const Home = observer((props: RouteComponentProps<HomeParams>) => (
@@ -27,6 +27,6 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => (
       <Link to="/nlsfb">Nlsfb</Link> -
     </Text>
 
-    <NLSfB />
+    {/* <NLSfB /> */}
   </Flex>
 ));
