@@ -4,7 +4,12 @@ import { observer } from 'mobx-react-lite';
 
 import { Box, Flex, Heading } from '../components/base';
 import { useAccount } from '../hooks/index';
-import { ConnectPouchDB, usePouchDB } from '../contexts/pouchdb';
+import {
+  ConnectPouchDB,
+  usePouchDB,
+  useSync,
+  useDoc,
+} from '../contexts/pouchdb';
 import { useAsync } from 'react-use';
 import PouchDB from 'pouchdb';
 import { Box as GBox, Text, Stack, Meter } from 'grommet';
@@ -27,108 +32,6 @@ const ShowDocs: React.FunctionComponent<{}> = ({}) => {
       <pre>{JSON.stringify(remoteInfo, null, 2)}</pre>
     </div>
   );
-};
-
-const useSync = (local: PouchDB.Database<{}>, remote: PouchDB.Database<{}>) => {
-  const [
-    lastPullChange,
-    setPullChange,
-  ] = useState<PouchDB.Replication.ReplicationResult<{}> | null>(null);
-  const [
-    lastPushChange,
-    setPushChange,
-  ] = useState<PouchDB.Replication.ReplicationResult<{}> | null>(null);
-  const [paused, setPaused] = useState<string | boolean>(false);
-  const [active, setActive] = useState<boolean>(true);
-  const [lastDenied, setDenied] = useState<{} | null>(null);
-  const [lastError, setError] = useState<{} | null>(null);
-  const [complete, setComplete] = useState<
-    PouchDB.Replication.SyncResultComplete<{}> | false
-  >(false);
-
-  const [maxPullPending, setMaxPullPending] = useState(-Infinity);
-  const [maxPushPending, setMaxPushPending] = useState(-Infinity);
-
-  const pullPending =
-    (lastPullChange && (lastPullChange as any).pending) || -Infinity;
-  const pushPending =
-    (lastPushChange && (lastPushChange as any).pending) || -Infinity;
-
-  if (pullPending > maxPullPending) {
-    setMaxPullPending(
-      pullPending + (lastPullChange ? lastPullChange.docs_read : 0)
-    );
-  }
-  if (pushPending > maxPushPending) {
-    setMaxPushPending(
-      pushPending + (lastPushChange ? lastPushChange.docs_read : 0)
-    );
-  }
-
-  const pullProgress: number | false =
-    maxPullPending > 0 && pullPending >= 0
-      ? Math.round((100 * (maxPullPending - pullPending)) / maxPullPending)
-      : false;
-  const pushProgress: number | false =
-    maxPushPending > 0 && pushPending >= 0
-      ? Math.round((100 * (maxPushPending - pushPending)) / maxPushPending)
-      : false;
-
-  const progress: number | false =
-    pullProgress === false && pushProgress === false
-      ? false
-      : pullProgress === false
-      ? pushProgress
-      : pushProgress === false
-      ? pullProgress
-      : Math.round(
-          (100 *
-            (maxPullPending - pullPending + maxPushPending - pushPending)) /
-            (maxPullPending + maxPushPending)
-        );
-
-  useEffect(
-    () => {
-      const sync = PouchDB.sync(local, remote, {
-        live: true,
-        retry: true,
-        // batch_size: 3, // FIXME lower on tiny devices
-        // batches_limit: 3,
-      })
-        .on('change', info => {
-          info.direction === 'pull'
-            ? setPullChange(info.change)
-            : setPushChange(info.change);
-        })
-        .on('paused', (err: {}) => {
-          setPaused(err ? JSON.stringify(err) : true);
-          setActive(false);
-        })
-        .on('active', () => {
-          setPaused(false);
-          setActive(true);
-        })
-        .on('denied', setDenied)
-        .on('complete', setComplete)
-        .on('error', setError);
-
-      return () => sync.cancel(); //
-    },
-    [local, remote]
-  );
-
-  return {
-    lastPushChange,
-    lastPullChange,
-    paused,
-    active,
-    lastDenied,
-    lastError,
-    complete,
-    pullProgress,
-    pushProgress,
-    progress,
-  };
 };
 
 const LabelledMeter: React.FunctionComponent<{
@@ -154,14 +57,18 @@ const LabelledMeter: React.FunctionComponent<{
   </GBox>
 );
 
-const SyncDBs: React.FunctionComponent<{}> = ({}) => {
-  const { local, remote } = usePouchDB()!;
+const DatabaseCard: React.FunctionComponent<{}> = ({}) => {
+  const { local, remote, name } = usePouchDB()!;
   const { active, progress } = useSync(local, remote);
+  const doc = useDoc<{ title: string }>(local, name);
   return (
-    <LabelledMeter
-      label="Progress"
-      value={progress === false ? (active ? 0 : 100) : progress}
-    />
+    <Box>
+      <Heading>{doc ? doc.title : name}</Heading>
+      <LabelledMeter
+        label="Progress"
+        value={progress === false ? (active ? 0 : 100) : progress}
+      />
+    </Box>
   );
 };
 
@@ -177,12 +84,9 @@ export const Sync = observer((props: RouteComponentProps<SyncParams>) => {
         : account.error
         ? 'Error'
         : account.value.databases.map(database => (
-            <Box key={database}>
-              <ConnectPouchDB dbname={database}>
-                <Heading>{database}</Heading>
-                <SyncDBs />
-              </ConnectPouchDB>
-            </Box>
+            <ConnectPouchDB key={database} dbname={database}>
+              <DatabaseCard />
+            </ConnectPouchDB>
           ))}
 
       {/* <Flex px={4} py={4}>

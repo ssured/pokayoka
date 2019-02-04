@@ -2,7 +2,7 @@ import React from 'react';
 import { Router, Link, navigate } from '@reach/router';
 
 import { Home } from './routes/Home';
-import { User } from './routes/User';
+import { Project } from './routes/Project';
 import { Debug } from './routes/Debug';
 import { Guide } from './routes/Guide';
 import { Sync as SyncStatus } from './routes/Sync';
@@ -47,7 +47,7 @@ export const App: React.SFC<{}> = ({}) => {
               pad="medium"
               background="dark-2"
             >
-              <Text>Pokayoka</Text>
+              <Text onClick={() => navigate('/')}>Pokayoka</Text>
 
               <Button
                 plain
@@ -99,7 +99,7 @@ export const App: React.SFC<{}> = ({}) => {
                 <Debug path="debug" />
                 <Guide path="guide" />
                 <SyncStatus path="sync" />
-                <User path=":userId" />
+                <Project path=":projectId" />
 
                 {/* <User path=":userId">
                   <Project path=":projectId" />
