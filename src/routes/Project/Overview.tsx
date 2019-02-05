@@ -1,14 +1,25 @@
 import React from 'react';
-import { useProject } from './index';
+import { useProjectAs } from './index';
 import { useObserver } from 'mobx-react-lite';
+import { RouteComponentProps } from '@reach/router';
 
 import { Box, Heading } from 'grommet';
 
-export const Overview: React.FunctionComponent<{}> = () => {
-  const project = useProject();
+export const Overview: React.FunctionComponent<
+  RouteComponentProps<{}>
+> = () => {
+  const project = useProjectAs(project => ({
+    current: project,
+    get cap() {
+      return project.title.toUpperCase();
+    },
+  }));
+
   return useObserver(() => (
     <Box>
-      <Heading>Project {project.title}</Heading>
+      <Heading>
+        Project {project.cap} {project.current.title}
+      </Heading>
       Overview
     </Box>
   ));

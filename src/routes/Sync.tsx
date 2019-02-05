@@ -1,5 +1,5 @@
 import { RouteComponentProps } from '@reach/router';
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Box, Flex, Heading } from '../components/base';
@@ -10,29 +10,23 @@ import {
   useSync,
   useDoc,
 } from '../contexts/pouchdb';
-import { useAsync } from 'react-use';
-import PouchDB from 'pouchdb';
+// import { useAsync } from 'resact-use';
 import { Box as GBox, Text, Stack, Meter } from 'grommet';
-// import {
-//   SparkLine,
-//   SparkLineValue,
-//   useSparkLine,
-// } from '../components/SparkLine';
 
 interface SyncParams {}
 
-const ShowDocs: React.FunctionComponent<{}> = ({}) => {
-  const { local, remote } = usePouchDB()!;
-  const localInfo = useAsync(() => local.info(), [local]);
-  const remoteInfo = useAsync(() => remote.info(), [remote]);
+// const ShowDocs: React.FunctionComponent<{}> = ({}) => {
+//   const { local, remote } = usePouchDB()!;
+//   const localInfo = useAsync(() => local.info(), [local]);
+//   const remoteInfo = useAsync(() => remote.info(), [remote]);
 
-  return (
-    <div>
-      <pre>{JSON.stringify(localInfo, null, 2)}</pre>
-      <pre>{JSON.stringify(remoteInfo, null, 2)}</pre>
-    </div>
-  );
-};
+//   return (
+//     <div>
+//       <pre>{JSON.stringify(localInfo, null, 2)}</pre>
+//       <pre>{JSON.stringify(remoteInfo, null, 2)}</pre>
+//     </div>
+//   );
+// };
 
 const LabelledMeter: React.FunctionComponent<{
   value: number;
@@ -77,8 +71,6 @@ export const Sync = observer((props: RouteComponentProps<SyncParams>) => {
 
   return (
     <Flex flexDirection="column">
-      {/* <Heading fontSize={[4, 5]}>SYNC STATUS</Heading> */}
-
       {account.loading
         ? 'loading'
         : account.error
@@ -88,12 +80,6 @@ export const Sync = observer((props: RouteComponentProps<SyncParams>) => {
               <DatabaseCard />
             </ConnectPouchDB>
           ))}
-
-      {/* <Flex px={4} py={4}>
-        <Box>Left</Box>
-        <Box mx="auto" />
-        <Box>Right</Box>
-      </Flex> */}
     </Flex>
   );
 });

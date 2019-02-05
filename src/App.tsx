@@ -1,5 +1,5 @@
 import React from 'react';
-import { Router, Link, navigate } from '@reach/router';
+import { Router, navigate } from '@reach/router';
 
 import { Home } from './routes/Home';
 import { Project } from './routes/Project/index';

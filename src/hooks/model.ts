@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { IAnyModelType, Instance, SnapshotIn } from 'mobx-state-tree';
+import { IAnyModelType, Instance, SnapshotIn, destroy } from 'mobx-state-tree';
 import { useDoc } from '../contexts/pouchdb';
 
 export const useModel: <T extends IAnyModelType>(
@@ -18,12 +18,13 @@ export const useModel: <T extends IAnyModelType>(
       if (instance == null) {
         setInstance(Model.create(doc, { db }));
       } else {
-        // instance.merge(doc);
+        // merge with the current doc
+        // applySnapshot(instance, doc);
       }
       return () => {
         if (instance) {
           // cache.set(getIdentifier(instance), getSnapshot(instance));
-          instance.destroy();
+          destroy(instance);
         }
       };
     },
