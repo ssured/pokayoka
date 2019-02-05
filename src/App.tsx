@@ -2,7 +2,7 @@ import React from 'react';
 import { Router, Link, navigate } from '@reach/router';
 
 import { Home } from './routes/Home';
-import { Project } from './routes/Project';
+import { Project } from './routes/Project/index';
 import { Debug } from './routes/Debug';
 import { Guide } from './routes/Guide';
 import { Sync as SyncStatus } from './routes/Sync';

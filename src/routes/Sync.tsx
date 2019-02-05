@@ -43,7 +43,7 @@ const LabelledMeter: React.FunctionComponent<{
       <Meter
         type="circle"
         background="light-2"
-        values={[{ label, value }]}
+        values={[{ label, value }] as any}
         size="xsmall"
         thickness="small"
       />

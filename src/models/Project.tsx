@@ -22,7 +22,7 @@ import { generateId } from '../utils/id';
 export const projectType = 'project';
 export const Project = base(projectType)
   .props({
-    name: t.string,
+    title: t.string,
     plans: t.optional(t.map(PlanRef), () => ({})),
   })
   .views(self => ({
@@ -32,8 +32,8 @@ export const Project = base(projectType)
   }))
   .actions(self => {
     return {
-      setName(name: string) {
-        self.name = name;
+      setName(title: string) {
+        self.title = title;
       },
       addPlan() {
         const plan = Plan.create({
@@ -53,7 +53,15 @@ export const Project = base(projectType)
         }
       },
     };
-  });
+  })
+  .actions(self => ({
+    // afterCreate() {
+    //   setInterval(() => {
+    //     const [title, index] = self.title.split('|');
+    //     self.setName([title, (index ? parseInt(index, 10) : 0) + 1].join('|'));
+    //   }, 50);
+    // },
+  }));
 
 export type TProjectInstance = Instance<typeof Project>;
 export type TProjectSnapshotIn = SnapshotIn<typeof Project>;

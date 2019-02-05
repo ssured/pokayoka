@@ -1,6 +1,6 @@
-import { RouteComponentProps, Link, navigate } from '@reach/router';
+import { RouteComponentProps, navigate } from '@reach/router';
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { observer, useObservable } from 'mobx-react-lite';
+import { observer } from 'mobx-react-lite';
 import { observable } from 'mobx';
 
 // import { Box, Flex, Heading, Text } from '../components/base';
@@ -19,13 +19,11 @@ import {
   types as t,
   SnapshotIn,
   Instance,
-  getEnv,
-  getType,
   onSnapshot,
-  IModelType,
   IAnyModelType,
 } from 'mobx-state-tree';
 import { OmitStrict } from 'type-zoo/types';
+import { useModel } from '../hooks/model';
 
 const Base = t.model('Base', { _id: t.identifier, _rev: t.string });
 
@@ -42,10 +40,13 @@ function isProjectV1Snapshot(obj: any): obj is SnapshotInProjectV1 {
   return !isProjectV2Snapshot(obj);
 }
 
+const toSnapshot1 = (snapshot: SnapshotInProjectV1) => snapshot;
+
 // VERSION 2
 const ProjectV2Model = t.model(
   'project',
   ((v1: typeof projectV1Props) => {
+    // change: v2 allows for multple images, v1 only 1
     const v2 = {
       ...projectV1Props,
       images: t.array(projectV1Props.image),
@@ -61,27 +62,17 @@ function isProjectV2Snapshot(obj: any): obj is SnapshotInProjectV2 {
   return /*!isProjectV3Snapshot(obj) &&*/ Array.isArray(obj.images);
 }
 
-const snapshot1ToSnapshot2: (
-  snapshot: SnapshotInProjectV1
-) => SnapshotInProjectV2 = snapshot => ({
-  ...snapshot,
-  images: [snapshot.image],
-});
+const toSnapshot2: (snapshot: AnySnapshot) => SnapshotInProjectV2 = snapshot =>
+  isProjectV1Snapshot(snapshot)
+    ? {
+        ...toSnapshot1(snapshot),
+        images: [snapshot.image],
+      }
+    : snapshot;
 
 // GENERAL IMPLEMENTATION
-const upgradeSnapshot = (
-  snapshot: SnapshotInProjectV1 | SnapshotInProjectV2
-): SnapshotInProjectV2 => {
-  let newSnapshot = snapshot;
-  if (isProjectV1Snapshot(newSnapshot)) {
-    newSnapshot = snapshot1ToSnapshot2(newSnapshot);
-  }
-  // for next version repeat:
-  // if (isProjectV2Snapshot(newSnapshot)) {
-  //   newSnapshot = snapshot2ToSnapshot3(newSnapshot);
-  // }
-  return newSnapshot;
-};
+type AnySnapshot = SnapshotInProjectV1 | SnapshotInProjectV2;
+// type CurrentSnapshot = SnapshotInProjectV2;
 
 const Project = t
   .compose(
@@ -89,38 +80,7 @@ const Project = t
     Base,
     ProjectV2Model
   )
-  .preProcessSnapshot(upgradeSnapshot as any);
-
-const useModel: <T extends IAnyModelType>(
-  Model: T,
-  db: PouchDB.Database,
-  id: string
-) => Instance<T> | null = (Model, db, id) => {
-  const doc = useDoc<SnapshotIn<typeof Model>>(db, id);
-  const [instance, setInstance] = useState<Instance<typeof Model> | null>(
-    /*cache.has(id) ? Model.create(cache.get(id)) : */ null
-  );
-
-  useEffect(
-    () => {
-      if (doc == null) return;
-      if (instance == null) {
-        setInstance(Model.create(doc));
-      } else {
-        // instance.merge(doc);
-      }
-      return () => {
-        if (instance) {
-          // cache.set(getIdentifier(instance), getSnapshot(instance));
-          instance.destroy();
-        }
-      };
-    },
-    [doc]
-  );
-
-  return instance;
-};
+  .preProcessSnapshot(toSnapshot2 as any);
 
 const ProjectCard: React.FunctionComponent<{}> = ({}) => {
   const { local, remote, name } = usePouchDB();

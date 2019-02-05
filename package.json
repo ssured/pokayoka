@@ -137,7 +137,7 @@
     "ltgt": "^2.2.1",
     "memdown": "^3.0.0",
     "mobx": "^5.9.0",
-    "mobx-react-lite": "^0.3.6",
+    "mobx-react-lite": "^0.3.7",
     "mobx-state-tree": "^3.10.2",
     "mobx-utils": "^5.1.0",
     "multilevel": "^7.2.3",
