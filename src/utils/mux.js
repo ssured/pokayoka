@@ -26,7 +26,7 @@ export const startClient = () => {
           // hello, world!
         });
 
-        pull(client.stuff(), pull.log());
+        pull(client.dbReplicationStream('bk0wb0a7sz'), pull.log());
       },
     }
   );

@@ -5,5 +5,8 @@ module.exports = {
 
     //source is a pull-stream (readable)
     stuff: 'source',
+
+    //source is a pull-stream (readable)
+    dbReplicationStream: 'source',
   },
 };

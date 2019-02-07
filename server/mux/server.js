@@ -1,6 +1,15 @@
 const MRPC = require('muxrpc');
 const pull = require('pull-stream');
-var ws = require('pull-ws');
+const ws = require('pull-ws');
+const defer = require('pull-defer');
+const toStream = require('pull-stream-to-stream');
+
+const PouchDB = require('pouchdb');
+const replicationStream = require('./pouchdb-replication-stream');
+PouchDB.plugin(replicationStream.plugin);
+PouchDB.adapter('writableStream', replicationStream.adapters.writableStream);
+
+var MemoryStream = require('memorystream');
 
 const { api } = require('./protocol');
 
@@ -18,6 +27,25 @@ module.exports = {
           cb(null, 'hello, ' + name + '!');
         },
         stuff: function() {
+          return pull.values([1, { a: 'A' }, 3, 4, 5]);
+        },
+        dbReplicationStream: function(name, since = 'now') {
+          const source = defer.source();
+
+          var dumpedString = '';
+          var stream = new MemoryStream();
+          stream.on('data', function(chunk) {
+            dumpedString += chunk.toString();
+          });
+          const db = new PouchDB(
+            `http://admin:admin@localhost:5984/${name}`,
+            {}
+          );
+
+          db.dump(stream, { since: 0 })
+            .then(() => console.log('dump', dumpedString))
+            .catch(err => console.error(err));
+
           return pull.values([1, { a: 'A' }, 3, 4, 5]);
         },
       });
