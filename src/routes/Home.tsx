@@ -79,7 +79,7 @@ type AnySnapshot = SnapshotInProjectV1 | SnapshotInProjectV2;
 const Project = t
   .compose(
     'Project',
-    base('Project'),
+    base,
     ProjectV2Model
   )
   .preProcessSnapshot(toSnapshot2 as any);
@@ -88,7 +88,7 @@ const ProjectCard: React.FunctionComponent<{}> = ({}) => {
   const { local, remote, name } = usePouchDB();
   const { active } = useSync(local, remote, { doc_ids: [name] });
   const activeDb = active ? remote : local;
-  const doc = useModel(
+  const project = useModel(
     Project,
     activeDb,
     name
@@ -98,59 +98,59 @@ const ProjectCard: React.FunctionComponent<{}> = ({}) => {
   const src = useAttachment(
     activeDb,
     name,
-    (doc && doc.images.length > 0 && doc.images[0].prefix) || null
+    (project && project.images.length > 0 && project.images[0].prefix) || null
   );
 
-  const [project, setProject] = useState<Instance<typeof Project> | null>(null);
-  useLayoutEffect(
-    () => {
-      const disposers: ((...args: any[]) => any)[] = [];
-      // use useLayoutEffect to go as fast as possible, could possibly block UI though
-      if (doc == null) return;
-      if (project) {
-        // project._merge_external_data(doc);
-      } else {
-        const p = Project.create(doc, {
-          db: local,
-          my: {
-            [Project.name]: {
-              my(project: Instance<typeof Project>) {
-                return observable({
-                  get capTitle() {
-                    return project.title.toUpperCase();
-                  },
-                });
-              },
-            },
-          },
-          // en dan in Project.views(self => ({
-          //   get my() { const my =  getEnv.my[getType(self).name]
-          //   if (typeof my === 'function') return my(self);
-          //   }
-          // }))
-          // en dan in template
-          // <p>{project.my.capTitle}</p>
-        });
-        setProject(p);
-        disposers.push(
-          onSnapshot(p, snapshot => {
-            local.put(snapshot).catch(err => {
-              if (err.code === 'CONFLICT') {
-                // mergeAndRetry()
-              }
-              throw err;
-            });
-          })
-        );
-      }
-      return () => {
-        disposers.forEach(disposer => disposer());
-        // someDataCache[doc._id] = getSnapshot(project);
-        // project.destroy(); // give back memory
-      };
-    },
-    [doc]
-  );
+  // const [project, setProject] = useState<Instance<typeof Project> | null>(null);
+  // useLayoutEffect(
+  //   () => {
+  //     const disposers: ((...args: any[]) => any)[] = [];
+  //     // use useLayoutEffect to go as fast as possible, could possibly block UI though
+  //     if (doc == null) return;
+  //     if (project) {
+  //       // project._merge_external_data(doc);
+  //     } else {
+  //       const p = Project.create(doc, {
+  //         db: local,
+  //         my: {
+  //           [Project.name]: {
+  //             my(project: Instance<typeof Project>) {
+  //               return observable({
+  //                 get capTitle() {
+  //                   return project.title.toUpperCase();
+  //                 },
+  //               });
+  //             },
+  //           },
+  //         },
+  //         // en dan in Project.views(self => ({
+  //         //   get my() { const my =  getEnv.my[getType(self).name]
+  //         //   if (typeof my === 'function') return my(self);
+  //         //   }
+  //         // }))
+  //         // en dan in template
+  //         // <p>{project.my.capTitle}</p>
+  //       });
+  //       setProject(p);
+  //       disposers.push(
+  //         onSnapshot(p, snapshot => {
+  //           local.put(snapshot).catch(err => {
+  //             if (err.code === 'CONFLICT') {
+  //               // mergeAndRetry()
+  //             }
+  //             throw err;
+  //           });
+  //         })
+  //       );
+  //     }
+  //     return () => {
+  //       disposers.forEach(disposer => disposer());
+  //       // someDataCache[doc._id] = getSnapshot(project);
+  //       // project.destroy(); // give back memory
+  //     };
+  //   },
+  //   [doc]
+  // );
 
   // const p = useObservable({
   //   current: null as Instance<typeof Project> | null,
@@ -172,7 +172,7 @@ const ProjectCard: React.FunctionComponent<{}> = ({}) => {
       gap="small"
       onClick={() => navigate(`/${name}`)}
     >
-      <Text>{(doc && doc.title) || name}</Text>
+      <Text>{(project && project.title) || name}</Text>
       {src && <Image src={src} fit="cover" />}
       <Anchor href="" label="Link" />
       <Button label="Button" onClick={() => {}} />

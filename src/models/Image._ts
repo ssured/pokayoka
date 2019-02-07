@@ -6,10 +6,11 @@ import {
   IStateTreeNode,
   isStateTreeNode,
 } from 'mobx-state-tree';
-import { base, referenceHandler } from './base';
+import { base } from './base';
 
 export const imageType = 'image';
-export const Image = base(imageType)
+export const Image = base
+  .named(imageType)
   .props({
     url: t.maybe(t.string),
   })
@@ -20,7 +21,7 @@ export const Image = base(imageType)
 
 // --- hygen generated code
 
-export const ImageRef = t.reference(Image, referenceHandler);
+// export const ImageRef = t.reference(Image, referenceHandler);
 export const isImage = (obj: IStateTreeNode): obj is TImageInstance =>
   isStateTreeNode(obj) && (obj as any).type === imageType;
 

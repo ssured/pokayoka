@@ -19,7 +19,7 @@ import {
 } from './base';
 import { getDeviceId, getSessionId, instanceId } from '../utils/id';
 
-import { Project } from '../models/Project';
+import { Project } from '../models/ProjectForm';
 import { Plan } from '../models/Plan';
 
 export const Store = BaseRoot.named('Store')

@@ -4,7 +4,6 @@ import { Router, navigate } from '@reach/router';
 import { Home } from './routes/Home';
 import { Project } from './routes/Project/index';
 import { Debug } from './routes/Debug';
-import { Guide } from './routes/Guide';
 import { Sync as SyncStatus } from './routes/Sync';
 
 import { CapabilitiesCheck } from './components/CapabilitiesCheck';
@@ -97,7 +96,6 @@ export const App: React.SFC<{}> = ({}) => {
               <Router>
                 <Home path="/" />
                 <Debug path="debug" />
-                <Guide path="guide" />
                 <SyncStatus path="sync" />
                 <Project path=":projectId" />
 

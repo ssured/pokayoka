@@ -13,9 +13,10 @@ import {
   getType,
   typecheck,
 } from 'mobx-state-tree';
-import { get, set, entries } from 'mobx';
+import { get, set } from 'mobx';
 import { merge, HamValue, isObject, THam } from './merge';
 import { winningRev } from '../utils/pouchdb';
+import { safeEntries } from '../utils/mobx';
 
 const hamType: IAnyComplexType = types.map(
   types.union(
@@ -54,7 +55,7 @@ const hamDlv = (_ham: THam, state: number, path: string[]): THam => {
 function initHam(state: number, obj: any): HamValue {
   if (isObject(obj)) {
     const ham: HamValue = [state, {}];
-    for (const [key, value] of entries(obj)) {
+    for (const [key, value] of safeEntries(obj)) {
       if (key === HAM_PATH) continue;
       ham[1][key] = initHam(state, value);
     }

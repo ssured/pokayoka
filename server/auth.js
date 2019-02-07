@@ -444,6 +444,8 @@ async function createToken(user = null) {
     await api.user.update(user);
   }
 
+  console.log('created token', token, 'for user', user);
+
   return token;
 }
 

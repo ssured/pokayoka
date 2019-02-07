@@ -4,7 +4,8 @@ import { useObserver } from 'mobx-react-lite';
 import { RouteComponentProps } from '@reach/router';
 
 import { Box, Heading } from 'grommet';
-import { BasicForm } from '../../models/Project';
+
+import { ProjectFormBasic } from '../../components/ProjectFormBasic';
 
 export const Overview: React.FunctionComponent<
   RouteComponentProps<{}>
@@ -22,7 +23,7 @@ export const Overview: React.FunctionComponent<
         Project {project.capitalized} {project.current.title}
       </Heading>
       Overview
-      <BasicForm project={project.current} />
+      <ProjectFormBasic project={project.current} />
     </Box>
   ));
 };

@@ -7,14 +7,11 @@ import {
   isStateTreeNode,
   getParent,
 } from 'mobx-state-tree';
-import { base, referenceHandler } from './base';
+import { base } from './base';
 import { ImageRef } from './Image';
+import { generateId } from '../utils/id';
 
-const identifier = t.optional(t.identifier, () =>
-  Math.random()
-    .toString(36)
-    .substr(2)
-);
+const identifier = t.optional(t.identifier, generateId);
 
 export const StepImage = t.model({
   id: identifier,
@@ -56,7 +53,8 @@ export const StepBullet = t
   }));
 
 export const stepType = 'step';
-export const Step = base(stepType)
+export const Step = base
+  .named(stepType)
   .props({
     title: t.string,
     images_: t.map(StepImage),
@@ -182,7 +180,7 @@ export const Step = base(stepType)
 
 // --- hygen generated code
 
-export const StepRef = t.reference(Step, referenceHandler);
+// export const StepRef = t.reference(Step, referenceHandler);
 export const isStep = (obj: IStateTreeNode): obj is TStepInstance =>
   isStateTreeNode(obj) && (obj as any).type === stepType;
 
