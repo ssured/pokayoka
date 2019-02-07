@@ -19,10 +19,13 @@ import { base, referenceHandler } from './base';
 import { Plan, PlanRef, IPlan } from './Plan';
 import { generateId } from '../utils/id';
 
+import styled from 'styled-components';
+
 export const projectType = 'project';
 export const Project = base(projectType)
   .props({
     title: t.string,
+    description: t.maybe(t.string),
     plans: t.optional(t.map(PlanRef), () => ({})),
   })
   .views(self => ({
@@ -32,7 +35,7 @@ export const Project = base(projectType)
   }))
   .actions(self => {
     return {
-      setName(title: string) {
+      setTitle(title: string) {
         self.title = title;
       },
       addPlan() {
@@ -77,32 +80,92 @@ export const isProject = (obj: IStateTreeNode): obj is TProjectInstance =>
 
 export const ProjectRef = t.reference(Project, referenceHandler);
 
+const SForm = styled('form')`
+  border: 2px solid red;
+  display: grid;
+  grid-template-columns: 1fr 1em 3fr;
+  grid-gap: 0.3em 0.6em;
+  grid-auto-flow: dense;
+  align-items: center;
+
+  input,
+  output,
+  textarea,
+  select,
+  button {
+    grid-column: 2 / 4;
+    width: auto;
+    margin: 0;
+  }
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    grid-column: 1 / 3;
+    justify-self: end;
+    margin: 0;
+  }
+
+  label,
+  input[type='checkbox'] + label,
+  input[type='radio'] + label {
+    width: auto;
+    padding: 0;
+    margin: 0;
+  }
+
+  textarea + label {
+    align-self: start;
+  }
+`;
+
 const _BasicForm: React.SFC<{ project: IProject }> = ({ project }) => (
   <div className="container">
-    <h3>Edit project {project.name}</h3>
+    <h3>Edit project {project.title}</h3>
     <Formik
       initialValues={getSnapshot(project)}
       onSubmit={(
         values: IProjectIn,
         { setSubmitting }: FormikActions<IProjectIn>
       ) => {
-        project.setName(values.name);
+        project.setTitle(values.title);
         setSubmitting(false);
       }}
-      render={() => (
-        <Form>
-          <label htmlFor="name">Project naam</label>
-          <Field
-            id="name"
-            name="name"
-            placeholder="Vul hier een naam in"
+      render={({
+        values,
+        errors,
+        touched,
+        handleChange,
+        handleBlur,
+        handleSubmit,
+        isSubmitting,
+      }) => (
+        <SForm onSubmit={handleSubmit}>
+          <label>Project naam</label>
+          <input
             type="text"
+            name="title"
+            placeholder="Vul hier een naam in van het project"
+            onChange={handleChange}
+            onBlur={handleBlur}
+            value={values.title}
           />
+          {errors.title && touched.title && errors.title}
 
-          <button type="submit" style={{ display: 'block' }}>
+          <label htmlFor="description">Beschrijving</label>
+          <textarea
+            name="description"
+            placeholder="Korte omschrijving"
+            onChange={handleChange}
+            onBlur={handleBlur}
+            value={values.description}
+            rows={10}
+          />
+          {errors.description && touched.description && errors.description}
+
+          <button type="submit" disabled={isSubmitting}>
             Submit
           </button>
-        </Form>
+        </SForm>
       )}
     />
   </div>

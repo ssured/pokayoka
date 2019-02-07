@@ -25,7 +25,9 @@ import {
 import { OmitStrict } from 'type-zoo/types';
 import { useModel } from '../hooks/model';
 
-const Base = t.model('Base', { _id: t.identifier, _rev: t.string });
+import { base } from '../models/base';
+
+// const base = t.model('Base', { _id: t.identifier, _rev: t.string });
 
 // VERSION 1
 const projectV1Props = {
@@ -77,7 +79,7 @@ type AnySnapshot = SnapshotInProjectV1 | SnapshotInProjectV2;
 const Project = t
   .compose(
     'Project',
-    Base,
+    base('Project'),
     ProjectV2Model
   )
   .preProcessSnapshot(toSnapshot2 as any);

@@ -16,6 +16,12 @@ export const base = (name: string) =>
       ...baseProperties,
       ...hamProperties,
     })
+    .actions(self => ({
+      // tslint:disable-next-line function-name
+      _setRev(rev: string) {
+        self._rev = rev;
+      },
+    }))
     //   .preProcessSnapshot(snapshot => snapshot)
     .actions(baseActions)
     .actions(hamActions);

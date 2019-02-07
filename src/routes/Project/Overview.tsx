@@ -4,13 +4,14 @@ import { useObserver } from 'mobx-react-lite';
 import { RouteComponentProps } from '@reach/router';
 
 import { Box, Heading } from 'grommet';
+import { BasicForm } from '../../models/Project';
 
 export const Overview: React.FunctionComponent<
   RouteComponentProps<{}>
 > = () => {
   const project = useProjectAs(project => ({
     current: project,
-    get cap() {
+    get capitalized() {
       return project.title.toUpperCase();
     },
   }));
@@ -18,9 +19,10 @@ export const Overview: React.FunctionComponent<
   return useObserver(() => (
     <Box>
       <Heading>
-        Project {project.cap} {project.current.title}
+        Project {project.capitalized} {project.current.title}
       </Heading>
       Overview
+      <BasicForm project={project.current} />
     </Box>
   ));
 };

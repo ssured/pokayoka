@@ -15,6 +15,7 @@ import {
 } from 'mobx-state-tree';
 import { get, set, entries } from 'mobx';
 import { merge, HamValue, isObject, THam } from './merge';
+import { winningRev } from '../utils/pouchdb';
 
 const hamType: IAnyComplexType = types.map(
   types.union(
@@ -106,7 +107,7 @@ export const hamActions = (self: Instance<typeof _HamModel>) => {
         onPatch(self, patch => {
           const path = splitJsonPath(patch.path);
 
-          if (isMerging > 0 || path[0] === HAM_PATH) {
+          if (isMerging > 0 || path[0] === HAM_PATH || path[0][0] === '_') {
             return;
           }
 
@@ -124,10 +125,14 @@ export const hamActions = (self: Instance<typeof _HamModel>) => {
     merge(incoming: any) {
       try {
         isMerging += 1;
-        const { [HAM_PATH]: inHam, ...inValue } = isStateTreeNode(incoming)
+        const { [HAM_PATH]: inHam, _rev: inRev, ...inValue } = isStateTreeNode(
+          incoming
+        )
           ? getSnapshot(incoming)
           : incoming;
-        const { [HAM_PATH]: curHam, ...curValue } = getSnapshot(self);
+        const { [HAM_PATH]: curHam, _rev: curRev, ...curValue } = getSnapshot(
+          self
+        ) as any;
 
         const result = merge(
           machineState(),
@@ -142,6 +147,7 @@ export const hamActions = (self: Instance<typeof _HamModel>) => {
             const newSnapshot = {
               ...result.resultValue,
               [HAM_PATH]: result.resultHam,
+              _rev: winningRev(inRev, curRev),
             };
             if (getType(self).is(newSnapshot)) {
               applySnapshot(self, newSnapshot);
