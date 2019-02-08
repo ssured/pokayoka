@@ -15,6 +15,14 @@ import 'tailwindcss/css/preflight.css';
 import { IconContext } from 'react-icons';
 import { AuthenticationContainer } from './contexts/authentication';
 
+if (
+  'serviceWorker' in navigator &&
+  (window.location.protocol === 'https:' ||
+    window.location.hostname === 'localhost')
+) {
+  navigator.serviceWorker.register('/sw.bundle.js');
+}
+
 const isProduction = false; // FIXME implement this
 configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });
 setLivelynessChecking(isProduction ? 'ignore' : 'error');

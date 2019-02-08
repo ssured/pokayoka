@@ -44,14 +44,16 @@ if (isDevelopment) {
   });
   app.use((req, res, next) => {
     const reqPath = req.url;
+    // console.log('GET ', reqPath);
     // find the file that the browser is looking for
     const file = reqPath.split('/').pop()!;
 
     if (
       file.match(
-        /^(index\.html)|(.*\.bundle\.js)|(.*\.worker\.js)|(.*\.hot-update\.js(on)?)$/
+        /^(index\.html)|(.*\.bundle\.js)|(.*\.worker\.js)|(.*\.hot-update\.js(on)?)|(precache-manifest\..*\.js)$/
       )
     ) {
+      res.contentType(file);
       res.end(
         devMiddleware.fileSystem.readFileSync(
           path.join(webpackConfig.output!.path!, file)

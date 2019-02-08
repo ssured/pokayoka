@@ -26,9 +26,6 @@ const NoAccountError = 1;
 const WrongPasswordError = 2;
 const NoResponseError = 3;
 
-const isSuccess = () => Math.random() >= 0.8;
-const generateErrCode = () => Math.floor(Math.random() * 3) + 1;
-
 const contactAuthService = (email: string, password: string) =>
   new Promise<
     | ServerAPIPost_Token_Response

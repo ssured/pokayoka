@@ -7,7 +7,10 @@ interface Check {
 
 const checks: Check[] = [
   {
-    check: 'serviceWorker' in navigator,
+    check:
+      'serviceWorker' in navigator &&
+      (window.location.protocol === 'https:' ||
+        window.location.hostname === 'localhost'),
     message: 'serviceWorker not supported',
   },
   {
