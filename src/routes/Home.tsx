@@ -174,7 +174,12 @@ const ProjectCard: React.FunctionComponent<{}> = ({}) => {
     >
       <Text>{(project && project.title) || name}</Text>
       {src && <Image src={src} fit="cover" />}
-      <Anchor href="" label="Link" />
+      <img
+        src={`http://localhost:5984/${name}/${name}/${project &&
+          project.images.length > 0 &&
+          project.images[0].prefix}?rev=${project && project._rev}`}
+      />
+      = <Anchor href="" label="Link" />
       <Button label="Button" onClick={() => {}} />
     </Box>
   );

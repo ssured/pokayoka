@@ -42,23 +42,25 @@ const contactAuthService = (email: string, password: string) =>
     return axios
       .create({ auth: { username: email, password } })
       .post('/auth/token')
-      .then(
-        (data: any) => {
-          console.log('got data', data);
-          resolve(data.data);
-        },
-        (data: any) => {
-          console.log('error data', data);
-          reject(data);
-        }
-      );
-    console.log(`email: ${email}`);
-    console.log(`password: ${password}`);
-
-    setTimeout(() => {
-      if (isSuccess()) resolve();
-      reject({ code: generateErrCode() });
-    }, 1500);
+      .then((data: any) => {
+        // Next we authorize to CouchDB itself
+        // this is not a no-op
+        // POST to _session returns a set-cookie header
+        // which is used to auth GET requests
+        // this way we make
+        const token = Object.keys(data.data)[0];
+        return axios
+          .create({ withCredentials: true })
+          .post('http://localhost:5984/_session', {
+            name: token,
+            password: token,
+          })
+          .then(() => resolve(data.data));
+      })
+      .catch((data: any) => {
+        console.log('error data', data);
+        reject(data);
+      });
   });
 
 export const LoginForm: React.FunctionComponent<{

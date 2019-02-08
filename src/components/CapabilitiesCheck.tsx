@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface Check {
   check: boolean;
@@ -7,15 +7,19 @@ interface Check {
 
 const checks: Check[] = [
   {
-    check: "serviceWorker" in navigator,
-    message: "serviceWorker not supported"
-  }
+    check: 'serviceWorker' in navigator,
+    message: 'serviceWorker not supported',
+  },
+  {
+    check: 'caches' in self,
+    message: 'serviceWorker not supported',
+  },
 ];
 
 const allSupported = checks.reduce((all, { check }) => all && check, true);
 
 export const CapabilitiesCheck: React.FunctionComponent<{}> = ({
-  children
+  children,
 }) => {
   if (allSupported) {
     return <React.Fragment>{children}</React.Fragment>;

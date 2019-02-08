@@ -134,7 +134,7 @@ const api = ((dbUrl, userDbName) => {
     },
   };
 
-  new Promise(res => setTimeout(res, 1000))
+  new Promise(res => setTimeout(res, 100))
     .then(() => usersList())
     .then(async ({ rows }) => {
       try {
@@ -197,9 +197,12 @@ const api = ((dbUrl, userDbName) => {
             }
           });
 
+            // TODO replace this with nano changes feed, pouchdb sometimes seems to lose connectien
         const usersDb = new PouchDB(`${dbUrl}/${userDbName}`, {
           adapter: 'http',
         });
+        console.log('START LISTENING FOR USERS CHANGE');
+
         usersDb
           .changes({ since: 'now', live: true, include_docs: true })
           .on('change', async change => {
@@ -208,6 +211,8 @@ const api = ((dbUrl, userDbName) => {
               doc: { tokens, databases },
             } = change;
             if (deleted || tokens == null) return;
+
+            console.log('GOT CHANGE', change);
 
             try {
               const roles = databases.map(name => `member-${name}`).sort();
@@ -443,8 +448,6 @@ async function createToken(user = null) {
     user.tokens = { ...user.tokens, ...token };
     await api.user.update(user);
   }
-
-  console.log('created token', token, 'for user', user);
 
   return token;
 }
