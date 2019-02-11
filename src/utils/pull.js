@@ -11,7 +11,7 @@ const dbChanges = (nano, name, options = {}) =>
     toPull.source(nano.db.changes(name, { since: 0, limit: 10, ...options })),
     flatMap(({ results, last_seq, pending }) =>
       results.length === 0
-        ? [{ last_seq, pending }]
+        ? [{ last_seq, pending, empty: true }]
         : results.map(result => ({ ...result, last_seq, pending }))
     )
   );
@@ -29,7 +29,8 @@ const dbChangesSince = (nano, name, options = {}) => {
         pull.through(({ last_seq, pending: pending_ }) => {
           since = last_seq;
           pending = pending_;
-        })
+        }),
+        pull.filter(({ empty }) => !empty)
       )
   );
 };
@@ -87,11 +88,6 @@ const shareSource = (sourceCreator, onActive, onInactive) => {
   };
 };
 
-// const mapPromise = fn =>
-//   pull.asyncMap((data, cb) =>
-//     fn(data).then(result => cb(null, result), error => cb(error))
-//   );
-
 const dbChangesSinceLive = (nano, name, options = {}) => {
   const sharedLive = shareSource(() => dbChangesLive(nano, name, options));
   return createLive(
@@ -101,9 +97,8 @@ const dbChangesSinceLive = (nano, name, options = {}) => {
 };
 
 module.exports = {
-  dbChanges,
-  dbChangesLive,
   dbChangesSince,
+  dbChangesLive,
   dbChangesSinceLive,
   shareSource,
 };

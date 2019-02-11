@@ -20,7 +20,7 @@ if (
   (window.location.protocol === 'https:' ||
     window.location.hostname === 'localhost')
 ) {
-  navigator.serviceWorker.register('/sw.bundle.js');
+  // navigator.serviceWorker.register('/sw.bundle.js');
 }
 
 const isProduction = false; // FIXME implement this
