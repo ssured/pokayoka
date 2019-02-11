@@ -5,5 +5,10 @@ module.exports = {
 
     //source is a pull-stream (readable)
     stuff: 'source',
+
+    // changesSince ,
+    changesSince: 'source',
+
+    log: 'sink',
   },
 };

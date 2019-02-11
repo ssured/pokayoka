@@ -10347,20 +10347,32 @@ pull-abortable@^4.1.1:
   resolved "https://registry.yarnpkg.com/pull-abortable/-/pull-abortable-4.1.1.tgz#b3ad5aefb4116b25916d26db89393ac98d0dcea1"
   integrity sha1-s61a77QRayWRbSbbiTk6yY0NzqE=
 
-pull-cat@^1.1.9:
+pull-cat@^1.1.11, pull-cat@^1.1.9:
   version "1.1.11"
   resolved "https://registry.yarnpkg.com/pull-cat/-/pull-cat-1.1.11.tgz#b642dd1255da376a706b6db4fa962f5fdb74c31b"
   integrity sha1-tkLdElXaN2pwa220+pYvX9t0wxs=
 
-pull-core@1:
+pull-core@1, pull-core@~1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/pull-core/-/pull-core-1.1.0.tgz#3d8127d6dac1475705c9800961f59d66c8046c8a"
   integrity sha1-PYEn1trBR1cFyYAJYfWdZsgEbIo=
+
+pull-debounce@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/pull-debounce/-/pull-debounce-1.1.1.tgz#ce80fd6843dc41a99aac6bb0e9a19d747400cc34"
+  integrity sha1-zoD9aEPcQamarGuw6aGddHQAzDQ=
+  dependencies:
+    pull-stream "^2.28.4"
 
 pull-defer@^0.2.2:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/pull-defer/-/pull-defer-0.2.3.tgz#4ee09c6d9e227bede9938db80391c3dac489d113"
   integrity sha512-/An3KE7mVjZCqNhZsr22k1Tx8MACnUnHZZNPSJ0S62td8JtYr/AiRG42Vz7Syu31SoTLUzVIe61jtT/pNdjVYA==
+
+pull-flatmap@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/pull-flatmap/-/pull-flatmap-0.0.1.tgz#13d494453e8f6d478e7bbfade6f8fe0197fa6bb7"
+  integrity sha1-E9SURT6PbUeOe7+t5vj+AZf6a7c=
 
 pull-goodbye@0.0.2:
   version "0.0.2"
@@ -10390,7 +10402,24 @@ pull-live@^1.0.1:
     pull-cat "^1.1.9"
     pull-stream "^3.4.0"
 
-pull-pushable@^2.0.0:
+pull-map-last@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/pull-map-last/-/pull-map-last-1.0.0.tgz#09d3d9fe004fe2d9e18d697ecffc7a27259946af"
+  integrity sha1-CdPZ/gBP4tnhjWl+z/x6JyWZRq8=
+
+pull-next@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/pull-next/-/pull-next-1.0.1.tgz#03f4d7d19872fc1114161e88db6ecf4c65e61e56"
+  integrity sha1-A/TX0Zhy/BEUFh6I227PTGXmHlY=
+
+pull-promise@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/pull-promise/-/pull-promise-2.0.0.tgz#48e72741fb81a7cacd2804df8c689a87167effa5"
+  integrity sha1-SOcnQfuBp8rNKATfjGiahxZ+/6U=
+  dependencies:
+    pull-stream "^3.4.3"
+
+pull-pushable@^2.0.0, pull-pushable@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/pull-pushable/-/pull-pushable-2.2.0.tgz#5f2f3aed47ad86919f01b12a2e99d6f1bd776581"
   integrity sha1-Xy867UethpGfAbEqLpnW8b13ZYE=
@@ -10407,7 +10436,14 @@ pull-stream-to-stream@~1.2.4:
   dependencies:
     pull-core "1"
 
-pull-stream@^3.2.3, pull-stream@^3.4.0, pull-stream@^3.6.8, pull-stream@^3.6.9:
+pull-stream@^2.28.4:
+  version "2.28.4"
+  resolved "https://registry.yarnpkg.com/pull-stream/-/pull-stream-2.28.4.tgz#7ea97413c1619c20bc3bdf9e10e91347b03253e4"
+  integrity sha1-fql0E8FhnCC8O9+eEOkTR7AyU+Q=
+  dependencies:
+    pull-core "~1.1.0"
+
+pull-stream@^3.2.3, pull-stream@^3.4.0, pull-stream@^3.4.3, pull-stream@^3.6.1, pull-stream@^3.6.8, pull-stream@^3.6.9:
   version "3.6.9"
   resolved "https://registry.yarnpkg.com/pull-stream/-/pull-stream-3.6.9.tgz#c774724cd63bc0984c3695f74c819aa02e977320"
   integrity sha512-hJn4POeBrkttshdNl0AoSCVjMVSuBwuHocMerUdoZ2+oIUzrWHFTwJMlbHND7OiKLVgvz6TFj8ZUVywUMXccbw==
@@ -10416,6 +10452,18 @@ pull-stream@~3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/pull-stream/-/pull-stream-3.5.0.tgz#1ee5b6f76fd3b3a49a5afb6ded5c0320acb3cfc7"
   integrity sha1-HuW292/Ts6SaWvtt7VwDIKyzz8c=
+
+pull-tap@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/pull-tap/-/pull-tap-1.1.1.tgz#a37e296f55caf2c59ed0a3c5ec470647ba87da40"
+  integrity sha512-KhXu0+OeITLFGiBBuJqJ54VNBNQI4uwmSmzW3+ssIpSUzjs91AHehQGTjOtpKsHJ+NBZd/CzrpAXzFupBrnYFg==
+  dependencies:
+    pull-stream "^3.6.1"
+
+pull-tee@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/pull-tee/-/pull-tee-2.0.1.tgz#0155f9e998301f47365e213df55cfee4c71e6d97"
+  integrity sha1-AVX56ZgwH0c2XiE99Vz+5McebZc=
 
 pull-through@^1.0.17:
   version "1.0.18"

@@ -197,7 +197,7 @@ const api = ((dbUrl, userDbName) => {
             }
           });
 
-            // TODO replace this with nano changes feed, pouchdb sometimes seems to lose connectien
+        // TODO replace this with nano changes feed, pouchdb sometimes seems to lose connectien
         const usersDb = new PouchDB(`${dbUrl}/${userDbName}`, {
           adapter: 'http',
         });
@@ -262,7 +262,8 @@ const api = ((dbUrl, userDbName) => {
       } catch (e) {
         console.error('usersList general error', e);
       }
-    });
+    })
+    .catch(err => console.error('USER MGT ERROR', err));
 
   return api;
 })('http://admin:admin@localhost:5984', 'users');
