@@ -1,5 +1,6 @@
 const pull = require('pull-stream');
 const pl = require('pull-level');
+const charwise = require('charwise');
 
 function encodeDecodeForPath(path) {
   const reversed = [...path].reverse();
@@ -32,6 +33,7 @@ function createSourceAndSinkFor(
 
   function createSource(options) {
     const query = {
+      keyEncoding: charwise,
       ...sourceOptions,
       ...options,
       ...('gte' in options ? { gte: encode(options.gte) } : {}),

@@ -47,8 +47,7 @@ export const startClient = () => {
       // pull(client.stuff(), pull.log());
       // read changes from server
       const db = 'bk0wb0a7sz';
-      const server = 'localhost:5984-uniq-id';
-      const key = `seq-${server}-${db}`;
+      const server = 'http://localhost:5984/';
 
       const indexedDbKeyFromProject = projectId => `project-${projectId}`;
 
@@ -95,9 +94,8 @@ export const startClient = () => {
               // make sure the attachment of the incoming document are added to the cache
               pull(
                 flatMap(({ doc }) =>
-                  Object.keys(doc._attachments || {}).map(
-                    filename =>
-                      `http://localhost:5984/${db}/${doc._id}/${filename}`
+                  Object.keys(doc._attachments || {}).map(filename =>
+                    [server, db, doc._id, filename].join('/')
                   )
                 ),
                 addToServiceWorkerCacheJobs()
