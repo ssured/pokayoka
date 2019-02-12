@@ -5,16 +5,12 @@ function encodeDecodeForPath(path) {
   const reversed = [...path].reverse();
 
   function encode(key) {
-    let root = [key];
-    reversed.forEach(key => (root = [key, root]));
-    return root;
+    return reversed.reduce((encoded, key) => [key, encoded], [key]);
   }
 
   function decode(nested) {
-    if (!Array.isArray(nested)) debugger;
-    let key = nested;
-    while (key[1]) key = key[1];
-    return key[0];
+    // if (!Array.isArray(nested)) debugger;
+    return reversed.reduce(nested => nested[1], nested)[0];
   }
 
   return {
@@ -26,7 +22,7 @@ function encodeDecodeForPath(path) {
 function createSourceAndSinkFor(
   db,
   path,
-  sourceOptions = { sync: false, live: true },
+  sourceOptions = { live: true, sync: false },
   sinkOptions = {
     windowSize: 100,
     windowTime: 100,
@@ -35,13 +31,16 @@ function createSourceAndSinkFor(
   const { encode, decode } = encodeDecodeForPath(path);
 
   function createSource(options) {
+    const query = {
+      ...sourceOptions,
+      ...options,
+      ...('gte' in options ? { gte: encode(options.gte) } : {}),
+      ...('gt' in options ? { gt: encode(options.gt) } : {}),
+      ...('lte' in options ? { lte: encode(options.lte) } : {}),
+      ...('lt' in options ? { lt: encode(options.lt) } : {}),
+    };
     return pull(
-      pl.read(db, {
-        ...sourceOptions,
-        ...options,
-        gte: 'gte' in options && encode(options.gte),
-        lte: 'lte' in options && encode(options.lte),
-      }),
+      pl.read(db, query),
       pull.map(item => ({ ...item, key: decode(item.key) }))
     );
   }

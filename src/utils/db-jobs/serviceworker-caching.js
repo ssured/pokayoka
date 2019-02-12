@@ -1,18 +1,24 @@
 import pull from 'pull-stream';
 import { tap } from 'pull-tap';
 import paraMap from 'pull-paramap';
+import createAbortable from 'pull-abortable';
 
 // USAGE:
 // import { createSourceAndSinkFor } from './db-jobs/helpers';
 // import { provideServiceWorkerCaching } from './db-jobs/serviceworker-caching';
 
-// const addUrlsToServiceWorkerCache = provideServiceWorkerCaching(
-//   createSourceAndSinkFor(level, ['jobs', 'add_to_cache'])
-// );
+// const {
+//   startServiceWorkerCacheJobs,
+//   addToServiceWorkerCacheJobs,
+// } = provideServiceWorkerCaching({
+//   ...createSourceAndSinkFor(level, ['jobs', 'add_to_cache']),
+//   cacheName: db,
+// });
+// const abortCacheJobs = startServiceWorkerCacheJobs();
 
 // pull(
 //   ... stream of URL strings
-//   addUrlsToServiceWorkerCache()
+//   addToServiceWorkerCacheJobs()
 // )
 
 const defaultOptions = {
@@ -22,44 +28,63 @@ const defaultOptions = {
   parallelDownloads: 5,
 };
 export function provideServiceWorkerCaching(options) {
-  const { parallelDownloads, createSource, createSink, cacheName } = {
+  const { createSource, createSink, cacheName, parallelDownloads } = {
     ...defaultOptions,
     ...options,
   };
-  // process add_to_cache jobs for Db
-  pull(
-    createSource({
-      gte: null,
-      lte: undefined,
-      live: true,
-    }),
 
-    pull.filter(({ value }) => !!value), // not needed?
-    paraMap(
-      ({ key, value }, cb) =>
-        caches
-          .open(cacheName)
-          .then(cache =>
-            cache.add(new Request(key, { credentials: 'include' }))
-          )
-          .then(
-            // when succeeded, remove the job
-            () => cb(null, { key, type: 'del' }),
-            // if failed, write back into level
-            () =>
-              cb(null, {
-                key,
-                value: { ...value, tries: (value.tries || 0) + 1 },
-              })
-          ),
-      parallelDownloads,
-      false // order is not important
-    ),
-    tap(console.log),
-    createSink({ windowSize: parallelDownloads })
-  );
+  function startServiceWorkerCacheJobs() {
+    const abortable = createAbortable();
 
-  return function addToServiceWorkerCacheJobs() {
+    // process add_to_cache jobs for Db
+    pull(
+      createSource({
+        // all non empty strings
+        gt: '',
+        lt: [],
+
+        // keep listening to new jobs
+        old: true,
+        live: true,
+        sync: false,
+      }),
+      abortable,
+      paraMap(
+        ({ key, value = {} }, cb) =>
+          caches
+            .open(cacheName)
+            .then(cache =>
+              cache.add(new Request(key, { credentials: 'include' }))
+            )
+            .then(
+              // when succeeded, remove the job
+              () => cb(null, { key, type: 'del' }),
+              // if failed, write back into level
+              () =>
+                cb(null, {
+                  key,
+                  value: {
+                    ...value,
+                    tries: (value.tries || []).concat(new Date().toISOString()),
+                  },
+                })
+            ),
+        parallelDownloads,
+        false // order is not important
+      ),
+      tap(console.log),
+      createSink({ windowSize: parallelDownloads })
+    );
+
+    return abortable.abort;
+  }
+
+  function addToServiceWorkerCacheJobs() {
     return pull(pull.map(url => ({ key: url, value: {} })), createSink());
+  }
+
+  return {
+    startServiceWorkerCacheJobs,
+    addToServiceWorkerCacheJobs,
   };
 }

@@ -52,18 +52,23 @@ export const startClient = () => {
 
       const indexedDbKeyFromProject = projectId => `project-${projectId}`;
 
+      const dbName = indexedDbKeyFromProject(db);
       const level = levelUp(
-        encode(levelJs(indexedDbKeyFromProject(db)), {
+        encode(levelJs(dbName), {
           keyEncoding: charwise,
           valueEncoding: 'json',
         })
       );
 
       const LAST_SEQ = ['last_seq'];
-      const addUrlsToServiceWorkerCache = provideServiceWorkerCaching({
+      const {
+        startServiceWorkerCacheJobs,
+        addToServiceWorkerCacheJobs,
+      } = provideServiceWorkerCaching({
         ...createSourceAndSinkFor(level, ['jobs', 'add_to_cache']),
-        cacheName: db,
+        cacheName: dbName,
       });
+      const abortCacheJobs = startServiceWorkerCacheJobs();
 
       // sync documents
       level
@@ -95,13 +100,17 @@ export const startClient = () => {
                       `http://localhost:5984/${db}/${doc._id}/${filename}`
                   )
                 ),
-                addUrlsToServiceWorkerCache()
+                addToServiceWorkerCacheJobs()
               ),
             ]),
             // muxMap(({ doc, seq }) => [{ key: doc._id, value: doc }]),
             // flatMap(ops => ops), // flatten stream
             // pull.filter(op => !!op), // remove empty items
-            pull.map(({ doc }) => ({ key: doc._id, value: doc })),
+            pull.map(({ doc, deleted }) => ({
+              key: doc._id,
+              value: doc,
+              type: deleted ? 'del' : 'put',
+            })),
             pl.write(level, { windowSize: 100, windowTime: 100 })
           );
         });
