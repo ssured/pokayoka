@@ -2,7 +2,7 @@ import pull from 'pull-stream';
 import { tap } from 'pull-tap';
 import paraMap from 'pull-paramap';
 import createAbortable from 'pull-abortable';
-
+import Backoff from '../backoff';
 // USAGE:
 // import { createSourceAndSinkFor } from './db-jobs/helpers';
 // import { provideServiceWorkerCaching } from './db-jobs/serviceworker-caching';
@@ -35,6 +35,7 @@ export function provideServiceWorkerCaching(options) {
 
   function startServiceWorkerCacheJobs() {
     const abortable = createAbortable();
+    const backoff = new Backoff(0, 100, 5000, 1.5);
 
     // process add_to_cache jobs for Db
     pull(
@@ -49,6 +50,9 @@ export function provideServiceWorkerCaching(options) {
         sync: false,
       }),
       abortable,
+      pull.asyncMap((item, cb) =>
+        setTimeout(() => cb(null, item), backoff.current)
+      ),
       paraMap(
         ({ key, value = {} }, cb) =>
           caches
@@ -58,16 +62,21 @@ export function provideServiceWorkerCaching(options) {
             )
             .then(
               // when succeeded, remove the job
-              () => cb(null, { key, type: 'del' }),
+              () => {
+                backoff.success();
+                cb(null, { key, type: 'del' });
+              },
               // if failed, write back into level
-              () =>
+              () => {
+                backoff.fail();
                 cb(null, {
                   key,
                   value: {
                     ...value,
                     tries: (value.tries || []).concat(new Date().toISOString()),
                   },
-                })
+                });
+              }
             ),
         parallelDownloads,
         false // order is not important
