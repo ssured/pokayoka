@@ -10,14 +10,15 @@ import encode from 'encoding-down';
 import levelJs from 'level-js';
 import charwise from 'charwise';
 // import sub from 'subleveldown';
-// import { tap } from 'pull-tap';
-import mux from '@expo/mux';
+import { tap } from 'pull-tap';
+// import mux from '@expo/mux';
 import flatMap from 'pull-flatmap';
 // import paraMap from 'pull-paramap';
 
 import { createSourceAndSinkFor } from './db-jobs/helpers';
 import { provideServiceWorkerCaching } from './db-jobs/serviceworker-caching';
 import { provideServerUpdater } from './db-jobs/server-updater';
+import { notifyUpdate } from '../global';
 
 /** BEGIN SETUP CODE */
 
@@ -82,7 +83,8 @@ export const startClient = () => {
 
       const { startUpdating, enqueueUpdate } = provideServerUpdater({
         ...createSourceAndSinkFor(level, ['jobs', 'send_to_server']),
-        createServerThrough: () => client.merge(db),
+        createServerThrough: () => client.merge(),
+        databaseName: db,
       });
       /* const stopUpdating = */ startUpdating();
 
@@ -91,7 +93,6 @@ export const startClient = () => {
         .get(LAST_SEQ)
         .catch(e => 0) // if not known, start from 0. idempotent because server = truth
         .then(since => {
-          console.log({ since });
           pull(
             client.changesSince(db, {
               since,
@@ -108,7 +109,7 @@ export const startClient = () => {
                 })),
                 pl.write(level, { windowSize: 1, windowTime: 1 })
               ),
-              // make sure the attachment of the incoming document are added to the cache
+              // make sure the attachment of the incoming documents are added to the cache
               pull(
                 flatMap(({ doc }) =>
                   Object.keys(doc._attachments || {}).map(filename =>
@@ -130,7 +131,13 @@ export const startClient = () => {
           );
         });
 
-      pull(pull.once({ _id: 'test', data: 'data' }), enqueueUpdate());
+      // listen to global update stream
+      /** FIXME this should be more precise */
+      pull(
+        notifyUpdate.listen(),
+        tap(snapshot => console.log('merge snapshot', snapshot)),
+        enqueueUpdate()
+      );
 
       console.log('done onconnect');
     },

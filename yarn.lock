@@ -10435,6 +10435,13 @@ pull-next@^1.0.1:
   resolved "https://registry.yarnpkg.com/pull-next/-/pull-next-1.0.1.tgz#03f4d7d19872fc1114161e88db6ecf4c65e61e56"
   integrity sha1-A/TX0Zhy/BEUFh6I227PTGXmHlY=
 
+pull-notify@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/pull-notify/-/pull-notify-0.1.1.tgz#6f86ff95d270b89c3ebf255b6031b7032dc99cca"
+  integrity sha1-b4b/ldJwuJw+vyVbYDG3Ay3JnMo=
+  dependencies:
+    pull-pushable "^2.0.0"
+
 pull-paramap@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/pull-paramap/-/pull-paramap-1.2.2.tgz#51a4193ce9c8d7215d95adad45e2bcdb8493b23a"

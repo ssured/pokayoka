@@ -1,5 +1,6 @@
 import pull from 'pull-stream';
 import createAbortable from 'pull-abortable';
+import { tap } from 'pull-tap';
 
 import { generateId } from '../../utils/id';
 
@@ -25,9 +26,10 @@ const defaultOptions = {
   // createSource,
   // createSink,
   // createServerThrough,
+  // databaseName
 };
 export function provideServerUpdater(options) {
-  const { createSource, createSink, createServerThrough } = {
+  const { createSource, createSink, createServerThrough, databaseName } = {
     ...defaultOptions,
     ...options,
   };
@@ -48,12 +50,12 @@ export function provideServerUpdater(options) {
       abortable,
       // tap(doc => console.log('server-updater start', doc)),
       createServerThrough(),
+      tap(doc => console.log('server-updater', doc)),
       pull.map(({ key, value, ok }) => ({
         key,
         value: ok ? null : value,
         type: ok ? 'del' : 'put',
       })),
-      // tap(doc => console.log('server-updater', doc)),
       createSink({ windowSize: 1 })
     );
 
@@ -61,10 +63,15 @@ export function provideServerUpdater(options) {
   }
 
   function enqueueUpdate() {
-    console.log('enqueueUpdate');
     return pull(
-      pull.map(doc => ({ key: generateId(), value: doc })),
-      createSink()
+      pull.map(doc => {
+        return {
+          key: generateId(),
+          value: { doc, databaseName },
+          type: 'put',
+        };
+      }),
+      createSink({ windowSize: 1 })
     );
   }
 

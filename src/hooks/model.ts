@@ -11,6 +11,7 @@ import { useDoc } from '../contexts/pouchdb';
 import { merge, HamValue } from '../mst-ham/merge';
 import { HAM_PATH } from '../mst-ham/index';
 import { winningRev } from '../utils/pouchdb';
+import { notifyUpdate } from '../global';
 
 const getMachineState = () => Date.now();
 
@@ -73,9 +74,10 @@ export const useModel: <T extends IAnyModelType>(
           db,
           onSnapshot(snapshot: SnapshotOut<typeof Model>) {
             console.log('put snapshot', snapshot);
-            upsert(db, snapshot).then(result => {
-              instance && instance._setRev(result.rev);
-            });
+            notifyUpdate(snapshot);
+            // upsert(db, snapshot).then(result => {
+            //   instance && instance._setRev(result.rev);
+            // });
           },
         })
       );

@@ -160,6 +160,7 @@
     "pull-live": "^1.0.1",
     "pull-map-last": "^1.0.0",
     "pull-next": "^1.0.1",
+    "pull-notify": "^0.1.1",
     "pull-paramap": "^1.2.2",
     "pull-promise": "^2.0.0",
     "pull-pushable": "^2.2.0",
