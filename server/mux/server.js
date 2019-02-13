@@ -24,7 +24,7 @@ module.exports = {
           return pull.values([1, { a: 'A' }, 3, 4, 5]);
         },
         changesSince: function(name, options = {}) {
-          console.log('changesSince', name, options);
+          // console.log('changesSince', name, options);
           // return pull.values([{ name, options }]);
           return dbChangesSinceLive(nano, name, options);
         },
@@ -34,6 +34,13 @@ module.exports = {
             item => console.log('mux log', item),
             () => console.log('mux log ended')
           );
+        },
+        merge: function(database) {
+          // const db = nano.use(database);
+          return pull.map(request => ({
+            ...request,
+            ok: true,
+          }));
         },
       });
       const serverStream = server.createStream();

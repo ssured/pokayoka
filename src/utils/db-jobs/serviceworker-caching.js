@@ -82,7 +82,7 @@ export function provideServiceWorkerCaching(options) {
         parallelDownloads,
         false // order is not important
       ),
-      tap(console.log),
+      // tap(console.log),
       createSink({ windowSize: parallelDownloads })
     );
 

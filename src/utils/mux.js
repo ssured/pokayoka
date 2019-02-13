@@ -17,13 +17,42 @@ import flatMap from 'pull-flatmap';
 
 import { createSourceAndSinkFor } from './db-jobs/helpers';
 import { provideServiceWorkerCaching } from './db-jobs/serviceworker-caching';
+import { provideServerUpdater } from './db-jobs/server-updater';
+
+/** BEGIN SETUP CODE */
+
+// read changes from server
+const db = 'bk0wb0a7sz';
+const server = 'http://localhost:5984';
+
+const indexedDbKeyFromProject = projectId => `project-${projectId}`;
+
+const dbName = indexedDbKeyFromProject(db);
+const level = levelUp(
+  encode(levelJs(dbName), {
+    keyEncoding: charwise,
+    valueEncoding: 'json',
+  })
+);
+
+const LAST_SEQ = ['last_seq'];
+const {
+  startServiceWorkerCacheJobs,
+  addToServiceWorkerCacheJobs,
+} = provideServiceWorkerCaching({
+  ...createSourceAndSinkFor(level, ['jobs', 'add_to_cache']),
+  cacheName: dbName,
+});
+/* const abortCacheJobs = */ startServiceWorkerCacheJobs();
+
+/** END SETUP CODE */
 
 let client = null;
 
-const muxMap = fn =>
-  pull.asyncMap((data, cb) =>
-    mux(fn(data)).then(result => cb(null, result), error => cb(error))
-  );
+// const muxMap = fn =>
+//   pull.asyncMap((data, cb) =>
+//     mux(fn(data)).then(result => cb(null, result), error => cb(error))
+//   );
 
 export const getClient = () => client;
 
@@ -36,38 +65,26 @@ export const startClient = () => {
       client = MRPC(api, null)(); //remoteApi, localApi
       const clientStream = client.createStream();
       pull(clientStream, stream, clientStream);
-      console.log('PULL CONNECT');
 
-      client.hello('world', function(err, value) {
-        if (err) throw err;
-        console.log(value);
-        // hello, world!
-      });
+      // console.log('PULL CONNECT');
 
+      // async call
+      // client.hello('world', function(err, value) {
+      //   if (err) throw err;
+      //   console.log(value);
+      // });
+
+      // source example
       // pull(client.stuff(), pull.log());
-      // read changes from server
-      const db = 'bk0wb0a7sz';
-      const server = 'http://localhost:5984/';
 
-      const indexedDbKeyFromProject = projectId => `project-${projectId}`;
+      // sink example
+      // pull(pull.values([1, 2, 3]), client.log());
 
-      const dbName = indexedDbKeyFromProject(db);
-      const level = levelUp(
-        encode(levelJs(dbName), {
-          keyEncoding: charwise,
-          valueEncoding: 'json',
-        })
-      );
-
-      const LAST_SEQ = ['last_seq'];
-      const {
-        startServiceWorkerCacheJobs,
-        addToServiceWorkerCacheJobs,
-      } = provideServiceWorkerCaching({
-        ...createSourceAndSinkFor(level, ['jobs', 'add_to_cache']),
-        cacheName: dbName,
+      const { startUpdating, enqueueUpdate } = provideServerUpdater({
+        ...createSourceAndSinkFor(level, ['jobs', 'send_to_server']),
+        createServerThrough: () => client.merge(db),
       });
-      const abortCacheJobs = startServiceWorkerCacheJobs();
+      /* const stopUpdating = */ startUpdating();
 
       // sync documents
       level
@@ -113,8 +130,7 @@ export const startClient = () => {
           );
         });
 
-      // send data to server
-      pull(pull.values([1, 2, 3]), client.log());
+      pull(pull.once({ _id: 'test', data: 'data' }), enqueueUpdate());
 
       console.log('done onconnect');
     },

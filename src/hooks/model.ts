@@ -65,32 +65,29 @@ export const useModel: <T extends IAnyModelType>(
     /*cache.has(id) ? Model.create(cache.get(id)) : */ null
   );
 
-  useEffect(
-    () => {
-      if (doc == null) return;
-      if (instance == null) {
-        setInstance(
-          Model.create(doc, {
-            db,
-            onSnapshot(snapshot: SnapshotOut<typeof Model>) {
-              console.log('put snapshot', snapshot);
-              upsert(db, snapshot).then(result => {
-                instance && instance._setRev(result.rev);
-              });
-            },
-          })
-        );
-      } else {
-        console.log('will merge doc', doc);
-        instance.merge(doc);
-        console.log(JSON.stringify(getSnapshot(instance), null, 2));
-        // merge with the current doc
-        // applySnapshot(instance, doc);
-      }
-      //   return () => {};
-    },
-    [doc]
-  );
+  useEffect(() => {
+    if (doc == null) return;
+    if (instance == null) {
+      setInstance(
+        Model.create(doc, {
+          db,
+          onSnapshot(snapshot: SnapshotOut<typeof Model>) {
+            console.log('put snapshot', snapshot);
+            upsert(db, snapshot).then(result => {
+              instance && instance._setRev(result.rev);
+            });
+          },
+        })
+      );
+    } else {
+      // console.log('will merge doc', doc);
+      instance.merge(doc);
+      // console.log(JSON.stringify(getSnapshot(instance), null, 2));
+      // merge with the current doc
+      // applySnapshot(instance, doc);
+    }
+    //   return () => {};
+  }, [doc]);
 
   useEffect(() => {
     return () => {

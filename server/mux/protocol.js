@@ -10,5 +10,7 @@ module.exports = {
     changesSince: 'source',
 
     log: 'sink',
+
+    merge: 'duplex',
   },
 };
