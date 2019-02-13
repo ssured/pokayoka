@@ -43,11 +43,12 @@ function createSourceAndSinkFor(
     };
     return pull(
       pl.read(db, query),
+      pull.filter(({ type }) => type !== 'del'), // filter delete tasks made by createSink
       pull.map(item => ({ ...item, key: decode(item.key) }))
     );
   }
 
-  function createSink(options) {
+  function createSink(options = {}) {
     return pull(
       pull.map(item => ({ ...item, key: encode(item.key) })),
       pl.write(db, { ...sinkOptions, ...options })
