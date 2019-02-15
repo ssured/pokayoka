@@ -1,19 +1,20 @@
 declare module 'charwise' {
-  interface Json {
-    [x: string]: string | number | boolean | Date | Json | JsonArray;
-  }
-
-  interface JsonArray
-    extends Array<string | number | boolean | Date | Json | JsonArray> {}
-
-  type jsonSerializable = string | number | boolean | Date | Json | JsonArray;
+  export type CharwiseKey =
+    | null
+    | false
+    | true
+    | number
+    | string
+    | undefined
+    | CharwiseArray;
+  interface CharwiseArray extends Array<CharwiseKey> {}
 
   const charwise: {
     type: 'charwise';
-    encode: (obj: jsonSerializable) => string;
-    decode: (str: string) => jsonSerializable;
+    encode: (obj: CharwiseKey) => string;
+    decode: (str: string) => CharwiseKey;
     buffer: false;
   };
 
-  export = charwise;
+  export default charwise;
 }
