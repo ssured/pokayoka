@@ -64,7 +64,14 @@ export const startClient = () => {
     onConnect: (err, stream) => {
       if (err) throw new Error(err);
       client = MRPC(api, null)(); //remoteApi, localApi
-      const clientStream = client.createStream();
+      const clientStream = client.createStream(err =>
+        console.log('mux stream ended with', err)
+      );
+      // https://github.com/ssbc/secret-stack/blob/bcb91e0b072fe6734301d89159bb55f688cb639f/index.js#L178-L180
+      client.once('closed', () => {
+        console.log('mux stream client closed');
+      });
+
       pull(clientStream, stream, clientStream);
 
       // console.log('PULL CONNECT');
@@ -102,6 +109,7 @@ export const startClient = () => {
             tee([
               // keep track of the latest seq seen in the stream, useful for restarting
               pull(
+                pull.filter(({ seq }) => !!seq),
                 debounce(100), // debounce as we do not need to write all intermediate values
                 pull.map(({ seq }) => ({
                   key: LAST_SEQ,

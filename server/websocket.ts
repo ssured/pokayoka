@@ -19,7 +19,7 @@ import {
 } from './protocolv1';
 
 import { merge, HamValue } from '../src/mst-ham/merge';
-import { currentState } from '../src/utils/ham';
+import { currentState } from '../src/global';
 import { HAM_PATH } from '../src/mst-ham';
 
 const server = nano('http://localhost:5984');
