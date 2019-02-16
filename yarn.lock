@@ -12123,7 +12123,7 @@ stream-shift@^1.0.0:
   resolved "https://registry.yarnpkg.com/stream-shift/-/stream-shift-1.0.0.tgz#d5c752825e5367e786f78e18e445ea223a155952"
   integrity sha1-1cdSgl5TZ+eG944Y5EXqIjoVWVI=
 
-stream-to-pull-stream@^1.7.1:
+stream-to-pull-stream@^1.7.1, stream-to-pull-stream@^1.7.2:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/stream-to-pull-stream/-/stream-to-pull-stream-1.7.2.tgz#757609ae1cebd33c7432d4afbe31ff78650b9dde"
   integrity sha1-dXYJrhzr0zx0MtSvvjH/eGULnd4=

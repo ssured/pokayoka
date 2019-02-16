@@ -5,6 +5,7 @@ const next = require('pull-next');
 const createPushable = require('pull-pushable');
 const createLive = require('pull-live');
 const createAbortable = require('pull-abortable');
+// const streamToPull = require('stream-to-pull-stream');
 
 const dbChanges = (nano, name, options = {}) =>
   pull(
@@ -37,6 +38,8 @@ const dbChangesSince = (nano, name, options = {}) => {
 
 const dbChangesLive = (nano, name, options = {}) => {
   const feed = nano.db.follow(name, { ...options, since: 'now' });
+  // const source = streamToPull(nano.db.follow(name, { ...options, since: 'now' }));
+
   const p = createPushable(true, () => feed.stop());
   feed.on('change', change => p.push(change));
   feed.follow();
@@ -97,6 +100,7 @@ const dbChangesSinceLive = (nano, name, options = {}) => {
 };
 
 module.exports = {
+  dbChanges,
   dbChangesSince,
   dbChangesLive,
   dbChangesSinceLive,
