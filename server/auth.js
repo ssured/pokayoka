@@ -10,38 +10,14 @@ const dlv = require('dlv');
 const addHours = require('date-fns/add_hours');
 const PouchDB = require('pouchdb');
 
-// guard for making 2 docs on the same time. This will add one second between bulk requests
-let lastTimestamp = -Infinity;
-function generateId() {
-  let timestamp = Math.floor(new Date().valueOf() / 1000);
-  if (timestamp <= lastTimestamp) {
-    timestamp = lastTimestamp + 1;
-  }
-  lastTimestamp = timestamp;
-  return (
-    (timestamp - parseInt('d00000', 36)).toString(36) +
-    Math.random()
-      .toString(36)
-      .substr(2, 4)
-  );
-}
+const { generateId } = require('../src/utils/id');
 
 const api = ((dbUrl, userDbName) => {
-  const { promisify } = require('util');
   const nano = require('nano')(dbUrl);
-  const db = nano.db.use(userDbName);
-
-  const createDatabase = promisify(nano.db.create);
-
-  const usersDb = nano.use('_users');
-  const usersGet = promisify(usersDb.get);
-  const usersList = promisify(usersDb.list);
-  const usersInsert = promisify(usersDb.insert);
-
-  const get = promisify(db.get);
-  const insert = promisify(db.insert);
-  const view = promisify(db.view);
-  const request = promisify(nano.request);
+  // the database where we keep the accounts
+  const accountsDb = nano.use(userDbName);
+  // the database which couchdb uses for user administration
+  const _usersDb = nano.use('_users');
 
   const keyFromToken = token => `org.couchdb.user:${token}`;
   const tokenFromKey = key => key.replace(/^org\.couchdb.user:/, '');
@@ -49,7 +25,7 @@ const api = ((dbUrl, userDbName) => {
   const api = {
     db: {
       getTokens: async db => {
-        const security = await request({
+        const security = await nano.request({
           db,
           path: '_security',
         });
@@ -69,30 +45,33 @@ const api = ((dbUrl, userDbName) => {
           profile,
           databases: [],
         };
-        const { rev } = await insert(doc);
+        const { rev } = await accountsDb.insert(doc);
         doc._rev = rev;
         return doc;
       },
       // read: get,
       update: async doc => {
-        const { rev } = await insert(doc);
+        const { rev } = await accountsDb.insert(doc);
         doc._rev = rev;
         return doc;
       },
-      delete: async ({ _id, _rev }) => insert({ _id, _rev, _deleted: true }),
+      delete: async ({ _id, _rev }) =>
+        accountsDb.insert({ _id, _rev, _deleted: true }),
       getByToken: async token => {
-        const { rows } = await view('users', 'byToken', { keys: [token] });
-        return rows.length === 0 ? null : get(rows[0].id);
+        const { rows } = await accountsDb.view('users', 'byToken', {
+          keys: [token],
+        });
+        return rows.length === 0 ? null : accountsDb.get(rows[0].id);
       },
     },
     project: {
       create: async name => {
         const projectId = generateId();
-        await createDatabase(projectId);
+        await nano.db.create(projectId);
         const db = nano.use(projectId);
-        await promisify(db.insert)({ _id: projectId, title: name });
+        await db.insert({ _id: projectId, title: name });
 
-        const security = await request({
+        const security = await nano.request({
           db: projectId,
           path: '_security',
         });
@@ -106,7 +85,7 @@ const api = ((dbUrl, userDbName) => {
         security.admins.roles.push(`admin-${projectId}`);
 
         return (
-          !!(await request({
+          !!(await nano.request({
             method: 'put',
             db: projectId,
             path: '_security',
@@ -117,25 +96,27 @@ const api = ((dbUrl, userDbName) => {
     },
     users: {
       getByUsername: async username => {
-        const { rows } = await view('users', 'byUsername', {
+        const { rows } = await accountsDb.view('users', 'byUsername', {
           keys: [username],
         });
-        return Promise.all(rows.map(({ id }) => get(id)));
+        return Promise.all(rows.map(({ id }) => accountsDb.get(id)));
       },
       getByTokens: async tokens => {
-        const { rows } = await view('users', 'byToken', { keys: tokens });
+        const { rows } = await accountsDb.view('users', 'byToken', {
+          keys: tokens,
+        });
         return Promise.all(
           rows
             .map(({ id }) => id)
             .filter((id, i, a) => a.indexOf(id) === i) // filter unique
-            .map(id => get(id))
+            .map(id => accountsDb.get(id))
         );
       },
     },
   };
 
   new Promise(res => setTimeout(res, 100))
-    .then(() => usersList())
+    .then(() => _usersDb.list())
     .then(async ({ rows }) => {
       try {
         const knownTokenIds = rows
@@ -145,7 +126,7 @@ const api = ((dbUrl, userDbName) => {
 
         const dateJSONString = JSON.stringify(new Date().toISOString());
         const [validTokenIds, invalidTokenIds] = await Promise.all([
-          (await view('tokens', 'byExpiration', {
+          (await accountsDb.view('tokens', 'byExpiration', {
             start_key: dateJSONString,
           })).rows.map(
             ({
@@ -154,7 +135,7 @@ const api = ((dbUrl, userDbName) => {
               value: tokenId,
             }) => tokenId
           ),
-          (await view('tokens', 'byExpiration', {
+          (await accountsDb.view('tokens', 'byExpiration', {
             end_key: dateJSONString,
           })).rows.map(
             ({
@@ -189,8 +170,12 @@ const api = ((dbUrl, userDbName) => {
           .filter(token => validTokenIds.indexOf(token) === -1)
           .forEach(async token => {
             try {
-              const { _id, _rev } = await usersGet(keyFromToken(token));
-              const result = await usersInsert({ _id, _rev, _deleted: true });
+              const { _id, _rev } = await users.db.get(keyFromToken(token));
+              const result = await _usersDb.insert({
+                _id,
+                _rev,
+                _deleted: true,
+              });
               console.log('deleted user', _id, result);
             } catch (e) {
               console.error('failed to delete user', e);
@@ -221,7 +206,7 @@ const api = ((dbUrl, userDbName) => {
               const rolesMatch = userRoles =>
                 JSON.stringify(userRoles.sort()) === rolesJSON;
 
-              const users = (await usersList({
+              const users = (await _usersDb.list({
                 keys: Object.keys(tokens).map(keyFromToken),
                 include_docs: true,
               })).rows;
@@ -233,7 +218,7 @@ const api = ((dbUrl, userDbName) => {
                   if (error != null) {
                     if (error === 'not_found') {
                       // create the user
-                      await usersInsert({
+                      await _usersDb.insert({
                         _id: key,
                         name: tokenFromKey(key),
                         password: tokenFromKey(key),
@@ -250,7 +235,7 @@ const api = ((dbUrl, userDbName) => {
                     }
                   } else if (!rolesMatch(doc.roles || [])) {
                     doc.roles = roles;
-                    await usersInsert(doc);
+                    await _usersDb.insert(doc);
                     console.log('updated', key, roles);
                     // update the user roles to fit the databases list
                   }
@@ -279,6 +264,7 @@ const basic = new Basic({
   // query: ['username', 'password'],
 });
 
+// guard which uses token to authenticate
 async function permitBearer(req, res, next) {
   try {
     const token = bearer.check(req);
@@ -305,6 +291,7 @@ async function permitBearer(req, res, next) {
   }
 }
 
+// guard which checks using HTTP Basic auth
 async function permitBasic(req, res, next) {
   try {
     const credentials = basic.check(req);
@@ -376,16 +363,16 @@ authRouter.post('/token', permitBasic, async (req, res) => {
   }
 });
 
-authRouter.post('/refresh', permitBearer, async (req, res) => {
-  try {
-    const token = await createToken(req.user);
-    await deleteToken(req.user, req.token);
-    res.json(token);
-  } catch (e) {
-    res.json({ ok: false });
-  }
-});
 // refresh token
+// authRouter.post('/refresh', permitBearer, async (req, res) => {
+//   try {
+//     const token = await createToken(req.user);
+//     await deleteToken(req.user, req.token);
+//     res.json(token);
+//   } catch (e) {
+//     res.json({ ok: false });
+//   }
+// });
 
 authRouter.use('/logout', permitBearer, async (req, res) => {
   try {
@@ -442,7 +429,7 @@ async function verifyPassword({ auth: { salt, hash } }, password) {
 
 async function createToken(user = null) {
   const token = {
-    [uuidv4()]: { expires: addHours(new Date(), 24).toISOString() },
+    [uuidv4()]: { expires: addHours(new Date(), 3 * 7 * 24).toISOString() },
   };
 
   if (user != null) {
