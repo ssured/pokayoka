@@ -3,94 +3,99 @@ declare module 'pull-stream' {
   type Callback<T> = (err: End, value?: T) => void;
   type Abort = (err: null | Error) => void;
 
-  export type Source<T> = (end: End, cb: Callback<T>) => void;
-  export type Sink<T, U = void> = (read: Source<T>) => U;
-  export type Through<T, U> = Sink<T, Source<U>>;
+  export type Source<T = any> = (end: End, cb: Callback<T>) => void;
+  export type Sink<T = any> = (read: Source<T>) => void;
+  export type Through<T = any, U = any> = (
+    read: Source<T>
+  ) => (end: End, cb: Callback<U>) => void;
   export type Duplex<T> = { source: Source<T>; sink: Sink<T> };
 
   // define pull up to 5 arguments:
-  export function pull<T>(s1: Source<T>, s2: Sink<T>): void;
-  export function pull<T, U>(s1: Source<T>, s2: Through<T, U>): Source<U>;
-  export function pull<T, U>(s1: Through<T, U>, s2: Sink<U>): void;
-  export function pull<T, U, V>(
+  export default function pull<T, U, V>(
     s1: Through<T, U>,
     s2: Through<U, V>
+  ): Source<V>;
+  export default function pull<T, U>(
+    s1: Source<T>,
+    s2: Through<T, U>
   ): Source<U>;
+  export default function pull<T, U>(s1: Through<T, U>, s2: Sink<U>): Sink<T>;
+  export default function pull<T>(s1: Source<T>, s2: Sink<T>): void;
 
-  export function pull<T, U>(
-    s1: Source<T>,
-    s2: Through<T, U>,
-    s3: Sink<U>
-  ): void;
-  export function pull<T, U, V>(
+  export default function pull<T, U, V>(
     s1: Source<T>,
     s2: Through<T, U>,
     s3: Through<U, V>
   ): Source<V>;
-  export function pull<S, T, U>(
-    s1: Through<S, T>,
+  export default function pull<T, U>(
+    s1: Source<T>,
     s2: Through<T, U>,
     s3: Sink<U>
   ): void;
-  export function pull<S, T, U, V>(
+  export default function pull<S, T, U, V>(
     s1: Through<S, T>,
     s2: Through<T, U>,
     s3: Through<U, V>
   ): Source<V>;
-
-  export function pull<T, U, V>(
-    s1: Source<T>,
+  export default function pull<S, T, U>(
+    s1: Through<S, T>,
     s2: Through<T, U>,
-    s3: Through<U, V>,
-    s4: Sink<V>
-  ): void;
-  export function pull<T, U, V, R>(
+    s3: Sink<U>
+  ): Sink<S>;
+
+  export default function pull<T, U, V, R>(
     s1: Source<T>,
     s2: Through<T, U>,
     s3: Through<U, V>,
     s4: Through<V, R>
   ): Source<R>;
-  export function pull<S, T, U, V>(
-    s1: Through<S, T>,
+  export default function pull<T, U, V>(
+    s1: Source<T>,
     s2: Through<T, U>,
     s3: Through<U, V>,
     s4: Sink<V>
   ): void;
-  export function pull<S, T, U, V, R>(
+  export default function pull<S, T, U, V, R>(
     s1: Through<S, T>,
     s2: Through<T, U>,
     s3: Through<U, V>,
     s4: Through<V, R>
   ): Source<R>;
-
-  export function pull<T, U, V, W>(
-    s1: Source<T>,
+  export default function pull<S, T, U, V>(
+    s1: Through<S, T>,
     s2: Through<T, U>,
     s3: Through<U, V>,
-    s4: Through<V, W>,
-    s5: Sink<W>
-  ): void;
-  export function pull<T, U, V, W, R>(
+    s4: Sink<V>
+  ): Sink<S>;
+
+  export default function pull<T, U, V, W, R>(
     s1: Source<T>,
     s2: Through<T, U>,
     s3: Through<U, V>,
     s4: Through<V, W>,
     s5: Through<W, R>
   ): Source<R>;
-  export function pull<S, T, U, V, W>(
-    s1: Through<S, T>,
+  export default function pull<T, U, V, W>(
+    s1: Source<T>,
     s2: Through<T, U>,
     s3: Through<U, V>,
     s4: Through<V, W>,
     s5: Sink<W>
   ): void;
-  export function pull<S, T, U, V, W, R>(
+  export default function pull<S, T, U, V, W, R>(
     s1: Through<S, T>,
     s2: Through<T, U>,
     s3: Through<U, V>,
     s4: Through<V, W>,
     s5: Through<W, R>
   ): Source<R>;
+  export default function pull<S, T, U, V, W>(
+    s1: Through<S, T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Sink<W>
+  ): Sink<S>;
 
   // source
   export function keys<T, U extends keyof T>(

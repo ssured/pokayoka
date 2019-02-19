@@ -8,7 +8,6 @@ const pwd = require('pwd');
 pwd.iterations(20000);
 const dlv = require('dlv');
 const addHours = require('date-fns/add_hours');
-const PouchDB = require('pouchdb');
 
 const { generateId } = require('../src/utils/id');
 
@@ -183,67 +182,60 @@ const api = ((dbUrl, userDbName) => {
           });
 
         // TODO replace this with nano changes feed, pouchdb sometimes seems to lose connectien
-        const usersDb = new PouchDB(`${dbUrl}/${userDbName}`, {
-          adapter: 'http',
-        });
+        const feed = accountsDb.follow({ since: 'now', include_docs: true });
         console.log('START LISTENING FOR USERS CHANGE');
 
-        usersDb
-          .changes({ since: 'now', live: true, include_docs: true })
-          .on('change', async change => {
-            const {
-              deleted,
-              doc: { tokens, databases },
-            } = change;
-            if (deleted || tokens == null) return;
+        feed.on('change', async change => {
+          const {
+            deleted,
+            doc: { tokens, databases },
+          } = change;
+          if (deleted || tokens == null) return;
 
-            console.log('GOT CHANGE', change);
+          console.log('GOT CHANGE', change);
 
-            try {
-              const roles = databases.map(name => `member-${name}`).sort();
-              const rolesJSON = JSON.stringify(roles);
+          try {
+            const roles = databases.map(name => `member-${name}`).sort();
+            const rolesJSON = JSON.stringify(roles);
 
-              const rolesMatch = userRoles =>
-                JSON.stringify(userRoles.sort()) === rolesJSON;
+            const rolesMatch = userRoles =>
+              JSON.stringify(userRoles.sort()) === rolesJSON;
 
-              const users = (await _usersDb.list({
-                keys: Object.keys(tokens).map(keyFromToken),
-                include_docs: true,
-              })).rows;
+            const users = (await _usersDb.list({
+              keys: Object.keys(tokens).map(keyFromToken),
+              include_docs: true,
+            })).rows;
 
-              users
-                .filter(user => dlv(user, 'value.deleted') !== true)
-                .forEach(async user => {
-                  const { key, /*value,*/ error, doc } = user;
-                  if (error != null) {
-                    if (error === 'not_found') {
-                      // create the user
-                      await _usersDb.insert({
-                        _id: key,
-                        name: tokenFromKey(key),
-                        password: tokenFromKey(key),
-                        type: 'user',
-                        roles,
-                      });
-                      console.log('inserted', key, roles);
-                    } else {
-                      console.log(
-                        'users follow user detail error',
-                        error,
-                        user
-                      );
-                    }
-                  } else if (!rolesMatch(doc.roles || [])) {
-                    doc.roles = roles;
-                    await _usersDb.insert(doc);
-                    console.log('updated', key, roles);
-                    // update the user roles to fit the databases list
+            users
+              .filter(user => dlv(user, 'value.deleted') !== true)
+              .forEach(async user => {
+                const { key, /*value,*/ error, doc } = user;
+                if (error != null) {
+                  if (error === 'not_found') {
+                    // create the user
+                    await _usersDb.insert({
+                      _id: key,
+                      name: tokenFromKey(key),
+                      password: tokenFromKey(key),
+                      type: 'user',
+                      roles,
+                    });
+                    console.log('inserted', key, roles);
+                  } else {
+                    console.log('users follow user detail error', error, user);
                   }
-                });
-            } catch (e) {
-              console.error('users follow error', e);
-            }
-          });
+                } else if (!rolesMatch(doc.roles || [])) {
+                  doc.roles = roles;
+                  await _usersDb.insert(doc);
+                  console.log('updated', key, roles);
+                  // update the user roles to fit the databases list
+                }
+              });
+          } catch (e) {
+            console.error('users follow error', e);
+          }
+        });
+        feed.follow();
       } catch (e) {
         console.error('usersList general error', e);
       }

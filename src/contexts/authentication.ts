@@ -2,36 +2,39 @@ import { useContext } from 'react';
 import createContainer from 'constate';
 import { useLocalStorage } from 'react-use';
 
-type AuthContextValue = {
-  email: string;
-  token: string;
-  expires: string;
+type AuthContextSuccess = {
+  ok: true;
+  name: string;
+  roles: string[];
 };
 
+type AuthContextError = {
+  ok?: boolean;
+  error: string;
+  reason: string;
+};
+
+type AuthContext = AuthContextSuccess | AuthContextError;
+
 const LocalStorageAuthKey = 'auth';
-const LocalStorageDbPrefix = 'db-';
+
+const isAuthenticated = (context: AuthContext): context is AuthContextSuccess =>
+  Boolean(context && context.ok);
 
 export const AuthenticationContainer = createContainer(() => {
-  const [authentication, setAuthentication] = useLocalStorage<AuthContextValue>(
+  const [authentication, setAuthentication] = useLocalStorage<AuthContext>(
     LocalStorageAuthKey
   );
-  const isAuthenticated =
-    authentication &&
-    !!authentication.token &&
-    new Date() < new Date(authentication.expires);
   const logout = () => {
-    setAuthentication((undefined as unknown) as AuthContextValue);
+    setAuthentication({ error: 'logged-out', reason: 'manual logout' });
   };
-  return { authentication, isAuthenticated, login: setAuthentication, logout };
+  return {
+    authentication,
+    isAuthenticated: isAuthenticated(authentication),
+    login: setAuthentication,
+    logout,
+  };
 });
 
 export const useAuthentication = () =>
   useContext(AuthenticationContainer.Context);
-
-export const useToken = () => {
-  const { isAuthenticated, authentication } = useAuthentication();
-  if (!isAuthenticated) {
-    throw new Error('not authenticated');
-  }
-  return authentication.token;
-};

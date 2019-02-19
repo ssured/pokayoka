@@ -37,22 +37,14 @@ const contactAuthService = (email: string, password: string) =>
       }
   >((resolve, reject) => {
     return axios
-      .create({ auth: { username: email, password } })
-      .post('/auth/token')
-      .then((data: any) => {
-        // Next we authorize to CouchDB itself
-        // this is not a no-op
-        // POST to _session returns a set-cookie header
-        // which is used to auth GET requests
-        // this way we make
-        const token = Object.keys(data.data)[0];
-        return axios
-          .create({ withCredentials: true })
-          .post('http://localhost:5984/_session', {
-            name: token,
-            password: token,
-          })
-          .then(() => resolve(data.data));
+      .create({ withCredentials: true })
+      .post('/db/_session', {
+        name: email,
+        password,
+      })
+      .then(data => {
+        console.log(data);
+        resolve(data.data);
       })
       .catch((data: any) => {
         console.log('error data', data);
@@ -102,7 +94,7 @@ export const LoginForm: React.FunctionComponent<{
       },
       guards: {
         isBadEmailFormat: ctx => !isEmail(ctx.email),
-        isPasswordShort: ctx => ctx.password.length <= 6,
+        isPasswordShort: ctx => ctx.password.length < 6,
         isNoAccount: (ctx, evt) =>
           evt.type === 'error.execution' &&
           evt.src === 'requestSignIn' &&

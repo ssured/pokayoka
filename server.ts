@@ -12,6 +12,7 @@ import { wsRouterFor } from './server/websocket';
 import { startServer } from './server/mux/server';
 
 import authRouter from './server/auth';
+import proxy from 'express-http-proxy';
 
 const { app, getWss } = expressWs(express());
 app.use(
@@ -34,6 +35,8 @@ app.use(wsRouterFor(getWss()));
 
 // @ts-ignore
 app.use('/auth', authRouter);
+
+app.use('/db', proxy('http://localhost:5984', {}));
 
 if (isDevelopment) {
   // Tell express to use the webpack-dev-middleware and use the webpack.config.js
