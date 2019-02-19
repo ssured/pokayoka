@@ -17,8 +17,8 @@ import {
   Button,
   Authenticated,
 } from './styles';
-import { ServerAPIPost_Token_Response } from '../../../server/auth';
 import { GlobalStyles } from './GlobalStyles';
+import { AuthenticationContext } from '../../contexts/authentication';
 
 const delay = (func: (...args: any[]) => any) => setTimeout(() => func());
 
@@ -27,23 +27,15 @@ const WrongPasswordError = 2;
 const NoResponseError = 3;
 
 const contactAuthService = (email: string, password: string) =>
-  new Promise<
-    | ServerAPIPost_Token_Response
-    | {
-        code:
-          | typeof NoAccountError
-          | typeof WrongPasswordError
-          | typeof NoResponseError;
-      }
-  >((resolve, reject) => {
+  new Promise<AuthenticationContext>((resolve, reject) => {
     return axios
       .create({ withCredentials: true })
-      .post('/db/_session', {
+      .post<AuthenticationContext>('/db/_session', {
         name: email,
         password,
       })
       .then(data => {
-        console.log(data);
+        console.log('logged in', data);
         resolve(data.data);
       })
       .catch((data: any) => {
@@ -53,7 +45,7 @@ const contactAuthService = (email: string, password: string) =>
   });
 
 export const LoginForm: React.FunctionComponent<{
-  onAuthentication: (email: string, token: string, expires: string) => void;
+  onAuthentication: (name: string, roles: string[]) => void;
 }> = ({ onAuthentication }) => {
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
@@ -80,16 +72,14 @@ export const LoginForm: React.FunctionComponent<{
         }),
         cacheToken: signInAssign({
           password: '',
-          tokens: (ctx, evt) =>
+          response: (ctx, evt) =>
             evt.type === 'done.invoke.requestSignIn' ? evt.data : null,
         }),
         onAuthentication: (ctx, evt) => {
           // console.log('user authenticated', { ctx, evt });
-          onAuthentication(
-            ctx.email,
-            Object.keys(ctx.tokens!)[0],
-            Object.values(ctx.tokens!)[0].expires
-          );
+          ctx.response &&
+            ctx.response.ok &&
+            onAuthentication(ctx.response.name, ctx.response.roles);
         },
       },
       guards: {

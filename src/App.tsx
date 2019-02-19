@@ -20,9 +20,7 @@ export const App: React.SFC<{}> = ({}) => {
     <CapabilitiesCheck>
       {!isAuthenticated && (
         <LoginForm
-          onAuthentication={(email, token, expires) =>
-            login({ email, token, expires })
-          }
+          onAuthentication={(name, roles) => login({ ok: true, name, roles })}
         />
       )}
 

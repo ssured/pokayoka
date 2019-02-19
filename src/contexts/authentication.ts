@@ -2,31 +2,38 @@ import { useContext } from 'react';
 import createContainer from 'constate';
 import { useLocalStorage } from 'react-use';
 
-type AuthContextSuccess = {
+export type AuthenticationContextSuccess = {
   ok: true;
   name: string;
   roles: string[];
 };
 
-type AuthContextError = {
-  ok?: boolean;
+export type AuthenticationContextError = {
+  ok: false | undefined;
   error: string;
   reason: string;
 };
 
-type AuthContext = AuthContextSuccess | AuthContextError;
+export type AuthenticationContext =
+  | AuthenticationContextSuccess
+  | AuthenticationContextError;
 
 const LocalStorageAuthKey = 'auth';
 
-const isAuthenticated = (context: AuthContext): context is AuthContextSuccess =>
-  Boolean(context && context.ok);
+const isAuthenticated = (
+  context: AuthenticationContext
+): context is AuthenticationContextSuccess => Boolean(context && context.ok);
 
 export const AuthenticationContainer = createContainer(() => {
-  const [authentication, setAuthentication] = useLocalStorage<AuthContext>(
-    LocalStorageAuthKey
-  );
+  const [authentication, setAuthentication] = useLocalStorage<
+    AuthenticationContext
+  >(LocalStorageAuthKey);
   const logout = () => {
-    setAuthentication({ error: 'logged-out', reason: 'manual logout' });
+    setAuthentication({
+      ok: false,
+      error: 'logged-out',
+      reason: 'manual logout',
+    });
   };
   return {
     authentication,

@@ -1,5 +1,6 @@
 import { MachineConfig, assign, Assigner, AssignAction } from 'xstate';
 import { ServerAPIPost_Token_Response } from '../../server/auth';
+import { AuthenticationContext } from '../contexts/authentication';
 
 // from https://codesandbox.io/embed/239lj2xzqp
 
@@ -33,13 +34,13 @@ export type SignInEvent =
   | { type: 'error.execution'; src: 'requestSignIn'; data: { code: number } }
   | {
       type: 'done.invoke.requestSignIn';
-      data: ServerAPIPost_Token_Response;
+      data: AuthenticationContext;
     };
 
 export interface SignInContext {
   email: string;
   password: string;
-  tokens: ServerAPIPost_Token_Response | null;
+  response?: AuthenticationContext | null;
 }
 
 export const signInAssign: (
@@ -66,7 +67,7 @@ export const signInMachineConfig: MachineConfig<
   context: {
     email: '',
     password: '',
-    tokens: null,
+    response: undefined,
   },
   initial: 'dataEntry',
   states: {
