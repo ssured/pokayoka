@@ -2,9 +2,7 @@ import React from 'react';
 import { Router, navigate } from '@reach/router';
 
 import { Home } from './routes/Home';
-import { Project } from './routes/Project/index';
-import { Debug } from './routes/Debug';
-import { Sync as SyncStatus } from './routes/Sync';
+import { Project } from './routes/Project';
 
 import { CapabilitiesCheck } from './components/CapabilitiesCheck';
 import { LoginForm } from './components/LoginForm/index';
@@ -14,7 +12,12 @@ import { Menu, Home as HomeIcon, Sync } from 'grommet-icons';
 import { useToggle } from 'react-use';
 
 export const App: React.SFC<{}> = ({}) => {
-  const { isAuthenticated, login, authentication } = useAuthentication();
+  const {
+    isAuthenticated,
+    login,
+    authentication,
+    logout,
+  } = useAuthentication();
   const [sidebar, toggleSidebar] = useToggle(true);
   return (
     <CapabilitiesCheck>
@@ -50,7 +53,7 @@ export const App: React.SFC<{}> = ({}) => {
                 plain
                 focusIndicator={false}
                 icon={<Menu />}
-                label={authentication.email}
+                label={authentication.ok ? authentication.name : 'Anonymous'}
                 reverse
                 hoverIndicator
                 onClick={() => toggleSidebar()}
@@ -66,6 +69,18 @@ export const App: React.SFC<{}> = ({}) => {
                   { type: 'slideLeft', size: 'xlarge', duration: 150 },
                 ]}
               >
+                <Button
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}
+                  hoverIndicator
+                >
+                  <Box direction="row" justify="between" pad="small">
+                    <Text>Logout</Text>
+                  </Box>
+                </Button>
+
                 <Button onClick={() => navigate('/sync')} hoverIndicator>
                   <Box direction="row" justify="between" pad="small">
                     <Text>Sync</Text>
@@ -93,8 +108,8 @@ export const App: React.SFC<{}> = ({}) => {
             <Box gridArea="main" justify="center" align="center">
               <Router>
                 <Home path="/" />
-                <Debug path="debug" />
-                <SyncStatus path="sync" />
+                {/* <Debug path="debug" /> */}
+                {/* <SyncStatus path="sync" /> */}
                 <Project path=":projectId" />
 
                 {/* <User path=":userId">

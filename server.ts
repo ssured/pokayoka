@@ -1,20 +1,21 @@
 import path from 'path';
 import express from 'express';
+import bodyParser from 'body-parser';
+import proxy from 'express-http-proxy';
+import WebSocket from 'ws';
+import http from 'http';
+
 import webpack from 'webpack';
+import webpackConfig from './webpack.config';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
-import expressWs from 'express-ws';
-import bodyParser from 'body-parser';
-
-import webpackConfig from './webpack.config';
-import { wsRouterFor } from './server/websocket';
-
-import { startServer } from './server/mux/server';
 
 import authRouter from './server/auth';
-import proxy from 'express-http-proxy';
 
-const { app, getWss } = expressWs(express());
+const isDevelopment = true;
+const app = express();
+const server = http.createServer(app);
+
 app.use(
   bodyParser.json({
     limit: '50mb',
@@ -27,17 +28,23 @@ app.use(
   })
 );
 
-const compiler = webpack(webpackConfig);
-
-const isDevelopment = true;
-
-app.use(wsRouterFor(getWss()));
-
-// @ts-ignore
 app.use('/auth', authRouter);
 
 app.use('/db', proxy('http://localhost:5984', {}));
 
+const wss = new WebSocket.Server({
+  server,
+});
+
+wss.on('connection', function connection(ws) {
+  ws.on('message', function incoming(message) {
+    console.log('received: %s', message);
+  });
+
+  ws.send('something');
+});
+
+const compiler = webpack(webpackConfig);
 if (isDevelopment) {
   // Tell express to use the webpack-dev-middleware and use the webpack.config.js
   // configuration file as a base.
@@ -81,8 +88,6 @@ if (isDevelopment) {
 }
 
 // Serve the files on port 3000.
-app.listen(3000, () => {
+server.listen(3000, () => {
   console.log('PokaYoka listening on port 3000!\n');
 });
-
-startServer();

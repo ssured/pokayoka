@@ -1,13 +1,12 @@
 import { Router, RouteComponentProps } from '@reach/router';
 import React, { useContext } from 'react';
 
-import { Project as ProjectModel, IProject } from '../../models/Project';
-import { useModel } from '../../hooks/model';
-import { usePouchDB, ConnectPouchDB, useSync } from '../../contexts/pouchdb';
+import { IProject } from '../../models/Project';
 
 import { Overview } from './Overview';
-import { useObservable, useComputed } from 'mobx-react-lite';
+import { useComputed } from 'mobx-react-lite';
 import { observable } from 'mobx';
+import { LevelContext, useLevel } from '../../contexts/level';
 
 interface ProjectParams {
   projectId: string;
@@ -26,32 +25,34 @@ export const useProjectAs = <T extends any>(
 export const Project: React.FunctionComponent<
   RouteComponentProps<ProjectParams>
 > = ({ projectId }) => {
+  const level = useLevel();
   return (
-    <ConnectPouchDB dbname={projectId!}>
-      <ProvideProject>
-        <Router>
-          <Overview path="/" />
-        </Router>
-      </ProvideProject>
-    </ConnectPouchDB>
+    <LevelContext.Provider value={level.partition(projectId)}>
+      {/* <ProvideProject> */}
+      <Router>
+        <Overview path="/" />
+      </Router>
+      {/* </ProvideProject> */}
+    </LevelContext.Provider>
   );
 };
 
-const ProvideProject: React.FunctionComponent<{}> = ({ children }) => {
-  const { local, remote, name } = usePouchDB();
-  const { active, progress } = useSync(local, remote);
-  const project = useModel(ProjectModel, local, name);
+// const ProvideProject: React.FunctionComponent<{}> = ({ children }) => {
+//   const level = useLevel();
+//   const { local, remote, name } = usePouchDB();
+//   const { active, progress } = useSync(local, remote);
+//   const project = useModel(ProjectModel, local, name);
 
-  return project ? (
-    <ProjectContext.Provider value={project}>
-      <ul>
-        <li>
-          active {active ? 'true' : 'false'} progress {progress}
-        </li>
-      </ul>
-      {children}
-    </ProjectContext.Provider>
-  ) : (
-    <div>Loading project</div>
-  );
-};
+//   return project ? (
+//     <ProjectContext.Provider value={project}>
+//       <ul>
+//         <li>
+//           active {active ? 'true' : 'false'} progress {progress}
+//         </li>
+//       </ul>
+//       {children}
+//     </ProjectContext.Provider>
+//   ) : (
+//     <div>Loading project</div>
+//   );
+// };

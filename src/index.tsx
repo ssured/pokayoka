@@ -6,14 +6,14 @@ import { App } from './App';
 import { configure } from 'mobx';
 import { setLivelynessChecking } from 'mobx-state-tree';
 
-import { startClient } from './utils/mux';
-
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/markdown/markdown';
 import 'tailwindcss/css/preflight.css';
 
 import { IconContext } from 'react-icons';
 import { AuthenticationContainer } from './contexts/authentication';
+
+import { startMux } from './mux';
 
 if (
   'serviceWorker' in navigator &&
@@ -24,25 +24,15 @@ if (
 }
 
 const isProduction = false; // FIXME implement this
+
 configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });
 setLivelynessChecking(isProduction ? 'ignore' : 'error');
 
-// onSnapshot(store, snapshot => console.log('STORE', snapshot));
-// autorun(() =>
-//   console.log(
-//     'STORE',
-//     [...store.shared.values()].map(val => [getType(val).name, getSnapshot(val)])
-//   )
-// );
+startMux();
 
-// {
-//   const ws = new WebSocket('ws://localhost:3000/debug');
-//   const { object, updateObject } = objectFromPatchStream();
-//   ws.addEventListener('message', ({ data }) => {
-//     updateObject(JSON.parse(data));
-//     console.debug('SERVER DEBUG', object());
-//   });
-// }
+/**
+ * boot the app
+ */
 
 const elemDiv = document.createElement('div');
 elemDiv.id = 'root';
@@ -66,5 +56,3 @@ if ((module as any).hot) {
     renderApp();
   });
 }
-
-startClient();

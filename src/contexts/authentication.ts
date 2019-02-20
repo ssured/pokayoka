@@ -37,6 +37,13 @@ export const AuthenticationContainer = createContainer(() => {
   };
   return {
     authentication,
+    dbNames:
+      (authentication.ok &&
+        authentication.roles.reduce((dbNames, role) => {
+          dbNames.add(role.split('-').pop()!);
+          return dbNames;
+        }, new Set<string>())) ||
+      new Set<string>(),
     isAuthenticated: isAuthenticated(authentication),
     login: setAuthentication,
     logout,
