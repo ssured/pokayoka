@@ -165,21 +165,21 @@ const api = ((dbUrl, userDbName) => {
         );
 
         // remove tokens from users db which are not valid anymore
-        knownTokenIds
-          .filter(token => validTokenIds.indexOf(token) === -1)
-          .forEach(async token => {
-            try {
-              const { _id, _rev } = await users.db.get(keyFromToken(token));
-              const result = await _usersDb.insert({
-                _id,
-                _rev,
-                _deleted: true,
-              });
-              console.log('deleted user', _id, result);
-            } catch (e) {
-              console.error('failed to delete user', e);
-            }
-          });
+        // knownTokenIds
+        //   .filter(token => validTokenIds.indexOf(token) === -1)
+        //   .forEach(async token => {
+        //     try {
+        //       const { _id, _rev } = await _usersDb.get(keyFromToken(token));
+        //       const result = await _usersDb.insert({
+        //         _id,
+        //         _rev,
+        //         _deleted: true,
+        //       });
+        //       console.log('deleted user', _id, result);
+        //     } catch (e) {
+        //       console.error('failed to delete user', e);
+        //     }
+        //   });
 
         // TODO replace this with nano changes feed, pouchdb sometimes seems to lose connectien
         const feed = accountsDb.follow({ since: 'now', include_docs: true });

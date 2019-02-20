@@ -1,6 +1,9 @@
+import debug from 'debug';
+
 import path from 'path';
 import express from 'express';
 import bodyParser from 'body-parser';
+import { Cookie } from 'tough-cookie';
 import proxy from 'express-http-proxy';
 import WebSocket from 'ws';
 import http from 'http';
@@ -11,6 +14,9 @@ import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 
 import authRouter from './server/auth';
+import got = require('got');
+
+const log = debug(__filename.replace(__dirname, '~'));
 
 const isDevelopment = true;
 const app = express();
@@ -30,18 +36,72 @@ app.use(
 
 app.use('/auth', authRouter);
 
-app.use('/db', proxy('http://localhost:5984', {}));
+const couchDbUrl = 'http://localhost:5984';
+app.use('/db', proxy(couchDbUrl, {}));
+
+const sessions = new WeakMap<
+  http.IncomingMessage,
+  { name: string; roles: string[] }
+>();
 
 const wss = new WebSocket.Server({
   server,
+  verifyClient: async (info, cb) => {
+    const ll = log.extend('verifyClient');
+
+    const cookieHeader = info.req.headers.cookie;
+    if (!cookieHeader) {
+      ll('Failed to authorize ');
+      return cb(false, 401, 'Not authorized');
+    }
+
+    const sessionCookie = Cookie.parse(cookieHeader);
+
+    if (!sessionCookie) {
+      ll('AuthSession not found in cookie %o', cookieHeader);
+      return cb(false, 401, 'Not authorized');
+    }
+
+    try {
+      // ll('cookie %o', sessionCookie.toString());
+      const response = await got('_session', {
+        baseUrl: couchDbUrl,
+        json: true,
+        headers: { cookie: sessionCookie.toString() },
+      });
+
+      const profile: {
+        ok: boolean;
+        userCtx: { name: null | string; roles: string[] };
+      } = response.body;
+
+      if (!profile.ok || !profile.userCtx.name) {
+        ll('No or anonymous profile %o', profile);
+        return cb(false, 401, 'Not authenticated');
+      }
+
+      log('info %O', profile.userCtx);
+      sessions.set(info.req, {
+        name: profile.userCtx.name,
+        roles: profile.userCtx.roles,
+      });
+
+      return cb(true);
+    } catch (e) {
+      ll('Network / profile error', e);
+      return cb(false, 500, 'Not authorized');
+    }
+  },
 });
 
-wss.on('connection', function connection(ws) {
-  ws.on('message', function incoming(message) {
+wss.on('connection', (ws, req) => {
+  const session = sessions.get(req)!;
+
+  ws.on('message', message => {
     console.log('received: %s', message);
   });
 
-  ws.send('something');
+  ws.send(`Hello ${session.name}`);
 });
 
 const compiler = webpack(webpackConfig);
@@ -89,5 +149,5 @@ if (isDevelopment) {
 
 // Serve the files on port 3000.
 server.listen(3000, () => {
-  console.log('PokaYoka listening on port 3000!\n');
+  log('PokaYoka listening on port 3000!\n');
 });
