@@ -40,10 +40,10 @@ app.use('/auth', authRouter);
 const couchDbUrl = 'http://localhost:5984';
 app.use('/db', proxy(couchDbUrl, {}));
 
-// const validatedWebSocketProfiles = new WeakMap<
-//   http.IncomingMessage,
-//   { name: string; roles: string[] }
-// >();
+const validatedWebSocketProfiles = new WeakMap<
+  http.IncomingMessage,
+  { name: string; roles: string[] }
+>();
 
 /*const wss = */ createServer(
   {
@@ -83,10 +83,10 @@ app.use('/db', proxy(couchDbUrl, {}));
         }
 
         log('info %O', profile.userCtx);
-        // validatedWebSocketProfiles.set(info.req, {
-        //   name: profile.userCtx.name,
-        //   roles: profile.userCtx.roles,
-        // });
+        validatedWebSocketProfiles.set(info.req, {
+          name: profile.userCtx.name,
+          roles: profile.userCtx.roles,
+        });
 
         return cb(true);
       } catch (e) {
@@ -95,8 +95,10 @@ app.use('/db', proxy(couchDbUrl, {}));
       }
     },
   },
-  stream => {
-    console.log('hier', stream.remoteAddress);
+  (stream, request) => {
+    console.log({ request });
+    const profile = validatedWebSocketProfiles.get(request)!;
+    console.log('hier', profile);
   }
 );
 

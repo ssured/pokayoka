@@ -9,11 +9,15 @@
 //   };
 
 declare module 'pull-ws/server' {
+  import { IncomingMessage } from 'http';
   import { Duplex } from 'pull-stream';
   import { ServerOptions } from 'ws';
 
   export default function createServer(
     options: ServerOptions,
-    onConnect: (stream: Duplex & { remoteAddress: string }) => void
+    onConnect: (
+      stream: Duplex & { remoteAddress: string },
+      request: IncomingMessage
+    ) => void
   ): any;
 }

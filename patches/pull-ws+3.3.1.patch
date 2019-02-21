@@ -1,0 +1,13 @@
+diff --git a/node_modules/pull-ws/server.js b/node_modules/pull-ws/server.js
+index 123b10b..991638a 100644
+--- a/node_modules/pull-ws/server.js
++++ b/node_modules/pull-ws/server.js
+@@ -41,7 +41,7 @@ module.exports = !WebSocket.Server ? null : function (opts, onConnection) {
+     wsServer.on('connection', function (socket) {
+       var stream = ws(socket)
+       stream.remoteAddress = socket.upgradeReq.socket.remoteAddress
+-      emitter.emit('connection', stream)
++      emitter.emit('connection', stream, socket.upgradeReq)
+     })
+ 
+     emitter.listen = function (addr, onListening) {

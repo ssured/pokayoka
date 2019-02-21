@@ -89,7 +89,8 @@
     "gen": "yarn run hygen",
     "test": "jest",
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@emotion/core": "^10.0.6",
@@ -155,9 +156,11 @@
     "multilevel": "^7.2.3",
     "muxrpc": "^6.4.2",
     "nano-css": "^3.5.0",
+    "patch-package": "^6.0.2",
     "paths.macro": "^2.0.2",
     "pify": "^4.0.1",
     "polished": "^2.3.3",
+    "postinstall-postinstall": "^2.0.0",
     "pouchdb": "^7.0.0",
     "pull-abortable": "^4.1.1",
     "pull-cat": "^1.1.11",
