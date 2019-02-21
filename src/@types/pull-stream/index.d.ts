@@ -8,7 +8,7 @@ declare module 'pull-stream' {
   export type Through<T = any, U = any> = (
     read: Source<T>
   ) => (end: End, cb: Callback<U>) => void;
-  export type Duplex<T> = { source: Source<T>; sink: Sink<T> };
+  export type Duplex<T = any> = { source: Source<T>; sink: Sink<T> };
 
   // define pull up to 5 arguments:
   export default function pull<T, U, V>(

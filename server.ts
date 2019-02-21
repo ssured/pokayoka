@@ -5,7 +5,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { Cookie } from 'tough-cookie';
 import proxy from 'express-http-proxy';
-import WebSocket from 'ws';
+// import WebSocket from 'ws';
+import createServer from 'pull-ws/server';
 import http from 'http';
 
 import webpack from 'webpack';
@@ -39,70 +40,75 @@ app.use('/auth', authRouter);
 const couchDbUrl = 'http://localhost:5984';
 app.use('/db', proxy(couchDbUrl, {}));
 
-const sessions = new WeakMap<
-  http.IncomingMessage,
-  { name: string; roles: string[] }
->();
+// const validatedWebSocketProfiles = new WeakMap<
+//   http.IncomingMessage,
+//   { name: string; roles: string[] }
+// >();
 
-const wss = new WebSocket.Server({
-  server,
-  verifyClient: async (info, cb) => {
-    const ll = log.extend('verifyClient');
+/*const wss = */ createServer(
+  {
+    server,
+    verifyClient: async (info, cb) => {
+      const ll = log.extend('verifyClient');
 
-    const cookieHeader = info.req.headers.cookie;
-    if (!cookieHeader) {
-      ll('Failed to authorize ');
-      return cb(false, 401, 'Not authorized');
-    }
-
-    const sessionCookie = Cookie.parse(cookieHeader);
-
-    if (!sessionCookie) {
-      ll('AuthSession not found in cookie %o', cookieHeader);
-      return cb(false, 401, 'Not authorized');
-    }
-
-    try {
-      // ll('cookie %o', sessionCookie.toString());
-      const response = await got('_session', {
-        baseUrl: couchDbUrl,
-        json: true,
-        headers: { cookie: sessionCookie.toString() },
-      });
-
-      const profile: {
-        ok: boolean;
-        userCtx: { name: null | string; roles: string[] };
-      } = response.body;
-
-      if (!profile.ok || !profile.userCtx.name) {
-        ll('No or anonymous profile %o', profile);
-        return cb(false, 401, 'Not authenticated');
+      const cookieHeader = info.req.headers.cookie;
+      if (!cookieHeader) {
+        ll('Failed to authorize ');
+        return cb(false, 401, 'Not authorized');
       }
 
-      log('info %O', profile.userCtx);
-      sessions.set(info.req, {
-        name: profile.userCtx.name,
-        roles: profile.userCtx.roles,
-      });
+      const sessionCookie = Cookie.parse(cookieHeader);
 
-      return cb(true);
-    } catch (e) {
-      ll('Network / profile error', e);
-      return cb(false, 500, 'Not authorized');
-    }
+      if (!sessionCookie) {
+        ll('AuthSession not found in cookie %o', cookieHeader);
+        return cb(false, 401, 'Not authorized');
+      }
+
+      try {
+        // ll('cookie %o', sessionCookie.toString());
+        const response = await got('_session', {
+          baseUrl: couchDbUrl,
+          json: true,
+          headers: { cookie: sessionCookie.toString() },
+        });
+
+        const profile: {
+          ok: boolean;
+          userCtx: { name: null | string; roles: string[] };
+        } = response.body;
+
+        if (!profile.ok || !profile.userCtx.name) {
+          ll('No or anonymous profile %o', profile);
+          return cb(false, 401, 'Not authenticated');
+        }
+
+        log('info %O', profile.userCtx);
+        // validatedWebSocketProfiles.set(info.req, {
+        //   name: profile.userCtx.name,
+        //   roles: profile.userCtx.roles,
+        // });
+
+        return cb(true);
+      } catch (e) {
+        ll('Network / profile error', e);
+        return cb(false, 500, 'Not authorized');
+      }
+    },
   },
-});
+  stream => {
+    console.log('hier', stream.remoteAddress);
+  }
+);
 
-wss.on('connection', (ws, req) => {
-  const session = sessions.get(req)!;
+// wss.on('connection', (ws, req) => {
+//   const profile = validatedWebSocketProfiles.get(req)!;
 
-  ws.on('message', message => {
-    console.log('received: %s', message);
-  });
+//   ws.on('message', message => {
+//     console.log('received: %s', message);
+//   });
 
-  ws.send(`Hello ${session.name}`);
-});
+//   ws.send(`Hello ${profile.name} ${profile.roles.join(', ')}`);
+// });
 
 const compiler = webpack(webpackConfig);
 if (isDevelopment) {
