@@ -9,5 +9,9 @@ declare module 'muxrpc' {
     local: MuxManifest | null
   ): (implementation: {
     [key: string]: (...args: any[]) => any;
-  }) => { createStream: () => Through<any, any> };
+  }) => {
+    createStream(
+      cb?: (err: Error | null | undefined) => void
+    ): Through<any, any>;
+  };
 }

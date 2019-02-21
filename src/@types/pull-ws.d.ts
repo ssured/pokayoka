@@ -1,12 +1,14 @@
-// export const client: {
-//     connect(
-//       url: string,
-//       options: {
-//         binary: boolean;
-//         onConnect(err: Error | null | undefined, stream: Through<any>): void;
-//       }
-//     ): any;
-//   };
+declare module 'pull-ws/client' {
+  import { Through } from 'pull-stream';
+
+  export default function connect(
+    url: string,
+    options: {
+      binary: boolean;
+      onConnect(err: Error | null | undefined, stream: Through): void;
+    }
+  ): any;
+}
 
 declare module 'pull-ws/server' {
   import { IncomingMessage } from 'http';

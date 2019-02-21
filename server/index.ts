@@ -8,13 +8,8 @@ import proxy from 'express-http-proxy';
 import http from 'http';
 
 import createServer from 'pull-ws/server';
-import MRPC from 'muxrpc';
 import pull from 'pull-stream';
-import {
-  api as serverApi,
-  implementation as serverImplementation,
-  UserProfile,
-} from './manifest-server';
+import { muxServer, UserProfile } from '../src/mux/server';
 
 import webpack from 'webpack';
 import webpackConfig from '../webpack.config';
@@ -23,6 +18,7 @@ import webpackHotMiddleware from 'webpack-hot-middleware';
 
 import authRouter from './auth';
 import got = require('got');
+import nano = require('nano');
 
 const log = debug(__filename.replace(__dirname, '~'));
 
@@ -47,6 +43,7 @@ app.use('/auth', authRouter);
 const couchDbUrl = 'http://localhost:5984';
 app.use('/db', proxy(couchDbUrl, {}));
 
+const nanoServer = nano(couchDbUrl.replace('://', '://admin:admin@'));
 const validatedWebSocketProfiles = new WeakMap<
   http.IncomingMessage,
   UserProfile
@@ -104,7 +101,7 @@ const validatedWebSocketProfiles = new WeakMap<
   },
   (clientStream, request) => {
     const profile = validatedWebSocketProfiles.get(request)!;
-    const server = MRPC(null, serverApi)(serverImplementation(profile));
+    const server = muxServer(nanoServer, profile);
     const serverStream = server.createStream();
     pull(clientStream, serverStream, clientStream);
   }
