@@ -16,7 +16,6 @@ import webpackConfig from '../webpack.config';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 
-import authRouter from './auth';
 import got = require('got');
 import nano = require('nano');
 
@@ -37,8 +36,6 @@ app.use(
     extended: true,
   })
 );
-
-app.use('/auth', authRouter);
 
 const couchDbUrl = 'http://localhost:5984';
 app.use('/db', proxy(couchDbUrl, {}));

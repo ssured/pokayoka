@@ -8,7 +8,7 @@
 - [ ] code splitting
 - [x] server side sharing of domain & model layer
 - [x] https://webpack.js.org/guides/hot-module-replacement/
-- [ ] husky
+- [ ] husky // https://levelup.gitconnected.com/using-pre-commit-and-pre-push-git-hooks-in-a-react-project-6c83431ef2bd
   - [ ] lint staged
 - [ ] https://github.com/joelparkerhenderson/architecture_decision_record
 - [x] https://github.com/jondot/hygen
