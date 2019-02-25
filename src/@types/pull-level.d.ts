@@ -5,9 +5,10 @@ declare module 'pull-level' {
   import Charwise, { CharwiseKey } from 'charwise';
 
   export type PullLevelReadOptions = AbstractIteratorOptions<CharwiseKey> & {
-    keyEncoding: typeof Charwise;
+    keyEncoding?: typeof Charwise;
     onAbort?: (err: Error) => void;
     live?: boolean;
+    sync?: boolean;
   };
 
   const pl: {

@@ -1,4 +1,11 @@
-class Backoff {
+export class Backoff {
+  noDelay: number;
+  current: number;
+
+  minDelay: number;
+  maxDelay: number;
+  factor: number;
+
   constructor(noDelay = 0, minDelay = 100, maxDelay = 2000, factor = 2) {
     this.noDelay = this.current = noDelay;
     this.minDelay = minDelay;
@@ -17,5 +24,3 @@ class Backoff {
     ));
   }
 }
-
-module.exports = Backoff;

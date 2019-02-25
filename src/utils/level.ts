@@ -1,6 +1,6 @@
 import charwise, { CharwiseKey } from 'charwise';
 import { LevelUp } from 'levelup';
-import pull, { filter, map, Source, Sink } from 'pull-stream';
+import pull, { filter, map } from 'pull-stream';
 import { AbstractIteratorOptions } from 'abstract-leveldown';
 import pl, { PullLevelReadOptions } from 'pull-level';
 
@@ -30,9 +30,7 @@ export class Partition {
     return new Partition(this.db, [...this.path, key]);
   }
 
-  public source<T = any>(
-    options: PullLevelReadOptions = { keyEncoding: charwise }
-  ) {
+  public source<T = any>(options: PullLevelReadOptions) {
     const query: PullLevelReadOptions = {
       keyEncoding: charwise,
       live: true,

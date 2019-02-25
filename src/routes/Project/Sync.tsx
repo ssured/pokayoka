@@ -11,6 +11,12 @@ import { tap } from 'pull-tap';
 import debounce from 'pull-debounce';
 import createAbortable from 'pull-abortable';
 
+import debug from 'debug';
+import base, { filename } from 'paths.macro';
+import { addToServiceWorkerCacheJobs } from '../../jobs/fileCaching';
+import flatMap from 'pull-flatmap';
+const log = debug(`${base}${filename}`);
+
 const SYNC_META_SINCE_KEY = 'since';
 
 export const Sync: React.FunctionComponent<{}> = () => {
@@ -19,18 +25,24 @@ export const Sync: React.FunctionComponent<{}> = () => {
   const syncMeta = partition.partition('sync');
   const mux = useMux();
 
-  const [{ pending, maxPending }, setPending] = useState<{
+  const [{ pending, maxPending, lastAction }, setPending] = useState<{
     pending: number;
     maxPending: number;
-  }>({ pending: Infinity, maxPending: 0 });
+    lastAction: string;
+  }>({ pending: Infinity, maxPending: 0, lastAction: '' });
 
   const updatePending = (newPending: number) => {
     if (pending === 0) {
-      setPending({ pending: newPending, maxPending: newPending });
+      setPending({
+        pending: newPending,
+        maxPending: newPending,
+        lastAction: new Date().toISOString(),
+      });
     } else if (newPending < pending || newPending > maxPending) {
       setPending({
         pending: Math.min(newPending, pending),
         maxPending: newPending === 0 ? 0 : Math.max(newPending, maxPending),
+        lastAction: new Date().toISOString(),
       });
     }
   };
@@ -53,6 +65,7 @@ export const Sync: React.FunctionComponent<{}> = () => {
       .catch(() => '0')
       .then(since => {
         if (unmounted) return;
+        log('sync since %s', since);
         pull(
           // @ts-ignore
           mux.changesSince(projectId, {
@@ -64,6 +77,7 @@ export const Sync: React.FunctionComponent<{}> = () => {
           filter(({ sync }) => !sync), // ignore the in-sync marker
           tee([
             // keep track of the latest seq seen in the stream, useful for restarting
+            // @ts-ignore
             pull(
               filter<{ seq?: string }, { seq: string }>(({ seq }) => !!seq),
               // @ts-ignore
@@ -79,14 +93,17 @@ export const Sync: React.FunctionComponent<{}> = () => {
               syncMeta.sink({ windowSize: 1, windowTime: 1 })
             ),
             // make sure the attachment of the incoming documents are added to the cache
-            // pull(
-            //   flatMap(({ doc }) =>
-            //     Object.keys(doc._attachments || {}).map(filename =>
-            //       [server, db, doc._id, filename].join('/')
-            //     )
-            //   ),
-            //   addToServiceWorkerCacheJobs()
-            // ),
+            pull(
+              // @ts-ignore
+              flatMap(({ doc }) =>
+                Object.keys(doc._attachments || {}).map(filename =>
+                  ['', 'db', projectId, doc._id, filename]
+                    .map(encodeURIComponent)
+                    .join('/')
+                )
+              ),
+              addToServiceWorkerCacheJobs()
+            ),
           ]),
           // @ts-ignore
           map(({ doc, deleted }) => ({
@@ -94,7 +111,9 @@ export const Sync: React.FunctionComponent<{}> = () => {
             value: doc,
             type: deleted ? 'del' : 'put',
           })),
-          partition.sink({ windowSize: 100, windowTime: 100 })
+          tap(doc => log('store doc %O', doc)),
+          // FIXME putting something else than 1 for windowSize breaks the live updating of the app for some reason
+          partition.sink({ windowSize: 1, windowTime: 1 })
         );
         startedPulling = true;
       });
@@ -114,10 +133,9 @@ export const Sync: React.FunctionComponent<{}> = () => {
   return useObserver(() => (
     <Box>
       <Heading>
-        Project {projectId}{' '}
-        {progress > -1 ? `${Math.round(progress)}%` : 'sync status unknown'}
+        Project {projectId} {progress > -1 ? `${Math.round(progress)}%` : '?%'}
       </Heading>
-      Overview
+      {lastAction}
     </Box>
   ));
 };
