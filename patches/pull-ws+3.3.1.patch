@@ -1,3 +1,16 @@
+diff --git a/node_modules/pull-ws/client.js b/node_modules/pull-ws/client.js
+index fb3099b..dbebbea 100644
+--- a/node_modules/pull-ws/client.js
++++ b/node_modules/pull-ws/client.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+ 
+ //load websocket library if we are not in the browser
+-var WebSocket = require('./web-socket')
++var WebSocket = require('reconnecting-websocket').default
+ var duplex = require('./duplex')
+ var wsurl = require('./ws-url')
+ 
 diff --git a/node_modules/pull-ws/server.js b/node_modules/pull-ws/server.js
 index 123b10b..991638a 100644
 --- a/node_modules/pull-ws/server.js

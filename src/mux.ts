@@ -1,10 +1,10 @@
 import connect from 'pull-ws/client';
-import MRPC from 'muxrpc';
+
+import pull, { drain } from 'pull-stream';
+import { muxClient } from './mux/client';
 
 import debug from 'debug';
-import pull, { drain } from 'pull-stream';
 import base, { filename } from 'paths.macro';
-import { muxClient } from './mux/client';
 const log = debug(`${base}${filename}`);
 
 export function startMux() {
@@ -21,10 +21,10 @@ export function startMux() {
       wsUrl,
       {
         binary: true,
-        onConnect: (err, stream) => {
-          if (err) {
-            log('onConnect error %O', err);
-            throw err;
+        onConnect: (errEvent, stream) => {
+          if (errEvent) {
+            log('onConnect error %O', errEvent);
+            return; // swallow the error throw err;
           }
 
           const client = muxClient();
