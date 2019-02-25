@@ -38,7 +38,8 @@ export const AuthenticationContainer = createContainer(() => {
   return {
     authentication,
     dbNames:
-      (authentication.ok &&
+      (authentication &&
+        authentication.ok &&
         authentication.roles.reduce((dbNames, role) => {
           dbNames.add(role.split('-').pop()!);
           return dbNames;

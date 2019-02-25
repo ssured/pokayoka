@@ -14,6 +14,7 @@ export type Change =
   | DatabaseChangesResultItem;
 
 export type InSync = { sync: true };
+export type NoSyncInfo = { sync?: false };
 
 export type DbChangesSinceLiveOptions = DocumentScopeFollowUpdatesParams & {
   // old: true,
@@ -24,7 +25,7 @@ export function dbChangesSinceLive(
   nano: ServerScope,
   name: string,
   options?: DbChangesSinceLiveOptions
-): Source<Change | InSync>;
+): Source<(Change & NoSyncInfo) | InSync>;
 
 export function shareSource<T>(
   sourceCreator: () => Source<T>,

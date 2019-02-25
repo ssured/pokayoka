@@ -9,25 +9,25 @@ export class Partition {
     return new Partition(db);
   }
 
-  private constructor(public db: LevelUp, private parent: CharwiseKey[] = []) {}
+  private constructor(public db: LevelUp, private path: CharwiseKey[] = []) {}
 
   public encode(key: CharwiseKey): CharwiseKey {
-    return this.parent.reduceRight((encoded, key) => [key, encoded], key);
+    return this.path.reduceRight((encoded, key) => [key, encoded], key);
   }
 
   public decode(nested: CharwiseKey): CharwiseKey {
-    return this.parent.reduceRight(
+    return this.path.reduceRight(
       nested => (nested as CharwiseKey[])[1],
       nested
     );
   }
 
   public isRoot(): boolean {
-    return this.parent.length === 0;
+    return this.path.length === 0;
   }
 
   public partition(key: CharwiseKey): Partition {
-    return new Partition(this.db, [...this.parent, key]);
+    return new Partition(this.db, [...this.path, key]);
   }
 
   public source<T = any>(
@@ -54,7 +54,12 @@ export class Partition {
     );
   }
 
-  public sink<T = any>(options: AbstractIteratorOptions = {}) {
+  public sink<T = any>(
+    options: AbstractIteratorOptions & {
+      windowSize?: number;
+      windowTime?: number;
+    } = {}
+  ) {
     return pull(
       map<
         { key: CharwiseKey; value: T; type?: 'put' | 'del' },
@@ -65,5 +70,9 @@ export class Partition {
       })),
       pl.write(this.db, options)
     );
+  }
+
+  public get<T = any>(key: CharwiseKey) {
+    return this.db.get(this.encode(key)) as Promise<T>;
   }
 }

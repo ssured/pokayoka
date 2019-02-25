@@ -12,8 +12,7 @@ import 'tailwindcss/css/preflight.css';
 
 import { IconContext } from 'react-icons';
 import { AuthenticationContainer } from './contexts/authentication';
-
-import { startMux } from './mux';
+import { MuxContainer } from './contexts/mux';
 
 if (
   'serviceWorker' in navigator &&
@@ -28,8 +27,6 @@ const isProduction = false; // FIXME implement this
 configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });
 setLivelynessChecking(isProduction ? 'ignore' : 'error');
 
-startMux();
-
 /**
  * boot the app
  */
@@ -42,7 +39,9 @@ function renderApp() {
   render(
     <IconContext.Provider value={{ style: { verticalAlign: 'middle' } }}>
       <AuthenticationContainer.Provider>
-        <App />
+        <MuxContainer.Provider>
+          <App />
+        </MuxContainer.Provider>
       </AuthenticationContainer.Provider>
     </IconContext.Provider>,
     document.getElementById('root')

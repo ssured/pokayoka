@@ -97,6 +97,39 @@ declare module 'pull-stream' {
     s5: Sink<W>
   ): Sink<S>;
 
+  export default function pull<T, U, V, W, X, R>(
+    s1: Source<T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Through<W, X>,
+    s6: Through<X, R>
+  ): Source<R>;
+  export default function pull<T, U, V, W, X>(
+    s1: Source<T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Through<W, X>,
+    s6: Sink<X>
+  ): void;
+  export default function pull<S, T, U, V, W, X, R>(
+    s1: Through<S, T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Through<W, X>,
+    s6: Through<X, R>
+  ): Source<R>;
+  export default function pull<S, T, U, V, W, X>(
+    s1: Through<S, T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Through<W, X>,
+    s6: Sink<X>
+  ): Sink<S>;
+
   // source
   export function keys<T, U extends keyof T>(
     obj: T,
@@ -124,8 +157,10 @@ declare module 'pull-stream' {
   export function asyncMap<T, U>(
     fn: (data: T, cb: Callback<U>) => void
   ): Through<T, U>;
-  export function filter<T>(test: (data: T) => boolean): Through<T, T>;
-  export function filterNot<T>(test: (data: T) => boolean): Through<T, T>;
+  export function filter<T, U = T>(test: (data: T) => boolean): Through<T, U>;
+  export function filterNot<T, U = T>(
+    test: (data: T) => boolean
+  ): Through<T, U>;
   export function take<T>(
     test: number | ((data: T) => boolean),
     opts?: { last: boolean }

@@ -1,4 +1,4 @@
-import { RouteComponentProps } from '@reach/router';
+import { RouteComponentProps, Link } from '@reach/router';
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 
@@ -20,7 +20,11 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => {
       gap="medium"
     >
       {authentication.ok
-        ? [...dbNames].map(db => <Box key={db}>{db}</Box>)
+        ? [...dbNames].map(db => (
+            <Link key={db} to={`/${db}`}>
+              <Box>{db}</Box>
+            </Link>
+          ))
         : 'Please connect to server to see your databases'}
     </Box>
   );
