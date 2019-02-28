@@ -1,4 +1,4 @@
-const Backoff = require('./backoff');
+const { Backoff } = require('./backoff');
 
 describe('Exponential backoff', () => {
   test('it increments on calls', () => {

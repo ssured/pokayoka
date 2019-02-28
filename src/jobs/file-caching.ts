@@ -1,31 +1,12 @@
 import pull, { asyncMap, map, Sink } from 'pull-stream';
-import { tap } from 'pull-tap';
 import paraMap from 'pull-paramap';
 import createAbortable from 'pull-abortable';
 import { Backoff } from '../utils/backoff';
 import { rootPartition } from '../contexts/level';
 
-const jobsPartition = rootPartition.partition('jobs');
+const jobsPartition = rootPartition.partition('_jobs');
 const cacheName = 'fileCache';
 const parallelDownloads = 5;
-
-// USAGE:
-// import { createSourceAndSinkFor } from './db-jobs/helpers';
-// import { provideServiceWorkerCaching } from './db-jobs/serviceworker-caching';
-
-// const {
-//   startServiceWorkerCacheJobs,
-//   addToServiceWorkerCacheJobs,
-// } = provideServiceWorkerCaching({
-//   ...createSourceAndSinkFor(level, ['jobs', 'add_to_cache']),
-//   cacheName: db,
-// });
-// const abortCacheJobs = startServiceWorkerCacheJobs();
-
-// pull(
-//   ... stream of URL strings
-//   addToServiceWorkerCacheJobs()
-// )
 
 function startServiceWorkerCacheJobs() {
   const abortable = createAbortable();

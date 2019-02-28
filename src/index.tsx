@@ -24,7 +24,7 @@ if (
 
 const isProduction = false; // FIXME implement this
 
-configure({ enforceActions: 'always', disableErrorBoundaries: isProduction });
+configure({ enforceActions: 'observed', disableErrorBoundaries: isProduction });
 setLivelynessChecking(isProduction ? 'ignore' : 'error');
 
 /**

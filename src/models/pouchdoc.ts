@@ -1,10 +1,12 @@
 import { types as t } from 'mobx-state-tree';
+import { singleton } from './utils';
 
-export const pouchdoc = t
-  .model('PouchDoc', {
-    _id: t.identifier,
-    _rev: t.maybe(t.string),
-    _attachments: t.frozen() /*t.optional(
+export const pouchdoc = singleton(
+  () =>
+    t.model('PouchDoc', {
+      _id: t.identifier,
+      // _rev: t.maybe(t.string),
+      _attachments: t.frozen() /*t.optional(
       t.map(
         t
           .model('Attachment', {
@@ -46,12 +48,13 @@ export const pouchdoc = t
       ),
       {}
     )*/,
-  })
-  .actions(self => ({
-    setRev(rev: string) {
-      self._rev = rev;
-    },
-  }));
+    })
+  // .actions(self => ({
+  //   setRev(rev: string) {
+  //     self._rev = rev;
+  //   },
+  // }))
+);
 // .actions(self => ({
 //   addAttachment(name, content_type, data) {
 //     self._attachments.set(name, { content_type, data });

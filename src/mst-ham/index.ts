@@ -15,7 +15,7 @@ import {
 } from 'mobx-state-tree';
 import { get, set } from 'mobx';
 import { merge, HamValue, isObject, THam } from './merge';
-import { winningRev } from '../utils/pouchdb';
+import isEqualWith from 'lodash.isequalwith';
 import { safeEntries } from '../utils/mobx';
 
 const hamType: IAnyComplexType = types.map(
@@ -26,6 +26,14 @@ const hamType: IAnyComplexType = types.map(
 );
 
 export const HAM_PATH = '#';
+
+export type HamObject = {
+  [HAM_PATH]: [number, THam];
+};
+
+export const objectHasHam = (obj: {}): obj is HamObject => HAM_PATH in obj;
+
+export const getHamFromObject = (obj: HamObject): HamValue => obj[HAM_PATH];
 
 export const maxStateFromHam = (ham: HamValue): number => {
   if (typeof ham === 'number') return ham;
@@ -143,12 +151,15 @@ export const hamActions = (self: Instance<typeof _HamModel>) => {
           curValue
         );
 
-        if (result.currentChanged) {
+        if (
+          !isEqualWith(curHam, result.resultHam) ||
+          !isEqualWith(curValue, result.resultValue)
+        ) {
           try {
             const newSnapshot = {
               ...result.resultValue,
               [HAM_PATH]: result.resultHam,
-              _rev: winningRev(inRev, curRev),
+              // _rev: winningRev(inRev, curRev),
             };
             if (getType(self).is(newSnapshot)) {
               applySnapshot(self, newSnapshot);

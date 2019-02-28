@@ -1,7 +1,7 @@
 declare module 'muxrpc' {
   import { Through } from 'pull-stream';
 
-  type MuxType = 'sink' | 'source' | 'async' | 'through';
+  type MuxType = 'sink' | 'source' | 'async' | 'duplex';
   type MuxManifest = { [key: string]: MuxType };
 
   export default function MRPC(

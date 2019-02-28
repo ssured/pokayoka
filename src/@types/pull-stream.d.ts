@@ -167,6 +167,47 @@ declare module 'pull-stream' {
     s7: Sink<Y>
   ): Sink<S>;
 
+  export default function pull<T, U, V, W, X, Y, Z, R>(
+    s1: Source<T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Through<W, X>,
+    s6: Through<X, Y>,
+    s7: Through<Y, Z>,
+    s8: Through<Z, R>
+  ): Source<R>;
+  export default function pull<T, U, V, W, X, Y, Z>(
+    s1: Source<T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Through<W, X>,
+    s6: Through<X, Y>,
+    s7: Through<Y, Z>,
+    s8: Sink<Z>
+  ): void;
+  export default function pull<S, T, U, V, W, X, Y, Z, R>(
+    s1: Through<S, T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Through<W, X>,
+    s6: Through<X, Y>,
+    s7: Through<Y, Z>,
+    s8: Through<Z, R>
+  ): Source<R>;
+  export default function pull<S, T, U, V, W, X, Y, Z>(
+    s1: Through<S, T>,
+    s2: Through<T, U>,
+    s3: Through<U, V>,
+    s4: Through<V, W>,
+    s5: Through<W, X>,
+    s6: Through<X, Y>,
+    s7: Through<Y, Z>,
+    s8: Sink<Z>
+  ): Sink<S>;
+
   // source
   export function keys<T, U extends keyof T>(
     obj: T,

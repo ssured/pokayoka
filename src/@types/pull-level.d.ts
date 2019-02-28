@@ -8,6 +8,7 @@ declare module 'pull-level' {
     keyEncoding?: typeof Charwise;
     onAbort?: (err: Error) => void;
     live?: boolean;
+    old?: boolean;
     sync?: boolean;
   };
 

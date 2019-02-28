@@ -10,7 +10,7 @@ const isProduction = false;
 
 const config: webpack.Configuration = {
   entry: {
-    main: ['./src/index', 'webpack-hot-middleware/client'],
+    main: ['babel-polyfill', './src/index', 'webpack-hot-middleware/client'],
     worker: ['./src/worker/index'],
     // sw: ['./src/worker-service/index'],
   },
