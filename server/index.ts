@@ -16,8 +16,9 @@ import webpackConfig from '../webpack.config';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 
-import got = require('got');
-import nano = require('nano');
+import got from 'got';
+import nano from 'nano';
+import { Channel, fromEmitter } from 'queueable';
 
 const log = debug(__filename.replace(__dirname, '~'));
 
@@ -161,3 +162,30 @@ if (isDevelopment) {
 server.listen(3000, () => {
   log('PokaYoka listening on port 3000!\n');
 });
+
+// The following code documents how to use async iterators
+// this can fully replace pull-streams
+// for timing examples see https://docs.google.com/presentation/d/1r2V1sLG8JSSk8txiLh4wfTkom-BoOsk52FgPBy8o3RM/edit
+(async function() {
+  async function* changes(db: nano.DocumentScope<{}>) {
+    const feed = db.follow({ since: 'now' });
+    // @ts-ignore
+    feed.follow();
+    try {
+      yield* fromEmitter(() => new Channel<nano.DatabaseChangesResultItem>())(
+        'change',
+        feed
+      );
+    } finally {
+      // @ts-ignore
+      feed.stop();
+    }
+  }
+
+  console.log('started listening');
+  console.log('YOYOYOYOYO');
+  for await (const change of changes(nanoServer.use('bk0wb0a7sz'))) {
+    console.log(JSON.stringify(change, null, 2));
+    break;
+  }
+})();

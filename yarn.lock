@@ -2032,6 +2032,14 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-native@*":
+  version "0.57.38"
+  resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.57.38.tgz#2ff6ed1a7cc207afbfd87bf496513d96931d1446"
+  integrity sha512-bmY2ad/vQgP0HMT7Q7EQzirDBt5ibp+kBHclTnY7/i5MrdqE1oY+3b9NkDg3ohXlumr7p5stAG6I55nhfeUV6Q==
+  dependencies:
+    "@types/prop-types" "*"
+    "@types/react" "*"
+
 "@types/react@*", "@types/react@^16.7.13", "@types/react@^16.7.18":
   version "16.7.18"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.7.18.tgz#f4ce0d539a893dd61e36cd11ae3a5e54f5a48337"
@@ -2108,6 +2116,15 @@
   dependencies:
     "@types/node" "*"
     "@types/react" "*"
+    csstype "^2.2.0"
+
+"@types/styled-components@^4.1.11":
+  version "4.1.11"
+  resolved "https://registry.yarnpkg.com/@types/styled-components/-/styled-components-4.1.11.tgz#1bd97988a69be550ef8a967b87827ff943f21c4e"
+  integrity sha512-AMuEwRLqV8T9T7+OV7KnMMODKRxcEAEDGd59pJDFcjx9TTVQmUzBqw7TtNVGh1poxJsm3Iv7SURpgdUr28E7Xw==
+  dependencies:
+    "@types/react" "*"
+    "@types/react-native" "*"
     csstype "^2.2.0"
 
 "@types/styled-system@^3.1.0":
@@ -5809,6 +5826,11 @@ fast-levenshtein@~2.0.4:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
+
+fast-list@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/fast-list/-/fast-list-1.0.3.tgz#f5d5754a7c1cbf682a15961ef9a063897571eaa1"
+  integrity sha1-9dV1Snwcv2gqFZYe+aBjiXVx6qE=
 
 fastest-stable-stringify@^1.0.1:
   version "1.0.1"
@@ -10994,6 +11016,13 @@ querystringify@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/querystringify/-/querystringify-2.1.0.tgz#7ded8dfbf7879dcc60d0a644ac6754b283ad17ef"
   integrity sha512-sluvZZ1YiTLD5jsqZcDmFyV2EwToyXZBfpoVOmktMmW+VEnhgakFHnasVph65fOjGPTWN0Nw3+XQaSeMayr0kg==
+
+queueable@^4.1.2:
+  version "4.1.2"
+  resolved "https://registry.yarnpkg.com/queueable/-/queueable-4.1.2.tgz#cfd9a3a53b96bfa43b43baa4a5f28a5a2d4c7f21"
+  integrity sha512-3ooAr53Owci05gjraF3J73ZUGmivxp/bH6ZCQDu8Nixeo5ybgjigheAIlD9Jsnl1eFiBjRvo5lbP84e+b4hsuQ==
+  dependencies:
+    fast-list "^1.0.3"
 
 raf-schd@^4.0.0:
   version "4.0.0"
