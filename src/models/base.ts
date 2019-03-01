@@ -1,11 +1,14 @@
 import { types } from 'mobx-state-tree';
-import { pouchdoc } from './pouchdoc';
 import { HamModel as hamdoc } from '../mst-ham';
 import { singleton } from './utils';
+import { mustBeOverwritten } from './types';
 
 export const base = singleton(() =>
-  types.compose(
-    pouchdoc(),
-    hamdoc
-  )
+  hamdoc.named('base').props({
+    _id: types.identifier,
+    _attachments: types.frozen(),
+
+    type: mustBeOverwritten,
+    typeVersion: mustBeOverwritten,
+  })
 );

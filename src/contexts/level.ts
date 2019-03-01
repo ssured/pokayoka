@@ -19,6 +19,9 @@ import createAbortable from 'pull-abortable';
 import debug from 'debug';
 import base, { filename } from 'paths.macro';
 import { observable, runInAction } from 'mobx';
+import { Env } from '../models/utils';
+import { Maybe, just, nothing } from 'true-myth/maybe';
+import { Result, ok, err } from 'true-myth/result';
 const log = debug(`${base}${filename}`);
 
 const dbName = 'pokayoka';
@@ -68,7 +71,9 @@ export const useModel = <C, S, T>(
   const level = useLevel();
   const [instance, setInstance] = useState<null | T>(null);
 
-  const cache = useRef(observable.map<string, T>({}, { deep: false }));
+  const cache = useRef(
+    observable.map<string, Result<Maybe<T>, string>>({}, { deep: false })
+  );
   const timeouts = useRef<{ [key: string]: any }>({});
   const setCache = (identifier: string, object: any) => {
     runInAction(() => cache.current.set(identifier, object));
@@ -89,35 +94,41 @@ export const useModel = <C, S, T>(
 
               if (!cache.current.has(id)) {
                 log('load %s %s', Model().name, id);
-                setCache(id, null);
+                setCache(id, ok(nothing()));
 
                 level
                   .get<CI>(id)
                   .then(
                     snapshot =>
-                      setCache(id, Model().create(snapshot, getEnv(root))) // here we copy the env from the root so they share behaviour
+                      setCache(
+                        id,
+                        ok(just(Model().create(snapshot, getEnv(root))))
+                      ) // here we copy the env from the root so they share behaviour
                   )
-                  .catch(err => log('load error %s %O', Model().name, err));
+                  .catch(err => {
+                    log('load error %s %O', Model().name, err);
+                    setCache(id, err(just(err)));
+                  });
               }
-              return cache.current.get(id);
+              return cache.current.get(id)!;
             },
-            onSnapshot(snapshot: C) {
-              // brute force debounce
-              // FIXME find reason why onSnapshot is called 5 times in a row
-              const id = (snapshot as any)._id;
-              if (timeouts.current[id]) clearTimeout(timeouts.current[id]);
-              timeouts.current[id] = setTimeout(() => {
-                pull(
-                  once({ key: id, value: snapshot }),
-                  level.sink({ windowSize: 1, windowTime: 1 })
-                );
-                log('wrote %O to level', snapshot);
-              }, 100);
-            },
+            // onSnapshot(snapshot: C) {
+            //   // brute force debounce
+            //   // FIXME find reason why onSnapshot is called 5 times in a row
+            //   const id = (snapshot as any)._id;
+            //   if (timeouts.current[id]) clearTimeout(timeouts.current[id]);
+            //   timeouts.current[id] = setTimeout(() => {
+            //     pull(
+            //       once({ key: id, value: snapshot }),
+            //       level.sink({ windowSize: 1, windowTime: 1 })
+            //     );
+            //     log('wrote %O to level', snapshot);
+            //   }, 100);
+            // },
             // getRoot() {
             //   return root;
             // },
-          });
+          } as Env);
           setInstance(root);
         }
       } else {

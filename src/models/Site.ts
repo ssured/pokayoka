@@ -1,3 +1,6 @@
+import Maybe, { just, nothing } from 'true-myth/maybe';
+import Result from 'true-myth/result';
+
 import {
   types as t,
   SnapshotIn,
@@ -9,59 +12,44 @@ import {
   getIdentifier,
 } from 'mobx-state-tree';
 
-import { singleton } from './utils';
-import { base } from './base';
 import { BelongsToProject } from './Project';
+import { singleton, nameFromType, Env } from './utils';
+import { SpatialStructureElement } from './IFC';
+import { label, compoundPlaneAngleMeasure, postalAddress } from './types';
+import { HasManyBuildings } from './Building';
 
-const siteType = 'site';
-
-// VERSION 1
-const siteV1Props = {
-  title: t.string,
-};
-
-const SiteV1Model = singleton(() => t.model(siteType, siteV1Props));
-type SnapshotInSiteV1 = SnapshotIn<typeof SiteV1Model>;
-
-const toSnapshot1 = (snapshot: SnapshotInSiteV1) => snapshot;
-
-// VERSION 2
-
-// GENERAL IMPLEMENTATION
+const type = 'site';
 
 export const Site = singleton(() =>
   t
     .compose(
-      'Site',
-      base(),
+      nameFromType(type),
+      SpatialStructureElement(),
+      t.model({
+        type,
+        typeVersion: 1,
+        refLatitude: t.maybe(compoundPlaneAngleMeasure),
+        refLongitude: t.maybe(compoundPlaneAngleMeasure),
+        refElevation: t.maybe(t.number),
+        landTitleNumber: t.maybe(label),
+        siteAddress: t.maybe(postalAddress),
+      }),
       BelongsToProject(),
-      SiteV1Model()
+      HasManyBuildings()
     )
-    .preProcessSnapshot(toSnapshot1 as any)
-    .actions(self => ({
-      setTitle(title: string) {
-        self.title = title;
-      },
-    }))
+    .actions(self => ({}))
 );
 
-type SiteType = ReturnType<typeof Site>;
-export type TSiteInstance = Instance<SiteType>;
-export type TSiteSnapshotIn = SnapshotIn<SiteType>;
-export type TSiteSnapshotOut = SnapshotOut<SiteType>;
-export type TSite = TSiteSnapshotIn | TSiteInstance;
-
-export interface ISite extends TSiteInstance {}
-
 export const isSite = (obj: IStateTreeNode): obj is TSiteInstance =>
-  isStateTreeNode(obj) && (obj as any).type === siteType;
+  isStateTreeNode(obj) && (obj as any).type === type;
 
 export const BelongsToSite = singleton(() =>
   t
     .model('BelongsToSite', { siteId: t.maybe(t.string) })
     .views(self => ({
-      get site(): ISite | undefined | null {
-        return self.siteId && getEnv(self).load(Site, self.siteId);
+      get site(): Maybe<Result<Maybe<ISite>, string>> {
+        if (self.siteId == null) return nothing();
+        return just(getEnv<Env>(self).load(Site, self.siteId));
       },
     }))
     .actions(self => ({
@@ -75,19 +63,12 @@ export const HasManySites = singleton(() =>
   t
     .model('HasManySites', { siteIds: t.map(t.boolean) })
     .views(self => ({
-      get allSites(): (ISite | string)[] {
+      get sites(): Result<Maybe<ISite>, string>[] {
         const validEntries = [...self.siteIds.entries()].filter(
           ([, value]) => value
         );
-        const { load } = getEnv(self);
-        return validEntries.map(([key]) => load(Site, key) || key);
-      },
-    }))
-    .views(self => ({
-      get sites(): ISite[] {
-        return self.allSites.filter(
-          site => typeof site !== 'string'
-        ) as ISite[];
+        const { load } = getEnv<Env>(self);
+        return validEntries.map(([key]) => load(Site, key));
       },
     }))
     .actions(self => ({
@@ -102,3 +83,9 @@ export const HasManySites = singleton(() =>
       },
     }))
 );
+
+export type TSite = ReturnType<typeof Site>;
+export type TSiteInstance = Instance<TSite>;
+export type TSiteSnapshotIn = SnapshotIn<TSite>;
+export type TSiteSnapshotOut = SnapshotOut<TSite>;
+export interface ISite extends TSiteInstance {}
