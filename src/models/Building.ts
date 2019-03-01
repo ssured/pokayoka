@@ -1,6 +1,3 @@
-import Maybe, { just, nothing } from 'true-myth/maybe';
-import Result from 'true-myth/result';
-
 import {
   types as t,
   SnapshotIn,
@@ -17,6 +14,9 @@ import { SpatialStructureElement } from './IFC';
 import { postalAddress } from './types';
 import { BelongsToSite } from './Site';
 import { HasManyBuildingStoreys } from './BuildingStorey';
+
+import { Maybe, Result } from 'true-myth';
+const { just, nothing } = Maybe;
 
 const type = 'building';
 

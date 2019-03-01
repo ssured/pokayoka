@@ -1,6 +1,3 @@
-import Maybe, { just, nothing } from 'true-myth/maybe';
-import Result from 'true-myth/result';
-
 import {
   types as t,
   SnapshotIn,
@@ -17,6 +14,9 @@ import { singleton, nameFromType, Env } from './utils';
 import { SpatialStructureElement } from './IFC';
 import { label, compoundPlaneAngleMeasure, postalAddress } from './types';
 import { HasManyBuildings } from './Building';
+
+import { Maybe, Result } from 'true-myth';
+const { just, nothing } = Maybe;
 
 const type = 'site';
 

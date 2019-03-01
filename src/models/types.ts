@@ -26,12 +26,7 @@ export const isText = isString;
 export const text = types.refinement('text', types.string, isText);
 
 export const isLabel = (s: string) => isString(s) && !s.match(/\n/);
-export const label = types.refinement(
-  'label',
-  types.string,
-  isLabel,
-  'label cannot contain newline'
-);
+export const label = types.refinement('label', types.string, isLabel);
 
 export const isGloballyUniqueId = (s: string) => isString(s) && s.length === 22;
 export const globallyUniqueId = types.refinement(

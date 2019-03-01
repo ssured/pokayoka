@@ -20,8 +20,8 @@ import debug from 'debug';
 import base, { filename } from 'paths.macro';
 import { observable, runInAction } from 'mobx';
 import { Env } from '../models/utils';
-import { Maybe, just, nothing } from 'true-myth/maybe';
-import { Result, ok, err } from 'true-myth/result';
+import { Maybe, Result } from 'true-myth';
+
 const log = debug(`${base}${filename}`);
 
 const dbName = 'pokayoka';
@@ -94,7 +94,7 @@ export const useModel = <C, S, T>(
 
               if (!cache.current.has(id)) {
                 log('load %s %s', Model().name, id);
-                setCache(id, ok(nothing()));
+                setCache(id, Result.ok(Maybe.nothing()));
 
                 level
                   .get<CI>(id)
@@ -102,12 +102,14 @@ export const useModel = <C, S, T>(
                     snapshot =>
                       setCache(
                         id,
-                        ok(just(Model().create(snapshot, getEnv(root))))
+                        Result.ok(
+                          Maybe.just(Model().create(snapshot, getEnv(root)))
+                        )
                       ) // here we copy the env from the root so they share behaviour
                   )
                   .catch(err => {
                     log('load error %s %O', Model().name, err);
-                    setCache(id, err(just(err)));
+                    setCache(id, Result.err(Maybe.just(err)));
                   });
               }
               return cache.current.get(id)!;

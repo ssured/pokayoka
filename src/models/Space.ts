@@ -1,6 +1,3 @@
-import Maybe, { just, nothing } from 'true-myth/maybe';
-import Result from 'true-myth/result';
-
 import {
   types as t,
   SnapshotIn,
@@ -16,6 +13,9 @@ import { singleton, nameFromType, Env } from './utils';
 import { SpatialStructureElement } from './IFC';
 import { internalOrExternalEnum } from './types';
 import { BelongsToBuildingStorey } from './BuildingStorey';
+
+import { Maybe, Result } from 'true-myth';
+const { just, nothing } = Maybe;
 
 const type = 'space';
 

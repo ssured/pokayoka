@@ -1,6 +1,3 @@
-import Maybe, { just, nothing } from 'true-myth/maybe';
-import Result from 'true-myth/result';
-
 import {
   types as t,
   SnapshotIn,
@@ -16,6 +13,9 @@ import { HasManySites } from './Site';
 import { singleton, nameFromType, Env } from './utils';
 import { Object } from './IFC';
 import { label } from './types';
+
+import { Maybe, Result } from 'true-myth';
+const { just, nothing } = Maybe;
 
 const type = 'project';
 
