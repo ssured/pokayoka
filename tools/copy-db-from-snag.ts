@@ -37,21 +37,19 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
       .filter(row => row.id === fromDbName)
       .map(row => row.doc!);
 
-    const newObjects: (
-      | IProject
-      | ISite
-      | IBuilding
-      | IBuildingStorey
-      | ISpace)[] = [];
+    const newObjects = new Map<
+      IProject | ISite | IBuilding | IBuildingStorey | ISpace,
+      string
+    >();
 
     projects.forEach(project => {
-      const _projectId = generateId();
+      const _projectId = project._id; // generateId();
       const newProject = Project().create({
         _id: _projectId,
         globalId: _projectId,
         name: project.title,
       });
-      newObjects.push(newProject);
+      newObjects.set(newProject, project._id);
 
       const _siteId = generateId();
       const newSite = Site().create({
@@ -59,7 +57,7 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
         globalId: _siteId,
         name: project.title,
       });
-      newObjects.push(newSite);
+      newObjects.set(newSite, project._id);
 
       newSite.setProject(newProject);
       newProject.addSite(newSite);
@@ -71,7 +69,7 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
         name: project.title,
         description: project.description,
       });
-      newObjects.push(newBuilding);
+      newObjects.set(newBuilding, project._id);
 
       newBuilding.setSite(newSite);
       newSite.addBuilding(newBuilding);
@@ -91,7 +89,7 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
           name: storey.title,
           description: storey.description,
         });
-        newObjects.push(newStorey);
+        newObjects.set(newStorey, storey._id);
 
         newStorey.setBuilding(newBuilding);
         newBuilding.addBuildingStorey(newStorey);
@@ -114,7 +112,7 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
             name: space.title,
             description: space.description,
           });
-          newObjects.push(newSpace);
+          newObjects.set(newSpace, space._id);
 
           newSpace.setBuildingStorey(newStorey);
           newStorey.addSpace(newSpace);
@@ -122,11 +120,17 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
       });
     });
 
-    log(
-      await Promise.all(
-        newObjects.map(object => toDb.insert(getSnapshot(object)))
-      )
-    );
+    for (const [object, originalId] of newObjects.entries()) {
+      log(
+        await toDb.insert({
+          ...getSnapshot(object),
+          // @ts-ignore
+          _attachments: (await fromDb.get<{ _attachments: any }>(originalId, {
+            attachments: true,
+          }))._attachments,
+        })
+      );
+    }
   } catch (e) {
     log('Uncaught error %O', e);
   }
