@@ -1,5 +1,4 @@
 import { types } from 'mobx-state-tree';
-import { type } from 'os';
 
 // use this
 export const mustBeOverwritten = types.custom<unknown, undefined>({

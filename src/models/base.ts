@@ -6,7 +6,7 @@ import { mustBeOverwritten } from './types';
 export const base = singleton(() =>
   hamdoc.named('base').props({
     _id: types.identifier,
-    _attachments: types.frozen(),
+    _attachments: types.maybe(types.frozen()),
 
     type: mustBeOverwritten,
     typeVersion: mustBeOverwritten,
