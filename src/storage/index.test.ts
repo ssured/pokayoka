@@ -1,4 +1,4 @@
-import { Storage, StampedTuple } from './index';
+import { Storage, StampedPatch } from './index';
 import { MemoryAdapter } from './adapters/memory';
 import { types, getSnapshot, onPatch } from 'mobx-state-tree';
 import { delay } from 'q';
@@ -159,18 +159,18 @@ describe('Storage', () => {
     });
   });
 
-  test('written tuples are emitted', async () => {
+  test('written patches are emitted', async () => {
     // TODO should be emitting patch objects
     const mem = new MemoryAdapter();
     const storage = new Storage(mem);
 
-    const tuples: StampedTuple[] = [];
+    const tuples: StampedPatch[] = [];
     const unsubscribe = storage.subscribe(written => tuples.push(...written));
 
     const obj1 = { id: ['obj1'] as [string], key: 'value' };
     await storage.slowlyMergeObject(obj1);
     unsubscribe();
 
-    expect(tuples.length > 0).toBe(true);
+    expect(tuples.length).toBe(1);
   });
 });

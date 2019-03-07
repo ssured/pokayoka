@@ -1,5 +1,5 @@
 import mlts from 'monotonic-lexicographic-timestamp';
-import { IJsonPatch, splitJsonPath } from 'mobx-state-tree';
+import { IJsonPatch, splitJsonPath, joinJsonPath } from 'mobx-state-tree';
 
 import {
   StorageAdapter,
@@ -21,7 +21,7 @@ interface Tuple {
   p: p;
   o: o;
 }
-export interface StampedTuple extends Tuple {
+interface StampedTuple extends Tuple {
   t: timestamp;
 }
 
@@ -100,9 +100,9 @@ export const numberToState = (n?: number) =>
 
 export class Storage {
   private updatedTuplesEmitter = new SubscribableEvent<
-    (tuples: StampedTuple[]) => void
+    (tuples: StampedPatch[]) => void
   >();
-  public subscribe(listener: (tuples: StampedTuple[]) => void) {
+  public subscribe(listener: (tuples: StampedPatch[]) => void) {
     const subscription = this.updatedTuplesEmitter.subscribe(listener);
     return () => subscription.unsubscribe();
   }
@@ -188,7 +188,9 @@ export class Storage {
         ({ key: [, s, p], value: [t, o] }) => ({ s, p, o, t } as StampedTuple)
       );
 
-    this.updatedTuplesEmitter.fire(propertyUpdateTuples);
+    this.updatedTuplesEmitter.fire(
+      propertyUpdateTuples.map(stampedTupleToStampedPatch)
+    );
   }
 
   private async mergeTuples(
@@ -311,5 +313,21 @@ function stampedPatchToStampedTuple({
     p: splitJsonPath(path).join(PREDICATE_PATH_SPLITTER),
     o: op === 'remove' ? undefined : value,
     t,
+  };
+}
+
+// TODO always sends a replace, but could be an 'add'. Maybe not needed. Research
+function stampedTupleToStampedPatch({
+  s,
+  p,
+  o,
+  t,
+}: StampedTuple): StampedPatch {
+  return {
+    s,
+    t,
+    op: 'replace',
+    path: joinJsonPath(p.split(PREDICATE_PATH_SPLITTER)),
+    value: o,
   };
 }

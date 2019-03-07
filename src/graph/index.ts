@@ -11,6 +11,7 @@ import {
   IReferenceType,
   types,
   getEnv,
+  applyPatch,
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
 import { Storage } from '../storage/index';
@@ -78,6 +79,19 @@ abstract class BaseStore implements GraphEnv {
 export class Store extends BaseStore {
   constructor(public storage: Storage) {
     super();
+
+    // actively listen for updates to keep the store up to date
+    storage.subscribe(patches => {
+      for (const {
+        s: [id],
+        t, // timestamp is not needed here
+        ...patch
+      } of patches) {
+        const obj = this.cache.get(id);
+        if (obj == null) continue;
+        applyPatch(obj, patch);
+      }
+    });
   }
 
   async load<T extends IAnyModelType>(
@@ -152,7 +166,7 @@ class RecordingStore extends BaseStore {
 export function referenceTo<IT extends IAnyComplexType>(
   Type: IT
 ): IReferenceType<IT> {
-  // TODO do something with types.safeReference?
+  // TODO do something with safeReference?
   return types.reference<IT>(Type, {
     get(identifier, parent) {
       if (parent == null) return null;
