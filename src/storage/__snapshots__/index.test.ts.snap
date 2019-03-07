@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Storage it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`Storage it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;

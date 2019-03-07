@@ -1,0 +1,647 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`M it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`M it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`Me it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`Me it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`Memo it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`Memo it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`Memory it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`Memory it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryA it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryA it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryAda it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryAda it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryAdap it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryAdap it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryAdapte it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryAdapte it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryAdapter it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`MemoryAdapter it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores adata 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores adata 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and redata 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and redata 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retdata 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retdata 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retrdata 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retrdata 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retriedata 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retriedata 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retrievedata 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retrievedata 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retrieves data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores and retrieves data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores andata 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores andata 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores data 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;
+
+exports[`it should work it stores data 2`] = `
+Array [
+  Object {
+    "key": Array [
+      "a",
+    ],
+    "value": "testa",
+  },
+  Object {
+    "key": Array [
+      "b",
+    ],
+    "value": "testb",
+  },
+]
+`;

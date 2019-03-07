@@ -15,6 +15,7 @@ import { BelongsToBuilding } from './Building';
 import { HasManySpaces } from './Space';
 
 import { Maybe, Result } from 'true-myth';
+import { HasManySheets } from './Sheet';
 const { just, nothing } = Maybe;
 
 const type = 'buildingStorey';
@@ -30,7 +31,8 @@ export const BuildingStorey = singleton(() =>
         elevation: t.maybe(t.number),
       }),
       BelongsToBuilding(),
-      HasManySpaces()
+      HasManySpaces(),
+      HasManySheets()
     )
     .actions(self => ({}))
 );

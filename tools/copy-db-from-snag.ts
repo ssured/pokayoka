@@ -2,11 +2,12 @@ import { Project, IProject } from '../src/models/Project';
 import { Site, ISite } from '../src/models/Site';
 import { Building, IBuilding } from '../src/models/Building';
 import { BuildingStorey, IBuildingStorey } from '../src/models/BuildingStorey';
+import { Sheet, ISheet } from '../src/models/Sheet';
 import { Space, ISpace } from '../src/models/Space';
 import debug from 'debug';
 import nano from 'nano';
 import { generateId } from '../src/utils/id';
-import { getSnapshot } from 'mobx-state-tree';
+import { getSnapshot, getType } from 'mobx-state-tree';
 
 const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
 
@@ -15,9 +16,11 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
     const fromDbName = 'bk0wb0a7sz';
     const toDbName = `pokayoka${fromDbName}`;
     const server = nano('http://admin:admin@localhost:5984');
-    const fromDb = server.use<{ title: string; description: string }>(
-      fromDbName
-    );
+    const fromDb = server.use<{
+      title: string;
+      description: string;
+      _attachments: any;
+    }>(fromDbName);
 
     try {
       await server.db.destroy(toDbName);
@@ -38,7 +41,7 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
       .map(row => row.doc!);
 
     const newObjects = new Map<
-      IProject | ISite | IBuilding | IBuildingStorey | ISpace,
+      IProject | ISite | IBuilding | IBuildingStorey | ISpace | ISheet,
       string
     >();
 
@@ -94,6 +97,18 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
         newStorey.setBuilding(newBuilding);
         newBuilding.addBuildingStorey(newStorey);
 
+        const _sheetId = generateId();
+        const newSheet = Sheet().create({
+          _id: _sheetId,
+          globalId: _sheetId,
+          name: storey.title,
+          tiles: Object.keys(storey._attachments),
+        });
+        newObjects.set(newSheet, storey._id);
+
+        newSheet.setBuildingStorey(newStorey);
+        newStorey.addSheet(newSheet);
+
         const spaces = nonLeafRows
           .filter(
             row =>
@@ -125,9 +140,12 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
         await toDb.insert({
           ...getSnapshot(object),
           // @ts-ignore
-          _attachments: (await fromDb.get<{ _attachments: any }>(originalId, {
-            attachments: true,
-          }))._attachments,
+          _attachments:
+            getType(object) === Sheet() || getType(object) === Building()
+              ? (await fromDb.get(originalId, {
+                  attachments: true,
+                }))._attachments
+              : undefined,
         })
       );
     }
