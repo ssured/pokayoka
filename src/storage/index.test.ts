@@ -15,10 +15,28 @@ describe('Storage', () => {
     const mem = new MemoryAdapter();
     const storage = new Storage(mem);
 
-    const obj = { id: 'test', a: 'A' };
-    await storage.slowlyMergeRawSnapshot(obj);
+    {
+      const obj = { id: 'test1', property: 'A' };
+      await storage.slowlyMergeRawSnapshot(obj);
+      expect(await storage.getRawSnapshot(obj.id)).toEqual(obj);
+    }
 
-    expect(await storage.getRawSnapshot(obj.id)).toEqual(obj);
+    {
+      const obj = { id: 'test2', reference: ['test1'] };
+      await storage.slowlyMergeRawSnapshot(obj);
+      expect(await storage.getRawSnapshot(obj.id)).toEqual(obj);
+    }
+
+    expect(() => {
+      const obj = { id: 'test3', property: { k: 'v' } };
+      storage.slowlyMergeRawSnapshot(obj as any);
+    }).toThrowError('cannot write objects in graph');
+
+    expect(() => {
+      const obj = { id: 'test3', property: ['a', 'b'] };
+      storage.slowlyMergeRawSnapshot(obj as any);
+    }).toThrowError('cannot write arrays in graph, except subject references');
+
     // expect(
     //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')
     // ).toEqual('');

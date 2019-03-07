@@ -1,13 +1,13 @@
+import mlts from 'monotonic-lexicographic-timestamp';
+import { IJsonPatch, splitJsonPath } from 'mobx-state-tree';
+
 import {
   StorageAdapter,
   BatchOperations,
   KeyType,
   ValueType,
 } from './adapters/shared';
-import mlts from 'monotonic-lexicographic-timestamp';
 import { ham } from './ham';
-
-import { IJsonPatch, splitJsonPath } from 'mobx-state-tree';
 
 const PREDICATE_PATH_SPLITTER = '.';
 
@@ -174,7 +174,7 @@ export class Storage {
     return results.reduce((res, subRes) => res || subRes, false) || false;
   }
 
-  public async slowlyMergeRawSnapshot(obj: RawSnapshot): Promise<boolean> {
+  public slowlyMergeRawSnapshot(obj: RawSnapshot): Promise<boolean> {
     const { id, ...other } = obj;
 
     // TODO this can be optimised as merge will be called lots of times, and merge will
@@ -194,8 +194,7 @@ export class Storage {
       }
       if (
         Array.isArray(rawO) &&
-        rawO.length !== 1 &&
-        typeof rawO[0] !== 'string'
+        (rawO.length !== 1 || typeof rawO[0] !== 'string')
       ) {
         throw new Error(
           'cannot write arrays in graph, except subject references'
