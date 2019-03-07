@@ -33,13 +33,13 @@ export interface StampedPatch extends Patch {
 }
 
 export interface StorageObject {
-  id: string;
+  id: s;
   [key: string]: o;
 }
 
 export interface StorageInverse {
-  id: string;
-  [key: string]: string | string[];
+  id: s;
+  [key: string]: s | s[];
 }
 
 function operationsForDeferredTuple(
@@ -200,23 +200,23 @@ export class Storage {
           'cannot write arrays in graph, except subject references'
         );
       }
-      tuples.push({ s: [id], p, o: rawO as o, t: machineState });
+      tuples.push({ s: id, p, o: rawO as o, t: machineState });
     }
 
     return this.mergeTuples(tuples);
   }
 
-  public async getObject(id: string): Promise<StorageObject> {
+  public async getObject(s: s): Promise<StorageObject> {
     const tuples = await this.adapter
       .queryList<[string, s, p], o>({
-        gt: ['sp', [id], ''],
-        lt: ['sp', [id], []],
+        gt: ['sp', s, ''],
+        lt: ['sp', s, []],
       })
       .then(result =>
         result.map(({ key: [, s, p], value: o }) => ({ s, p, o } as Tuple))
       );
 
-    const object: StorageObject = { id };
+    const object: StorageObject = { id: s };
 
     for (const { p, o } of tuples) {
       object[p] = o;
@@ -225,24 +225,24 @@ export class Storage {
     return object;
   }
 
-  public async getInverse(id: string): Promise<StorageInverse> {
+  public async getInverse(s: s): Promise<StorageInverse> {
     const tuples = await this.adapter
       .queryList<[string, o, p, s], true>({
-        gt: ['ops', [id], ''],
-        lt: ['ops', [id], []],
+        gt: ['ops', s, ''],
+        lt: ['ops', s, []],
       })
       .then(result =>
         result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple))
       );
 
-    const object: StorageInverse = { id };
+    const object: StorageInverse = { id: s };
 
     for (const { p, s } of tuples) {
       const entry = object[p];
       if (Array.isArray(entry)) {
-        entry.push(s[0]);
+        entry[entry.length] = s;
       } else {
-        object[p] = s;
+        object[p] = [s];
       }
     }
 
