@@ -33,3 +33,1125 @@ Array [
   },
 ]
 `;
+
+exports[`Storage snapshots  1`] = `
+Array [
+  Object {
+    "key": Array [
+      "ops",
+      "A",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ops",
+      "B",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "A",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "B",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "a",
+      "A",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "b",
+      "B",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "A",
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "B",
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "a",
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "b",
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "st",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "a",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "b",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+]
+`;
+
+exports[`Storage snapshots are automatically merged 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "ops",
+      "A",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ops",
+      "B",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "A",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "B",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "a",
+      "A",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "b",
+      "B",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "A",
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "B",
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "a",
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "b",
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "st",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "a",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "b",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+]
+`;
+
+exports[`Storage snapshots handle  1`] = `
+Array [
+  Object {
+    "key": Array [
+      "ops",
+      "A",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ops",
+      "B",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "A",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "B",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "a",
+      "A",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "b",
+      "B",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "A",
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "B",
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "a",
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "b",
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "st",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "a",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "b",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+]
+`;
+
+exports[`Storage snapshots handle conflich 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "ops",
+      "A",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ops",
+      "B",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "A",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "B",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "a",
+      "A",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "b",
+      "B",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "A",
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "B",
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "a",
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "b",
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "st",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "a",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "b",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+]
+`;
+
+exports[`Storage snapshots handle conflicht 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "ops",
+      "A",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ops",
+      "B",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "A",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "B",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "a",
+      "A",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "b",
+      "B",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "A",
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "B",
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "a",
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "b",
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "st",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "a",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "b",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+]
+`;
+
+exports[`Storage snapshots handle conflicts 1`] = `
+Array [
+  Object {
+    "key": Array [
+      "ops",
+      "A",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ops",
+      "B",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "A",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "osp",
+      "B",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "a",
+      "A",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "pos",
+      "b",
+      "B",
+      Array [
+        "test",
+      ],
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "a",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "ps",
+      "b",
+      Array [
+        "test",
+      ],
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "A",
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sop",
+      Array [
+        "test",
+      ],
+      "B",
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "sp",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "a",
+      "a",
+    ],
+    "value": "A",
+  },
+  Object {
+    "key": Array [
+      "spt",
+      Array [
+        "test",
+      ],
+      "b",
+      "b",
+    ],
+    "value": "B",
+  },
+  Object {
+    "key": Array [
+      "st",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "a",
+      Array [
+        "test",
+      ],
+      "a",
+    ],
+    "value": true,
+  },
+  Object {
+    "key": Array [
+      "tsp",
+      "b",
+      Array [
+        "test",
+      ],
+      "b",
+    ],
+    "value": true,
+  },
+]
+`;

@@ -7,9 +7,11 @@ import {
 import mlts from 'monotonic-lexicographic-timestamp';
 import { ham } from './ham';
 
-export const getCurrentState = mlts();
+import { IJsonPatch, splitJsonPath } from 'mobx-state-tree';
 
-export type timestamp = ReturnType<typeof getCurrentState>;
+const PREDICATE_PATH_SPLITTER = '.';
+
+export type timestamp = string;
 type s = [string];
 type p = string;
 type o = null | string | number | s;
@@ -19,6 +21,14 @@ interface Tuple {
   o: o;
 }
 interface StampedTuple extends Tuple {
+  t: timestamp;
+}
+
+export interface Patch extends IJsonPatch {
+  id: s[0];
+}
+
+export interface StampedPatch extends Patch {
   t: timestamp;
 }
 
@@ -84,20 +94,32 @@ function isObjectOrFunction(obj: any): boolean {
   );
 }
 
-export class Storage {
-  constructor(private adapter: StorageAdapter) {}
+export const numberToState = (n?: number) =>
+  typeof n === 'number' ? mlts(n) : mlts();
 
-  private async getCurrent(s: s, p: p, t: timestamp): Promise<StampedTuple[]> {
+export class Storage {
+  constructor(
+    private adapter: StorageAdapter,
+    public getMachineState = numberToState()
+  ) {}
+
+  private async getCurrent(
+    s: s,
+    p: p,
+    machineState = this.getMachineState()
+  ): Promise<StampedTuple[]> {
     return (await this.adapter.queryList<[string, s, p, timestamp], o>({
       gt: ['spt', s, p, ''],
-      lte: ['spt', s, p, t],
+      lte: ['spt', s, p, machineState],
     })).map(({ key: [, s, p, t], value: o }) => ({ s, p, o, t }));
   }
 
   // merge a tuple with the current db
   // returns a boolean which tells if the passed tuple is now the current tuple
-  async merge(incomingTuple: StampedTuple): Promise<boolean> {
-    const machineState = getCurrentState();
+  private async mergeTuple(
+    incomingTuple: StampedTuple,
+    machineState = this.getMachineState()
+  ): Promise<boolean> {
     const currentTuples = await this.getCurrent(
       incomingTuple.s,
       incomingTuple.p,
@@ -141,12 +163,18 @@ export class Storage {
     return merged;
   }
 
-  // definitly stores a tuple
-  async write(tuple: Tuple) {
-    return this.merge({ ...tuple, t: getCurrentState() });
+  private async mergeTuples(
+    tuples: StampedTuple[],
+    machineState = this.getMachineState()
+  ): Promise<boolean> {
+    const merges = tuples.map(tuple => this.mergeTuple(tuple, machineState));
+
+    const results = await Promise.all(merges);
+
+    return results.reduce((res, subRes) => res || subRes, false) || false;
   }
 
-  async writeRawSnapshot(obj: RawSnapshot): Promise<boolean> {
+  public async slowlyMergeRawSnapshot(obj: RawSnapshot): Promise<boolean> {
     const { id, ...other } = obj;
 
     // TODO this can be optimised as merge will be called lots of times, and merge will
@@ -156,19 +184,30 @@ export class Storage {
       'writeRawSnapshot is slow, please only write patches. Also note object values are not allowed'
     );
 
-    const ops: Promise<boolean>[] = [];
+    // all writes are at the same moment
+    const machineState = this.getMachineState();
+
+    const tuples: StampedTuple[] = [];
     for (const [p, rawO] of Object.entries(other)) {
-      if (isObjectOrFunction(rawO)) continue; // ignore object values
-      const o = rawO as o;
-      ops.push(this.write({ s: [id], p, o }));
+      if (isObjectOrFunction(rawO)) {
+        throw new Error('cannot write objects in graph');
+      }
+      if (
+        Array.isArray(rawO) &&
+        rawO.length !== 1 &&
+        typeof rawO[0] !== 'string'
+      ) {
+        throw new Error(
+          'cannot write arrays in graph, except subject references'
+        );
+      }
+      tuples.push({ s: [id], p, o: rawO as o, t: machineState });
     }
 
-    const results = await Promise.all(ops);
-
-    return results.reduce((res, subRes) => res || subRes, false) || false;
+    return this.mergeTuples(tuples);
   }
 
-  async getRawSnapshot(id: string): Promise<RawSnapshot> {
+  public async getRawSnapshot(id: string): Promise<RawSnapshot> {
     const tuples = await this.adapter
       .queryList<[string, s, p], o>({
         gt: ['sp', [id], ''],
@@ -210,4 +249,40 @@ export class Storage {
 
   //     return object;
   //   }
+
+  private stampPatch(
+    patch: Patch | StampedPatch,
+    machineState = this.getMachineState()
+  ): StampedPatch {
+    // @ts-ignore
+    return typeof patch.t === 'string' ? patch : { ...patch, t: machineState };
+  }
+
+  public async mergePatches(
+    patches: (Patch | StampedPatch)[]
+  ): Promise<boolean> {
+    const machineState = this.getMachineState();
+    const stampedPatches = patches.map(patch =>
+      this.stampPatch(patch, machineState)
+    );
+
+    const stampedTuples = stampedPatches.map(stampedPatchToStampedTuple);
+
+    return this.mergeTuples(stampedTuples, machineState);
+  }
+}
+
+function stampedPatchToStampedTuple({
+  id,
+  t,
+  op,
+  path,
+  value,
+}: StampedPatch): StampedTuple {
+  return {
+    s: [id],
+    p: splitJsonPath(path).join(PREDICATE_PATH_SPLITTER),
+    o: op === 'remove' ? undefined : value,
+    t,
+  };
 }
