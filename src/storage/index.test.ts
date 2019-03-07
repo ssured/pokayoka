@@ -98,7 +98,7 @@ describe('Storage', () => {
       }));
     const id = 'id';
     const instance = Model.create({ id, name: 'Pokayoka' });
-    onPatch(instance, patch => storage.mergePatches([{ ...patch, id }]));
+    onPatch(instance, patch => storage.mergePatches([{ ...patch, s: [id] }]));
 
     await storage.slowlyMergeRawSnapshot(getSnapshot(instance));
 

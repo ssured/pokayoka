@@ -25,7 +25,7 @@ interface StampedTuple extends Tuple {
 }
 
 export interface Patch extends IJsonPatch {
-  id: s[0];
+  s: s;
 }
 
 export interface StampedPatch extends Patch {
@@ -273,14 +273,14 @@ export class Storage {
 }
 
 function stampedPatchToStampedTuple({
-  id,
+  s,
   t,
   op,
   path,
   value,
 }: StampedPatch): StampedTuple {
   return {
-    s: [id],
+    s,
     p: splitJsonPath(path).join(PREDICATE_PATH_SPLITTER),
     o: op === 'remove' ? undefined : value,
     t,
