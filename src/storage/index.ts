@@ -8,6 +8,7 @@ import {
   ValueType,
 } from './adapters/shared';
 import { ham } from './ham';
+import SubscribableEvent from 'subscribableevent';
 
 const PREDICATE_PATH_SPLITTER = '.';
 
@@ -20,7 +21,7 @@ interface Tuple {
   p: p;
   o: o;
 }
-interface StampedTuple extends Tuple {
+export interface StampedTuple extends Tuple {
   t: timestamp;
 }
 
@@ -63,7 +64,7 @@ function operationsForTuple(
 ): BatchOperations {
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
-    { key: ['sp', s, p], value: o }, // only one value can exist for s+p
+    { key: ['sp', s, p], value: [t, o] }, // only one value can exist for s+p
     // { key: ['ps', p, s], value: o },
     // { key: ['sop', s, o, p], value: true },
     { key: ['ops', o, p, s], value: true },
@@ -98,6 +99,14 @@ export const numberToState = (n?: number) =>
   typeof n === 'number' ? mlts(n) : mlts();
 
 export class Storage {
+  private updatedTuplesEmitter = new SubscribableEvent<
+    (tuples: StampedTuple[]) => void
+  >();
+  public subscribe(listener: (tuples: StampedTuple[]) => void) {
+    const subscription = this.updatedTuplesEmitter.subscribe(listener);
+    return () => subscription.unsubscribe();
+  }
+
   constructor(
     private adapter: StorageAdapter,
     public getMachineState = numberToState()
@@ -157,10 +166,29 @@ export class Storage {
     }
 
     if (operations.length > 0) {
-      await this.adapter.batch(operations);
+      await this.commit(operations);
     }
 
     return merged;
+  }
+
+  private async commit(operations: BatchOperations) {
+    try {
+      await this.adapter.batch(operations);
+    } catch (e) {
+      throw e;
+    }
+
+    const propertyUpdateTuples: StampedTuple[] = operations
+      .filter(
+        op => op.type === 'put' && Array.isArray(op.key) && op.key[0] === 'sp'
+      )
+      .map(
+        // @ts-ignore
+        ({ key: [, s, p], value: [t, o] }) => ({ s, p, o, t } as StampedTuple)
+      );
+
+    this.updatedTuplesEmitter.fire(propertyUpdateTuples);
   }
 
   private async mergeTuples(
@@ -208,12 +236,12 @@ export class Storage {
 
   public async getObject(s: s): Promise<StorageObject> {
     const tuples = await this.adapter
-      .queryList<[string, s, p], o>({
+      .queryList<[string, s, p], [timestamp, o]>({
         gt: ['sp', s, ''],
         lt: ['sp', s, []],
       })
       .then(result =>
-        result.map(({ key: [, s, p], value: o }) => ({ s, p, o } as Tuple))
+        result.map(({ key: [, s, p], value: [, o] }) => ({ s, p, o } as Tuple))
       );
 
     const object: StorageObject = { id: s };
