@@ -8,7 +8,7 @@ import {
   ModelPropertiesDeclaration,
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
-import { Db, RawSnapshot } from '../storage/index';
+import { Db, StorageObject } from '../storage/index';
 import console = require('console');
 
 export interface GraphEnv {

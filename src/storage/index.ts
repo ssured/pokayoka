@@ -32,15 +32,15 @@ export interface StampedPatch extends Patch {
   t: timestamp;
 }
 
-export interface RawSnapshot {
+export interface StorageObject {
   id: string;
-  [key: string]: o | string[];
+  [key: string]: o;
 }
 
-// export interface RawInverse {
-//   id: string;
-//   [key: string]: string | [string];
-// }
+export interface StorageInverse {
+  id: string;
+  [key: string]: string | string[];
+}
 
 function operationsForDeferredTuple(
   tuple: StampedTuple,
@@ -49,8 +49,8 @@ function operationsForDeferredTuple(
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
     { key: ['spt', s, p, t], value: o }, // used to store future values
-    { key: ['st', s, t], value: true }, // what is the next update for a subject?
-    { key: ['tsp', t, s, p], value: true },
+    // { key: ['st', s, t], value: true }, // what is the next update for a subject?
+    // { key: ['tsp', t, s, p], value: true },
   ];
   return type === 'put'
     ? pairs.map(pair => ({ ...pair, type }))
@@ -64,11 +64,11 @@ function operationsForTuple(
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
     { key: ['sp', s, p], value: o }, // only one value can exist for s+p
-    { key: ['ps', p, s], value: o },
-    { key: ['sop', s, o, p], value: true },
+    // { key: ['ps', p, s], value: o },
+    // { key: ['sop', s, o, p], value: true },
     { key: ['ops', o, p, s], value: true },
-    { key: ['osp', o, s, p], value: true },
-    { key: ['pos', p, o, s], value: true },
+    // { key: ['osp', o, s, p], value: true },
+    // { key: ['pos', p, o, s], value: true },
   ];
   const ops =
     type === 'put'
@@ -174,7 +174,7 @@ export class Storage {
     return results.reduce((res, subRes) => res || subRes, false) || false;
   }
 
-  public slowlyMergeRawSnapshot(obj: RawSnapshot): Promise<boolean> {
+  public slowlyMergeObject(obj: StorageObject): Promise<boolean> {
     const { id, ...other } = obj;
 
     // TODO this can be optimised as merge will be called lots of times, and merge will
@@ -206,7 +206,7 @@ export class Storage {
     return this.mergeTuples(tuples);
   }
 
-  public async getRawSnapshot(id: string): Promise<RawSnapshot> {
+  public async getObject(id: string): Promise<StorageObject> {
     const tuples = await this.adapter
       .queryList<[string, s, p], o>({
         gt: ['sp', [id], ''],
@@ -216,7 +216,7 @@ export class Storage {
         result.map(({ key: [, s, p], value: o }) => ({ s, p, o } as Tuple))
       );
 
-    const object: RawSnapshot = { id };
+    const object: StorageObject = { id };
 
     for (const { p, o } of tuples) {
       object[p] = o;
@@ -225,29 +225,29 @@ export class Storage {
     return object;
   }
 
-  //   async getRawInverse(id: string): Promise<RawInverse> {
-  //     const tuples = await this.adapter
-  //         .queryList<[string, o, p, s], true>({
-  //           gt: ['ops', [id], ''],
-  //           lt: ['ops', [id], []],
-  //         })
-  //         .then(result =>
-  //           result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple))
-  //         );
+  public async getInverse(id: string): Promise<StorageInverse> {
+    const tuples = await this.adapter
+      .queryList<[string, o, p, s], true>({
+        gt: ['ops', [id], ''],
+        lt: ['ops', [id], []],
+      })
+      .then(result =>
+        result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple))
+      );
 
-  //     const object: RawInverse = { id };
+    const object: StorageInverse = { id };
 
-  //     for (const { p, s } of tuples) {
-  //       const entry = object[p];
-  //       if (Array.isArray(entry)) {
-  //         entry.push(s[0]);
-  //       } else {
-  //         object[p] = s;
-  //       }
-  //     }
+    for (const { p, s } of tuples) {
+      const entry = object[p];
+      if (Array.isArray(entry)) {
+        entry.push(s[0]);
+      } else {
+        object[p] = s;
+      }
+    }
 
-  //     return object;
-  //   }
+    return object;
+  }
 
   private stampPatch(
     patch: Patch | StampedPatch,

@@ -17,24 +17,24 @@ describe('Storage', () => {
 
     {
       const obj = { id: 'test1', property: 'A' };
-      await storage.slowlyMergeRawSnapshot(obj);
-      expect(await storage.getRawSnapshot(obj.id)).toEqual(obj);
+      await storage.slowlyMergeObject(obj);
+      expect(await storage.getObject(obj.id)).toEqual(obj);
     }
 
     {
       const obj = { id: 'test2', reference: ['test1'] };
-      await storage.slowlyMergeRawSnapshot(obj);
-      expect(await storage.getRawSnapshot(obj.id)).toEqual(obj);
+      await storage.slowlyMergeObject(obj);
+      expect(await storage.getObject(obj.id)).toEqual(obj);
     }
 
     expect(() => {
       const obj = { id: 'test3', property: { k: 'v' } };
-      storage.slowlyMergeRawSnapshot(obj as any);
+      storage.slowlyMergeObject(obj as any);
     }).toThrowError('cannot write objects in graph');
 
     expect(() => {
       const obj = { id: 'test3', property: ['a', 'b'] };
-      storage.slowlyMergeRawSnapshot(obj as any);
+      storage.slowlyMergeObject(obj as any);
     }).toThrowError('cannot write arrays in graph, except subject references');
 
     // expect(
@@ -47,14 +47,14 @@ describe('Storage', () => {
     const storage = new Storage(mem);
 
     const obj1 = { id: 'test', a: 'A', b: 'b' };
-    await storage.slowlyMergeRawSnapshot(obj1);
+    await storage.slowlyMergeObject(obj1);
     const contentLength1 = (await mem.queryList({})).length;
 
     const obj2 = { id: 'test', b: 'B' };
-    await storage.slowlyMergeRawSnapshot(obj2);
+    await storage.slowlyMergeObject(obj2);
     const contentLength2 = (await mem.queryList({})).length;
 
-    const result = await storage.getRawSnapshot(obj1.id);
+    const result = await storage.getObject(obj1.id);
     expect(result).toEqual({ ...obj1, ...obj2 });
 
     // only 2 props are stored, which means the old data is correctly removed
@@ -82,26 +82,22 @@ describe('Storage', () => {
     let state = initialState;
     let storage = new Storage(new MemoryAdapter(), () => state);
 
-    await storage.slowlyMergeRawSnapshot(obj1);
-    await storage.slowlyMergeRawSnapshot(obj2);
+    await storage.slowlyMergeObject(obj1);
+    await storage.slowlyMergeObject(obj2);
 
     // because
     expect(obj1.b > obj2.b).toBe(true);
     // obj2 is ignored, as they are both written in the same state
-    expect(await storage.getRawSnapshot(obj1.id)).toEqual(
-      expectedResultAtSameState
-    );
+    expect(await storage.getObject(obj1.id)).toEqual(expectedResultAtSameState);
 
     // start again and increment the state between writes
     storage = new Storage(new MemoryAdapter(), () => state);
 
-    await storage.slowlyMergeRawSnapshot(obj1);
+    await storage.slowlyMergeObject(obj1);
     state = nextState;
-    await storage.slowlyMergeRawSnapshot(obj2);
+    await storage.slowlyMergeObject(obj2);
 
-    expect(await storage.getRawSnapshot(obj1.id)).toEqual(
-      expectedResultAtNextState
-    );
+    expect(await storage.getObject(obj1.id)).toEqual(expectedResultAtNextState);
   });
 
   test('patches can be written', async () => {
@@ -118,16 +114,36 @@ describe('Storage', () => {
     const instance = Model.create({ id, name: 'Pokayoka' });
     onPatch(instance, patch => storage.mergePatches([{ ...patch, s: [id] }]));
 
-    await storage.slowlyMergeRawSnapshot(getSnapshot(instance));
+    await storage.slowlyMergeObject(getSnapshot(instance));
 
-    expect(await storage.getRawSnapshot(id)).toEqual({ id, name: 'Pokayoka' });
+    expect(await storage.getObject(id)).toEqual({ id, name: 'Pokayoka' });
 
     instance.setName('Pokayoka BV');
     await delay(10);
 
-    expect(await storage.getRawSnapshot(id)).toEqual({
+    expect(await storage.getObject(id)).toEqual({
       id,
       name: 'Pokayoka BV',
+    });
+  });
+
+  test('inverse relations are exposed', async () => {
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+
+    const obj1 = { id: 'obj1' };
+    const ref: [string] = [obj1.id];
+    const inv1 = { id: 'inv1', ref1: ref };
+    const inv2 = { id: 'inv2', ref1: ref, ref2: ref };
+
+    await storage.slowlyMergeObject(obj1);
+    await storage.slowlyMergeObject(inv1);
+    await storage.slowlyMergeObject(inv2);
+
+    expect(await storage.getInverse(obj1.id)).toEqual({
+      id: obj1.id,
+      ref1: [inv1.id, inv2.id],
+      ref2: [inv2.id],
     });
   });
 });
