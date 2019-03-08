@@ -12,6 +12,8 @@ import {
   types,
   getEnv,
   applyPatch,
+  ISerializedActionCall,
+  onAction,
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
 import { Storage } from '../storage/index';
@@ -123,6 +125,7 @@ class RecordingStore extends BaseStore {
     id: string;
     patch: IJsonPatch;
     inverse: IJsonPatch;
+    action: ISerializedActionCall;
     timestamp: number;
   }>([], { deep: false });
 
@@ -137,6 +140,14 @@ class RecordingStore extends BaseStore {
   ): Instance<T> {
     const instance = this.parent.create(Type, snapshot, env);
 
+    let action: ISerializedActionCall;
+
+    // we use actions to group patches for undo/redo functionality
+    addDisposer(
+      instance,
+      onAction(instance, newAction => (action = newAction))
+    );
+
     addDisposer(
       instance,
       onPatch(instance, (patch, inverse) => {
@@ -145,6 +156,7 @@ class RecordingStore extends BaseStore {
           id: instance.id,
           patch,
           inverse,
+          action,
           timestamp: Date.now(),
         });
         // })

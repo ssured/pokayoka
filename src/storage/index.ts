@@ -25,9 +25,9 @@ function isObject(x: any): x is object {
 
 function isO(v: any): v is o {
   switch (typeof v) {
+    case 'string':
     case 'boolean':
     case 'number':
-    case 'string':
       return true;
     case 'object':
       return v == null || isOReference(v);
@@ -76,7 +76,7 @@ function createOperationsForDeferredTuple(
 ): BatchOperations {
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
-    { key: ['spt', s, p, t], value: o }, // used to store future values
+    { key: ['spt', s, p, t], value: [o] }, // used to store future values
     // { key: ['st', s, t], value: true }, // what is the next update for a subject?
     // { key: ['tsp', t, s, p], value: true },
   ];
@@ -114,14 +114,6 @@ function createOperations(
     .concat(...operationsForTuple(toAdd, 'put'));
 }
 
-function isObjectOrFunction(obj: any): boolean {
-  return (
-    obj != null &&
-    (typeof obj === 'object' || typeof obj === 'function') &&
-    !Array.isArray(obj)
-  );
-}
-
 export const numberToState = (n?: number) =>
   typeof n === 'number' ? mlts(n) : mlts();
 
@@ -144,10 +136,10 @@ export class Storage {
     p: p,
     machineState = this.getMachineState()
   ): Promise<StampedTuple[]> {
-    return (await this.adapter.queryList<[string, s, p, timestamp], o>({
+    return (await this.adapter.queryList<[string, s, p, timestamp], [o]>({
       gt: ['spt', s, p, ''],
       lte: ['spt', s, p, machineState],
-    })).map(({ key: [, s, p, t], value: o }) => ({ s, p, o, t }));
+    })).map(({ key: [, s, p, t], value: [o] }) => ({ s, p, o, t }));
   }
 
   // merge a tuple with the current db
@@ -327,7 +319,7 @@ function stampedPatchToStampedTuple({
   return {
     s,
     p: splitJsonPath(path),
-    o: op === 'remove' ? undefined : value,
+    o: op === 'remove' ? null : typeof value === 'undefined' ? null : value,
     t,
   };
 }

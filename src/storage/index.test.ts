@@ -154,6 +154,44 @@ describe('Storage', () => {
     });
   });
 
+  test('patches can replace objects', async () => {
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+
+    const Model = types
+      .model({
+        id: types.identifier,
+        address: types.model({
+          street: types.string,
+          number: types.maybeNull(types.number),
+        }),
+      })
+      .actions(self => ({
+        setAddress(address: { street: string; number?: number }) {
+          self.address = { number: null, ...address };
+        },
+      }));
+
+    const id = 'id';
+    const instance = Model.create({
+      id,
+      address: { street: 'A1', number: 1 },
+    });
+    onPatch(instance, patch => storage.mergePatches([{ ...patch, s: id }]));
+
+    await storage.slowlyMergeObject(getSnapshot(instance));
+
+    expect(await storage.getObject(id)).toEqual({
+      id,
+      address: { street: 'A1', number: 1 },
+    });
+
+    instance.setAddress({ street: 'A2' });
+    await delay(10);
+
+    expect(await storage.getObject(id)).toEqual(getSnapshot(instance));
+  });
+
   test('inverse relations are exposed', async () => {
     const mem = new MemoryAdapter();
     const storage = new Storage(mem);
