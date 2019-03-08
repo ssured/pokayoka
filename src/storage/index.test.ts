@@ -16,27 +16,28 @@ describe('Storage', () => {
     const storage = new Storage(mem);
 
     {
-      const obj = { id: ['test1'] as [string], property: 'A' };
+      const obj = { id: 'test1', property: 'A' };
       await storage.slowlyMergeObject(obj);
       expect(await storage.getObject(obj.id)).toEqual(obj);
     }
 
     {
       const obj = {
-        id: ['test2'] as [string],
+        id: 'test2',
         reference: ['test1'] as [string],
       };
       await storage.slowlyMergeObject(obj);
       expect(await storage.getObject(obj.id)).toEqual(obj);
     }
 
-    expect(() => {
-      const obj = { id: ['test3'] as [string], property: { k: 'v' } };
-      storage.slowlyMergeObject(obj as any);
-    }).toThrowError('cannot write objects in graph');
+    {
+      const obj = { id: 'test3', property: { k: 'v' } };
+      await storage.slowlyMergeObject(obj);
+      expect(await storage.getObject(obj.id)).toEqual(obj);
+    }
 
     expect(() => {
-      const obj = { id: ['test3'] as [string], property: ['a', 'b'] };
+      const obj = { id: 'test4', property: ['a', 'b'] };
       storage.slowlyMergeObject(obj as any);
     }).toThrowError('cannot write arrays in graph, except subject references');
 
@@ -49,11 +50,11 @@ describe('Storage', () => {
     const mem = new MemoryAdapter();
     const storage = new Storage(mem);
 
-    const obj1 = { id: ['test'] as [string], a: 'A', b: 'b' };
+    const obj1 = { id: 'test', a: 'A', b: 'b' };
     await storage.slowlyMergeObject(obj1);
     const contentLength1 = (await mem.queryList({})).length;
 
-    const obj2 = { id: ['test'] as [string], b: 'B' };
+    const obj2 = { id: 'test', b: 'B' };
     await storage.slowlyMergeObject(obj2);
     const contentLength2 = (await mem.queryList({})).length;
 
@@ -62,15 +63,11 @@ describe('Storage', () => {
 
     // only 2 props are stored, which means the old data is correctly removed
     expect(contentLength1).toBe(contentLength2);
-
-    // expect(
-    //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')
-    // ).toEqual('');
   });
 
   test('snapshots handle conflicts', async () => {
-    const obj1 = { id: ['test'] as [string], a: 'A', b: 'b' };
-    const obj2 = { id: ['test'] as [string], b: 'B' };
+    const obj1 = { id: 'test', a: 'A', b: 'b' };
+    const obj2 = { id: 'test', b: 'B' };
 
     const initialState = 'a';
     const nextState = 'b';
@@ -112,18 +109,10 @@ describe('Storage', () => {
         setName(name: string) {
           self.name = name;
         },
-      }))
-      .preProcessSnapshot(({ id, ...other }) => ({
-        id: Array.isArray(id) ? id[0] : id,
-        ...other,
-      }))
-      .postProcessSnapshot(({ id, ...other }) => ({
-        id: Array.isArray(id) ? id : [id],
-        ...other,
       }));
 
-    const id = ['id'] as [string];
-    const instance = Model.create({ id: id[0], name: 'Pokayoka' });
+    const id = 'id';
+    const instance = Model.create({ id, name: 'Pokayoka' });
     onPatch(instance, patch => storage.mergePatches([{ ...patch, s: id }]));
 
     // @ts-ignore
@@ -144,16 +133,23 @@ describe('Storage', () => {
     const mem = new MemoryAdapter();
     const storage = new Storage(mem);
 
-    const obj1 = { id: ['obj1'] as [string], key: 'value' };
-    const inv1 = { id: ['inv1'] as [string], ref1: obj1.id };
-    const inv2 = { id: ['inv2'] as [string], ref1: obj1.id, ref2: obj1.id };
+    const obj1 = { id: 'obj1', key: 'value' };
+    const inv1 = { id: 'inv1', ref1: [obj1.id] as [string] };
+    const inv2 = {
+      id: 'inv2',
+      ref1: [obj1.id] as [string],
+      ref2: [obj1.id] as [string],
+    };
 
     await storage.slowlyMergeObject(obj1);
     await storage.slowlyMergeObject(inv1);
     await storage.slowlyMergeObject(inv2);
 
+    // expect(
+    //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')
+    // ).toEqual('');
+
     expect(await storage.getInverse(obj1.id)).toEqual({
-      id: obj1.id,
       ref1: [inv1.id, inv2.id],
       ref2: [inv2.id],
     });
@@ -167,7 +163,7 @@ describe('Storage', () => {
     const tuples: StampedPatch[] = [];
     const unsubscribe = storage.subscribe(written => tuples.push(...written));
 
-    const obj1 = { id: ['obj1'] as [string], key: 'value' };
+    const obj1 = { id: 'obj1', key: 'value' };
     await storage.slowlyMergeObject(obj1);
     unsubscribe();
 

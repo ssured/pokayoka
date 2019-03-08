@@ -5197,6 +5197,11 @@ double-ended-queue@2.1.0-0:
   resolved "https://registry.yarnpkg.com/double-ended-queue/-/double-ended-queue-2.1.0-0.tgz#103d3527fd31528f40188130c841efdd78264e5c"
   integrity sha1-ED01J/0xUo9AGIEwyEHv3XgmTlw=
 
+dset@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/dset/-/dset-2.0.1.tgz#a15fff3d1e4d60ac0c95634625cbd5441a76deb1"
+  integrity sha512-nI29OZMRYq36hOcifB6HTjajNAAiBKSXsyWZrq+VniusseuP2OpNlTiYgsaNRSGvpyq5Wjbc2gQLyBdTyWqhnQ==
+
 duplex@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/duplex/-/duplex-1.0.0.tgz#6abc5c16ec17e4c578578727126700590d3a2dda"

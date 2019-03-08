@@ -1,6 +1,6 @@
-export type Primitive = null | string | number | boolean;
+export type JsonPrimitive = null | string | number | boolean;
 
-export type JsonEntry = Primitive | JsonArray | JsonMap;
+export type JsonEntry = JsonPrimitive | JsonArray | JsonMap;
 
 interface IMap<TValue> {
   [key: string]: TValue;

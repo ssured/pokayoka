@@ -9,13 +9,36 @@ import {
 } from './adapters/shared';
 import { ham } from './ham';
 import SubscribableEvent from 'subscribableevent';
+import { JsonPrimitive } from '../utils/json';
+import dset from 'dset';
+import dlv from 'dlv';
 
-const PREDICATE_PATH_SPLITTER = '.';
+type oReference = [string];
+
+function isOReference(v: any): v is oReference {
+  return Array.isArray(v) && v.length === 1 && typeof v[0] === 'string';
+}
+
+function isObject(x: any): x is object {
+  return (typeof x === 'object' && x !== null) || typeof x === 'function';
+}
+
+function isO(v: any): v is o {
+  switch (typeof v) {
+    case 'boolean':
+    case 'number':
+    case 'string':
+      return true;
+    case 'object':
+      return v == null || isOReference(v);
+  }
+  return false;
+}
 
 export type timestamp = string;
-type s = [string];
-type p = string;
-type o = null | string | number | s;
+type s = string;
+type p = string[];
+type o = JsonPrimitive | oReference;
 interface Tuple {
   s: s;
   p: p;
@@ -33,14 +56,18 @@ export interface StampedPatch extends Patch {
   t: timestamp;
 }
 
-export interface StorageObject {
+type StorableValue = o | StorableObject;
+
+interface StorableObject {
+  [key: string]: StorableValue;
+}
+
+export interface IdentifiedStorableObject extends StorableObject {
   id: s;
-  [key: string]: o;
 }
 
 export interface StorageInverse {
-  id: s;
-  [key: string]: s | s[];
+  [key: string]: s[];
 }
 
 function createOperationsForDeferredTuple(
@@ -204,7 +231,7 @@ export class Storage {
     return results.reduce((res, subRes) => res || subRes, false) || false;
   }
 
-  public slowlyMergeObject(obj: StorageObject): Promise<boolean> {
+  public slowlyMergeObject(obj: IdentifiedStorableObject): Promise<boolean> {
     const { id, ...other } = obj;
 
     // TODO this can be optimised as merge will be called lots of times, and merge will
@@ -218,38 +245,27 @@ export class Storage {
     const machineState = this.getMachineState();
 
     const tuples: StampedTuple[] = [];
-    for (const [p, rawO] of Object.entries(other)) {
-      if (isObjectOrFunction(rawO)) {
-        throw new Error('cannot write objects in graph');
-      }
-      if (
-        Array.isArray(rawO) &&
-        (rawO.length !== 1 || typeof rawO[0] !== 'string')
-      ) {
-        throw new Error(
-          'cannot write arrays in graph, except subject references'
-        );
-      }
+    for (const [p, rawO] of poInObject(other)) {
       tuples.push({ s: id, p, o: rawO as o, t: machineState });
     }
 
     return this.mergeTuples(tuples);
   }
 
-  public async getObject(s: s): Promise<StorageObject> {
+  public async getObject(s: s): Promise<IdentifiedStorableObject> {
     const tuples = await this.adapter
       .queryList<[string, s, p], [timestamp, o]>({
-        gt: ['sp', s, ''],
-        lt: ['sp', s, []],
+        gt: ['sp', s, []],
+        lt: ['sp', s, [[]]],
       })
       .then(result =>
         result.map(({ key: [, s, p], value: [, o] }) => ({ s, p, o } as Tuple))
       );
 
-    const object: StorageObject = { id: s };
+    const object: IdentifiedStorableObject = { id: s };
 
     for (const { p, o } of tuples) {
-      object[p] = o;
+      dset(object, p, o);
     }
 
     return object;
@@ -258,21 +274,21 @@ export class Storage {
   public async getInverse(s: s): Promise<StorageInverse> {
     const tuples = await this.adapter
       .queryList<[string, o, p, s], true>({
-        gt: ['ops', s, ''],
-        lt: ['ops', s, []],
+        gt: ['ops', [s], []],
+        lt: ['ops', [s], [[]]],
       })
       .then(result =>
         result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple))
       );
 
-    const object: StorageInverse = { id: s };
+    const object: StorageInverse = {};
 
     for (const { p, s } of tuples) {
-      const entry = object[p];
+      const entry = dlv<StorageInverse[string] | undefined>(object, p);
       if (Array.isArray(entry)) {
         entry[entry.length] = s;
       } else {
-        object[p] = [s];
+        dset(object, p, [s]);
       }
     }
 
@@ -310,7 +326,7 @@ function stampedPatchToStampedTuple({
 }: StampedPatch): StampedTuple {
   return {
     s,
-    p: splitJsonPath(path).join(PREDICATE_PATH_SPLITTER),
+    p: splitJsonPath(path),
     o: op === 'remove' ? undefined : value,
     t,
   };
@@ -327,7 +343,24 @@ function stampedTupleToStampedPatch({
     s,
     t,
     op: 'replace',
-    path: joinJsonPath(p.split(PREDICATE_PATH_SPLITTER)),
+    path: joinJsonPath(p),
     value: o,
   };
+}
+
+function* poInObject(obj: StorableObject): IterableIterator<[p, o]> {
+  for (const [key, value] of Object.entries(obj)) {
+    if (isO(value)) {
+      yield [[key], value];
+    } else if (isObject(value)) {
+      if (Array.isArray(value)) {
+        throw new Error(
+          'cannot write arrays in graph, except subject references'
+        );
+      }
+      for (const [path, innerVal] of poInObject(value)) {
+        yield [[key].concat(path), innerVal];
+      }
+    }
+  }
 }
