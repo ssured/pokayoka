@@ -161,6 +161,20 @@ class RecordingStore extends BaseStore {
   ): Promise<SnapshotIn<T>> {
     return getSnapshot(await this.parent.get(Type, id));
   }
+
+  async commit() {
+    const currentPatches = this.patches.splice(0, this.patches.length);
+    try {
+      const stampedPatches = currentPatches.map(({ id, patch }) => ({
+        ...patch,
+        s: [id] as [string],
+      }));
+
+      await this.parent.storage.mergePatches(stampedPatches);
+    } catch (e) {
+      this.patches.splice(0, 0, ...currentPatches);
+    }
+  }
 }
 
 export function referenceTo<IT extends IAnyComplexType>(

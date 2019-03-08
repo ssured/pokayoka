@@ -43,7 +43,7 @@ export interface StorageInverse {
   [key: string]: s | s[];
 }
 
-function operationsForDeferredTuple(
+function createOperationsForDeferredTuple(
   tuple: StampedTuple,
   type: 'del' | 'put' = 'put'
 ): BatchOperations {
@@ -75,7 +75,7 @@ function operationsForTuple(
     type === 'put'
       ? pairs.map(pair => ({ ...pair, type }))
       : pairs.map(({ key }) => ({ key, type }));
-  return [...ops, ...operationsForDeferredTuple(tuple, type)];
+  return [...ops, ...createOperationsForDeferredTuple(tuple, type)];
 }
 
 function createOperations(
@@ -144,7 +144,7 @@ export class Storage {
     let merged = false;
     if (currentTuple === undefined) {
       if (machineState < incomingTuple.t) {
-        operations = operationsForDeferredTuple(incomingTuple);
+        operations = createOperationsForDeferredTuple(incomingTuple);
       } else {
         operations = createOperations(incomingTuple, currentTuples);
       }
@@ -161,7 +161,7 @@ export class Storage {
         operations = createOperations(incomingTuple, currentTuples);
         merged = true;
       } else if (comparison.resolution === 'defer') {
-        operations = operationsForDeferredTuple(incomingTuple);
+        operations = createOperationsForDeferredTuple(incomingTuple);
       }
     }
 
