@@ -1,7 +1,8 @@
 import { Storage, StampedPatch } from './index';
 import { MemoryAdapter } from './adapters/memory';
-import { types, getSnapshot, onPatch } from 'mobx-state-tree';
-import { delay } from 'q';
+import { types, getSnapshot, onPatch, splitJsonPath } from 'mobx-state-tree';
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 describe('Storage', () => {
   test('it loads', () => {
@@ -125,7 +126,11 @@ describe('Storage', () => {
       name: 'Pokayoka',
       address: { street: 'A1' },
     });
-    onPatch(instance, patch => storage.mergePatches([{ ...patch, s: id }]));
+    onPatch(instance, patch =>
+      storage.mergePatches([
+        { ...patch, path: splitJsonPath(patch.path), s: id },
+      ])
+    );
 
     // @ts-ignore
     await storage.slowlyMergeObject(getSnapshot(instance));
@@ -178,7 +183,11 @@ describe('Storage', () => {
       id,
       address: { street: 'A1', number: 1 },
     });
-    onPatch(instance, patch => storage.mergePatches([{ ...patch, s: id }]));
+    onPatch(instance, patch =>
+      storage.mergePatches([
+        { ...patch, path: splitJsonPath(patch.path), s: id },
+      ])
+    );
 
     await storage.slowlyMergeObject(getSnapshot(instance));
 

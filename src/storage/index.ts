@@ -1,6 +1,5 @@
 import dlv from 'dlv';
 import dset from 'dset';
-import { IJsonPatch, joinJsonPath, splitJsonPath } from 'mobx-state-tree';
 import mlts from 'monotonic-lexicographic-timestamp';
 import SubscribableEvent from 'subscribableevent';
 import { JsonArray, JsonPrimitive } from '../utils/json';
@@ -11,6 +10,7 @@ import {
   ValueType,
 } from './adapters/shared';
 import { ham } from './ham';
+import console = require('console');
 
 function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
@@ -44,7 +44,13 @@ interface StampedTuple extends Tuple {
   t: timestamp;
 }
 
-export interface Patch extends IJsonPatch {
+interface RFC6902Patch {
+  op: 'replace' | 'remove' | 'add';
+  path: (string | number)[];
+  value?: any;
+}
+
+export interface Patch extends RFC6902Patch {
   s: s;
 }
 
@@ -312,9 +318,10 @@ function stampedPatchToStampedTuple({
   path,
   value,
 }: StampedPatch): StampedTuple {
+  console.log({ op, path, s });
   return {
     s,
-    p: splitJsonPath(path),
+    p: path.map(String),
     o: op === 'remove' ? null : typeof value === 'undefined' ? null : value,
     t,
   };
@@ -331,7 +338,7 @@ function stampedTupleToStampedPatch({
     s,
     t,
     op: 'replace',
-    path: joinJsonPath(p),
+    path: p,
     value: o,
   };
 }

@@ -5,18 +5,19 @@ import {
   addDisposer,
   onPatch,
   getSnapshot,
-  IJsonPatch,
   IReferenceType,
   types,
   getEnv,
   applyPatch,
   ISerializedActionCall,
   onAction,
+  splitJsonPath,
+  joinJsonPath,
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
-import { Storage } from '../storage/index';
+import { Storage, Patch } from '../storage/index';
 import { generateId } from '../utils/id';
-import { compare } from 'fast-json-patch';
+import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
 import console = require('console');
 
 export interface GraphEnv {
@@ -96,7 +97,10 @@ export class Store extends BaseStore {
       } of patches) {
         const obj = this.cache.get(id);
         if (obj == null) continue;
-        applyPatch(obj, patch);
+        applyPatch(obj, {
+          ...patch,
+          path: joinJsonPath(patch.path.map(String)),
+        });
       }
     });
   }
@@ -127,8 +131,8 @@ class RecordingStore extends BaseStore {
 
   public readonly patches = observable.array<{
     id: string;
-    patch: IJsonPatch;
-    inverse: IJsonPatch;
+    patch: ImmerPatch;
+    inverse: ImmerPatch;
     action: ISerializedActionCall; // action null = create new
     timestamp: number;
   }>([], { deep: false });
@@ -169,8 +173,8 @@ class RecordingStore extends BaseStore {
         // runInAction(() => {
         this.patches.push({
           id: instance.id,
-          patch,
-          inverse,
+          patch: { ...patch, path: splitJsonPath(patch.path) },
+          inverse: { ...inverse, path: splitJsonPath(inverse.path) },
           action,
           timestamp: Date.now(),
         });
@@ -192,7 +196,7 @@ class RecordingStore extends BaseStore {
   // this is the method to create a new instance
   newInstance<T extends IAnyModelType>(
     Type: T,
-    snapshot: Omit<SnapshotIn<T>, 'id'>
+    snapshot: Omit<SnapshotIn<T>, 'id'> & Partial<Pick<SnapshotIn<T>, 'id'>>
   ): Instance<T> {
     const identifiedSnapshot = snapshot.id
       ? snapshot
@@ -206,21 +210,27 @@ class RecordingStore extends BaseStore {
     const { id, ...definedProperties } = getSnapshot(instance);
     const action = { name: 'newInstance', args: [Type, identifiedSnapshot] };
     const timestamp = Date.now();
-    const patches = compare({}, definedProperties) as IJsonPatch[];
-    this.patches.push(
-      ...patches.map(patch => ({
-        id,
-        patch,
-        inverse: { op: 'remove' as 'remove', path: patch.path }, // stupid ts
-        action,
-        timestamp,
-      }))
+
+    produce(
+      {},
+      () => definedProperties,
+      (patches, inversePatches) =>
+        patches.forEach((patch, i) => {
+          const inverse = inversePatches[i];
+          this.patches.push({
+            id,
+            patch,
+            inverse,
+            action,
+            timestamp,
+          });
+        })
     );
 
     return instance;
   }
 
-  async commit() {
+  async commit(): Promise<boolean> {
     const currentPatches = this.patches.splice(0, this.patches.length);
     try {
       currentPatches
@@ -233,15 +243,38 @@ class RecordingStore extends BaseStore {
           }
         });
 
-      const stampedPatches = currentPatches.map(({ id, patch }) => ({
-        ...patch,
-        s: id,
-      }));
+      // use immer to compress patches
+      // https://medium.com/@dedels/using-immer-to-compress-immer-patches-f382835b6c69
+      const stampedPatches: Patch[] = [];
 
+      const patchesPerId = currentPatches.reduce(
+        (perId, { id, patch }) => {
+          if (perId[id] == null) {
+            perId[id] = [patch];
+          } else {
+            perId[id].push(patch);
+          }
+          return perId;
+        },
+        {} as { [id: string]: ImmerPatch[] }
+      );
+
+      for (const [id, patches] of Object.entries(patchesPerId)) {
+        produce(
+          {},
+          draft => Object.assign(draft, applyPatches(draft, patches)),
+          patches => {
+            stampedPatches.push(...patches.map(patch => ({ ...patch, s: id })));
+          }
+        );
+      }
       await this.storage.mergePatches(stampedPatches);
+      return true;
     } catch (e) {
+      console.error('commit failed', e);
       this.patches.splice(0, 0, ...currentPatches);
     }
+    return false;
   }
 }
 
