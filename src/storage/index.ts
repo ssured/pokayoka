@@ -1,17 +1,16 @@
+import dlv from 'dlv';
+import dset from 'dset';
+import { IJsonPatch, joinJsonPath, splitJsonPath } from 'mobx-state-tree';
 import mlts from 'monotonic-lexicographic-timestamp';
-import { IJsonPatch, splitJsonPath, joinJsonPath } from 'mobx-state-tree';
-
+import SubscribableEvent from 'subscribableevent';
+import { JsonArray, JsonPrimitive } from '../utils/json';
 import {
-  StorageAdapter,
   BatchOperations,
   KeyType,
+  StorageAdapter,
   ValueType,
 } from './adapters/shared';
 import { ham } from './ham';
-import SubscribableEvent from 'subscribableevent';
-import { JsonPrimitive, JsonArray } from '../utils/json';
-import dset from 'dset';
-import dlv from 'dlv';
 
 function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
@@ -29,10 +28,13 @@ function isO(v: any): v is o {
   return false;
 }
 
+type JsonNoMap = (JsonPrimitive | JsonArray)[];
+interface JsonNoMapArray extends JsonNoMap {}
+
 export type timestamp = string;
 type s = string;
 type p = string[];
-type o = JsonPrimitive | JsonArray;
+type o = JsonPrimitive | JsonNoMapArray;
 interface Tuple {
   s: s;
   p: p;
@@ -50,17 +52,15 @@ export interface StampedPatch extends Patch {
   t: timestamp;
 }
 
-type StorableValue = o | StorableObject;
-
-interface StorableObject {
-  [key: string]: StorableValue;
+interface UnIdentifiedStorableObject {
+  [key: string]: UnIdentifiedStorableObject | o;
 }
 
-export interface IdentifiedStorableObject extends StorableObject {
+export interface StorableObject extends UnIdentifiedStorableObject {
   id: s;
 }
 
-export interface StorageInverse {
+export interface StorableObjectInverse {
   [key: string]: s[];
 }
 
@@ -219,7 +219,7 @@ export class Storage {
     return results.reduce((res, subRes) => res || subRes, false) || false;
   }
 
-  public slowlyMergeObject(obj: IdentifiedStorableObject): Promise<boolean> {
+  public slowlyMergeObject(obj: StorableObject): Promise<boolean> {
     const { id, ...other } = obj;
 
     // TODO this can be optimised as merge will be called lots of times, and merge will
@@ -240,7 +240,7 @@ export class Storage {
     return this.mergeTuples(tuples);
   }
 
-  public async getObject(s: s): Promise<IdentifiedStorableObject> {
+  public async getObject(s: s): Promise<StorableObject> {
     const tuples = await this.adapter
       .queryList<[string, s, p], [timestamp, o]>({
         gt: ['sp', s, []],
@@ -250,7 +250,7 @@ export class Storage {
         result.map(({ key: [, s, p], value: [, o] }) => ({ s, p, o } as Tuple))
       );
 
-    const object: IdentifiedStorableObject = { id: s };
+    const object: StorableObject = { id: s };
 
     for (const { p, o } of tuples) {
       dset(object, p, o);
@@ -259,7 +259,7 @@ export class Storage {
     return object;
   }
 
-  public async getInverse(s: s, p: p = []): Promise<StorageInverse> {
+  public async getInverse(s: s, p: p = []): Promise<StorableObjectInverse> {
     const tuples = await this.adapter
       .queryList<[string, o, p, s], true>({
         gt: ['ops', s, p],
@@ -269,10 +269,10 @@ export class Storage {
         result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple))
       );
 
-    const object: StorageInverse = {};
+    const object: StorableObjectInverse = {};
 
     for (const { p, s } of tuples) {
-      const entry = dlv<StorageInverse[string] | undefined>(object, p);
+      const entry = dlv<StorableObjectInverse[string] | undefined>(object, p);
       if (Array.isArray(entry)) {
         entry[entry.length] = s;
       } else {
@@ -336,7 +336,9 @@ function stampedTupleToStampedPatch({
   };
 }
 
-function* poInObject(obj: StorableObject): IterableIterator<[p, o]> {
+function* poInObject(
+  obj: UnIdentifiedStorableObject
+): IterableIterator<[p, o]> {
   for (const [key, value] of Object.entries(obj)) {
     if (isO(value)) {
       yield [[key], value];

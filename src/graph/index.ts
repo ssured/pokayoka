@@ -5,9 +5,7 @@ import {
   addDisposer,
   onPatch,
   getSnapshot,
-  getType,
   IJsonPatch,
-  IAnyComplexType,
   IReferenceType,
   types,
   getEnv,
@@ -17,16 +15,16 @@ import {
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
 import { Storage } from '../storage/index';
+import { generateId } from '../utils/id';
+import { compare } from 'fast-json-patch';
+import console = require('console');
 
 export interface GraphEnv {
-  create<T extends IAnyModelType>(
+  // observable view which triggers loading the instance from the storage as a side effect
+  loadInstance<T extends IAnyModelType>(
     Type: T,
-    snapshot: SnapshotIn<T>,
-    env: GraphEnv
-  ): Instance<T>;
-  get<T extends IAnyModelType>(Type: T, id: string): Promise<Instance<T>>;
-  load<T extends IAnyModelType>(Type: T, id: string): Promise<SnapshotIn<T>>;
-  getOrLoad<T extends IAnyModelType>(Type: T, id: string): Instance<T> | null;
+    id: string
+  ): Instance<T> | null;
 }
 
 abstract class BaseStore implements GraphEnv {
@@ -35,29 +33,44 @@ abstract class BaseStore implements GraphEnv {
     { deep: false }
   );
 
-  load<T extends IAnyModelType>(Type: T, id: string): Promise<SnapshotIn<T>> {
-    throw new Error('must be implemented downstream');
+  protected getSnapshot<T extends IAnyModelType>(
+    Type: T,
+    id: string
+  ): Promise<SnapshotIn<T>> {
+    throw new Error('must be implemented in subclass');
   }
 
-  create<T extends IAnyModelType>(
+  protected createInstance<T extends IAnyModelType>(
     Type: T,
     snapshot: SnapshotIn<T>,
     env: GraphEnv = this
   ): Instance<T> {
-    const instance = Type.create({ ...snapshot, id: snapshot.id[0] }, env);
+    const instance = Type.create(snapshot, env);
+    this.cache.set(instance.id, instance);
     return instance;
   }
 
-  getOrLoad<T extends IAnyModelType>(Type: T, id: string): Instance<T> | null {
+  protected async getInstance<T extends IAnyModelType>(
+    Type: T,
+    id: string
+  ): Promise<Instance<T>> {
+    await when(() => this.loadInstance(Type, id) != null);
+    return this.loadInstance(Type, id) as any;
+  }
+
+  loadInstance<T extends IAnyModelType>(
+    Type: T,
+    id: string
+  ): Instance<T> | null {
     if (!this.cache.has(id)) {
       runInAction(() => this.cache.set(id, null));
 
       // intentional sideeffect
       Promise.resolve().then(async () => {
-        const snapshot = await this.load(Type, id);
+        const snapshot = await this.getSnapshot(Type, id);
         runInAction(() => {
           try {
-            this.cache.set(id, this.create(Type, snapshot));
+            this.cache.set(id, this.createInstance(Type, snapshot));
           } catch (e) {
             console.error('Got error in getOrLoad');
             console.error(e);
@@ -68,14 +81,6 @@ abstract class BaseStore implements GraphEnv {
     }
     return this.cache.get(id);
   }
-
-  async get<T extends IAnyModelType>(
-    Type: T,
-    id: string
-  ): Promise<Instance<T>> {
-    await when(() => this.getOrLoad(Type, id) != null);
-    return this.getOrLoad(Type, id) as any;
-  }
 }
 
 export class Store extends BaseStore {
@@ -85,7 +90,7 @@ export class Store extends BaseStore {
     // actively listen for updates to keep the store up to date
     storage.subscribe(patches => {
       for (const {
-        s: [id],
+        s: id,
         t, // timestamp is not needed here
         ...patch
       } of patches) {
@@ -96,7 +101,7 @@ export class Store extends BaseStore {
     });
   }
 
-  async load<T extends IAnyModelType>(
+  async getSnapshot<T extends IAnyModelType>(
     Type: T,
     id: string
   ): Promise<SnapshotIn<T>> {
@@ -108,12 +113,12 @@ export class Store extends BaseStore {
     return snapshot as any;
   }
 
-  async record(object: Instance<IAnyModelType>) {
-    if (!this.cache.has(object.id) || this.cache.get(object.id) !== object) {
-      throw new Error('object does not belong to this store');
-    }
-    const forkedStore = new RecordingStore(this);
-    return forkedStore.get(getType(object) as IAnyModelType, object.id);
+  record() {
+    return new RecordingStore(
+      this.storage,
+      this.createInstance.bind(this),
+      this.getInstance.bind(this)
+    );
   }
 }
 
@@ -124,20 +129,31 @@ class RecordingStore extends BaseStore {
     id: string;
     patch: IJsonPatch;
     inverse: IJsonPatch;
-    action: ISerializedActionCall;
+    action: ISerializedActionCall; // action null = create new
     timestamp: number;
   }>([], { deep: false });
 
-  constructor(private parent: Store) {
+  constructor(
+    public storage: Storage,
+    private parentCreateInstance: <T extends IAnyModelType>(
+      Type: T,
+      snapshot: SnapshotIn<T>
+    ) => Instance<T>,
+    private parentGetInstance: <T extends IAnyModelType>(
+      Type: T,
+      id: string
+    ) => Promise<Instance<T>>
+  ) {
     super();
   }
 
-  create<T extends IAnyModelType>(
+  protected createInstance<T extends IAnyModelType>(
     Type: T,
     snapshot: SnapshotIn<T>,
     env: GraphEnv = this
   ): Instance<T> {
-    const instance = this.parent.create(Type, snapshot, env);
+    const instance = Type.create(snapshot, env);
+    this.cache.set(instance.id, instance);
 
     let action: ISerializedActionCall;
 
@@ -166,29 +182,70 @@ class RecordingStore extends BaseStore {
   }
 
   // make a clone of the parent instance
-  async load<T extends IAnyModelType>(
+  async getSnapshot<T extends IAnyModelType>(
     Type: T,
     id: string
   ): Promise<SnapshotIn<T>> {
-    return getSnapshot(await this.parent.get(Type, id));
+    return getSnapshot(await this.parentGetInstance(Type, id));
+  }
+
+  // this is the method to create a new instance
+  newInstance<T extends IAnyModelType>(
+    Type: T,
+    snapshot: Omit<SnapshotIn<T>, 'id'>
+  ): Instance<T> {
+    const identifiedSnapshot = snapshot.id
+      ? snapshot
+      : {
+          id: generateId() as SnapshotIn<T>['id'],
+          ...snapshot,
+        };
+    // @ts-ignore
+    const instance = this.createInstance(Type, identifiedSnapshot);
+
+    const { id, ...definedProperties } = getSnapshot(instance);
+    const action = { name: 'newInstance', args: [Type, identifiedSnapshot] };
+    const timestamp = Date.now();
+    const patches = compare({}, definedProperties) as IJsonPatch[];
+    this.patches.push(
+      ...patches.map(patch => ({
+        id,
+        patch,
+        inverse: { op: 'remove' as 'remove', path: patch.path }, // stupid ts
+        action,
+        timestamp,
+      }))
+    );
+
+    return instance;
   }
 
   async commit() {
     const currentPatches = this.patches.splice(0, this.patches.length);
     try {
+      currentPatches
+        .filter(patch => patch.action.name === 'newInstance')
+        .map(patch => patch.action)
+        .filter((item, i, a) => a.indexOf(item) === i)
+        .forEach(action => {
+          if (action.args && action.args.length >= 2) {
+            this.parentCreateInstance(action.args![0], action.args![1]);
+          }
+        });
+
       const stampedPatches = currentPatches.map(({ id, patch }) => ({
         ...patch,
         s: id,
       }));
 
-      await this.parent.storage.mergePatches(stampedPatches);
+      await this.storage.mergePatches(stampedPatches);
     } catch (e) {
       this.patches.splice(0, 0, ...currentPatches);
     }
   }
 }
 
-export function referenceTo<IT extends IAnyComplexType>(
+export function referenceTo<IT extends IAnyModelType>(
   Type: IT
 ): IReferenceType<IT> {
   // TODO do something with safeReference?
@@ -197,7 +254,7 @@ export function referenceTo<IT extends IAnyComplexType>(
       if (parent == null) return null;
       const env = getEnv<GraphEnv>(parent);
       // @ts-ignore
-      return env.getOrLoad(Type, identifier, env);
+      return env.loadInstance(Type, identifier, env);
     },
     set(value) {
       // @ts-ignore
