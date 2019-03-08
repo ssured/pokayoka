@@ -36,10 +36,11 @@ describe('Storage', () => {
       expect(await storage.getObject(obj.id)).toEqual(obj);
     }
 
-    expect(() => {
+    {
       const obj = { id: 'test4', property: ['a', 'b'] };
-      storage.slowlyMergeObject(obj as any);
-    }).toThrowError('cannot write arrays in graph, except subject references');
+      await storage.slowlyMergeObject(obj);
+      expect(await storage.getObject(obj.id)).toEqual(obj);
+    }
 
     // expect(
     //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')
@@ -197,11 +198,11 @@ describe('Storage', () => {
     const storage = new Storage(mem);
 
     const obj1 = { id: 'obj1', key: 'value' };
-    const inv1 = { id: 'inv1', ref1: [obj1.id] as [string] };
+    const inv1 = { id: 'inv1', ref1: obj1.id };
     const inv2 = {
       id: 'inv2',
-      ref1: [obj1.id] as [string],
-      ref2: [obj1.id] as [string],
+      ref1: obj1.id,
+      ref2: obj1.id,
     };
 
     await storage.slowlyMergeObject(obj1);
@@ -214,6 +215,10 @@ describe('Storage', () => {
 
     expect(await storage.getInverse(obj1.id)).toEqual({
       ref1: [inv1.id, inv2.id],
+      ref2: [inv2.id],
+    });
+
+    expect(await storage.getInverse(obj1.id, ['ref2'])).toEqual({
       ref2: [inv2.id],
     });
   });

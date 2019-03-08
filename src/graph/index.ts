@@ -100,8 +100,7 @@ export class Store extends BaseStore {
     Type: T,
     id: string
   ): Promise<SnapshotIn<T>> {
-    const { id: arrId, ...other } = await this.storage.getObject([id]);
-    const snapshot = { ...other, id: arrId[0] };
+    const snapshot = await this.storage.getObject(id);
     if (!Type.is(snapshot)) {
       console.error('snapshot is wrong', Type, snapshot);
       throw new Error('snapshot is wrong');
@@ -179,7 +178,7 @@ class RecordingStore extends BaseStore {
     try {
       const stampedPatches = currentPatches.map(({ id, patch }) => ({
         ...patch,
-        s: [id] as [string],
+        s: id,
       }));
 
       await this.parent.storage.mergePatches(stampedPatches);

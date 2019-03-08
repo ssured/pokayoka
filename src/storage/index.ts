@@ -9,15 +9,9 @@ import {
 } from './adapters/shared';
 import { ham } from './ham';
 import SubscribableEvent from 'subscribableevent';
-import { JsonPrimitive } from '../utils/json';
+import { JsonPrimitive, JsonArray } from '../utils/json';
 import dset from 'dset';
 import dlv from 'dlv';
-
-type oReference = [string];
-
-function isOReference(v: any): v is oReference {
-  return Array.isArray(v) && v.length === 1 && typeof v[0] === 'string';
-}
 
 function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
@@ -30,7 +24,7 @@ function isO(v: any): v is o {
     case 'number':
       return true;
     case 'object':
-      return v == null || isOReference(v);
+      return v == null || Array.isArray(v);
   }
   return false;
 }
@@ -38,7 +32,7 @@ function isO(v: any): v is o {
 export type timestamp = string;
 type s = string;
 type p = string[];
-type o = JsonPrimitive | oReference;
+type o = JsonPrimitive | JsonArray;
 interface Tuple {
   s: s;
   p: p;
@@ -76,7 +70,7 @@ function createOperationsForDeferredTuple(
 ): BatchOperations {
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
-    { key: ['spt', s, p, t], value: [o] }, // used to store future values
+    { key: ['spt', s, p, t], value: [o] }, // used to store future values, wrap o as [o] to support storing o = null
     // { key: ['st', s, t], value: true }, // what is the next update for a subject?
     // { key: ['tsp', t, s, p], value: true },
   ];
@@ -93,11 +87,13 @@ function operationsForTuple(
   const pairs: { key: KeyType; value: ValueType }[] = [
     { key: ['sp', s, p], value: [t, o] }, // only one value can exist for s+p
     // { key: ['ps', p, s], value: o },
+  ];
+  if (!Array.isArray(o)) {
+    pairs.push({ key: ['ops', o, p, s], value: true });
     // { key: ['sop', s, o, p], value: true },
-    { key: ['ops', o, p, s], value: true },
     // { key: ['osp', o, s, p], value: true },
     // { key: ['pos', p, o, s], value: true },
-  ];
+  }
   const ops =
     type === 'put'
       ? pairs.map(pair => ({ ...pair, type }))
@@ -263,11 +259,11 @@ export class Storage {
     return object;
   }
 
-  public async getInverse(s: s): Promise<StorageInverse> {
+  public async getInverse(s: s, p: p = []): Promise<StorageInverse> {
     const tuples = await this.adapter
       .queryList<[string, o, p, s], true>({
-        gt: ['ops', [s], []],
-        lt: ['ops', [s], [[]]],
+        gt: ['ops', s, p],
+        lt: ['ops', s, [...p, []]],
       })
       .then(result =>
         result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple))
