@@ -104,21 +104,36 @@ describe('Storage', () => {
     const storage = new Storage(new MemoryAdapter());
 
     const Model = types
-      .model({ id: types.identifier, name: types.string })
+      .model({
+        id: types.identifier,
+        name: types.string,
+        address: types.model({ street: types.string }),
+      })
       .actions(self => ({
         setName(name: string) {
           self.name = name;
         },
+        setStreet(name: string) {
+          self.address.street = name;
+        },
       }));
 
     const id = 'id';
-    const instance = Model.create({ id, name: 'Pokayoka' });
+    const instance = Model.create({
+      id,
+      name: 'Pokayoka',
+      address: { street: 'A1' },
+    });
     onPatch(instance, patch => storage.mergePatches([{ ...patch, s: id }]));
 
     // @ts-ignore
     await storage.slowlyMergeObject(getSnapshot(instance));
 
-    expect(await storage.getObject(id)).toEqual({ id, name: 'Pokayoka' });
+    expect(await storage.getObject(id)).toEqual({
+      id,
+      name: 'Pokayoka',
+      address: { street: 'A1' },
+    });
 
     instance.setName('Pokayoka BV');
     await delay(10);
@@ -126,6 +141,16 @@ describe('Storage', () => {
     expect(await storage.getObject(id)).toEqual({
       id,
       name: 'Pokayoka BV',
+      address: { street: 'A1' },
+    });
+
+    instance.setStreet('A2');
+    await delay(10);
+
+    expect(await storage.getObject(id)).toEqual({
+      id,
+      name: 'Pokayoka BV',
+      address: { street: 'A2' },
     });
   });
 
