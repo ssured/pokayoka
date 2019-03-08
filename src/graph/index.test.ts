@@ -81,4 +81,33 @@ describe('Storage', () => {
       name: 'b',
     });
   });
+
+  test('really stores stuff', async () => {
+    const db = new MemoryAdapter();
+    const rootStore = new Store(new Storage(db));
+
+    const M = t.model('M', {
+      id: t.identifier,
+      key: 'value',
+    });
+
+    const store = rootStore.record();
+    const obj = store.newInstance(M, { id: 'root' });
+    await store.commit();
+
+    expect(getSnapshot(rootStore.loadInstance(M, obj.id)!)).toEqual({
+      id: 'root',
+      key: 'value',
+    });
+
+    // test if the same data is available when loaded from another storage
+
+    const newStore = new Store(new Storage(db));
+    newStore.loadInstance(M, obj.id);
+    await delay(10);
+    expect(getSnapshot(newStore.loadInstance(M, obj.id)!)).toEqual({
+      id: 'root',
+      key: 'value',
+    });
+  });
 });
