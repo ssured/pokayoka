@@ -11,7 +11,7 @@ export type KeyType = CharwiseKey;
 export type ValueType = JsonEntry;
 export type BatchOperation = AbstractBatch<KeyType, ValueType>;
 export type BatchOperations = BatchOperation[];
-export type ReadOptions = AbstractIteratorOptions<KeyType>;
+export type ReadOptions<K = KeyType> = AbstractIteratorOptions<K>;
 export type KeyValue<K = KeyType, V = ValueType> = { key: K; value: V };
 
 export class SharedAdapter {

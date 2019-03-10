@@ -13,17 +13,18 @@ describe('Storage', () => {
     expect(storage).toBeDefined();
   });
 
-  test('snapshots can be written and persisted', async () => {
-    const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
-
+  test.only('snapshots can be written and persisted', async () => {
     {
+      const mem = new MemoryAdapter();
+      const storage = new Storage(mem);
       const obj = { id: 'test1', property: 'A' };
       await storage.slowlyMergeObject(obj);
       expect(await storage.getObject(obj.id)).toEqual(obj);
     }
 
     {
+      const mem = new MemoryAdapter();
+      const storage = new Storage(mem);
       const obj = {
         id: 'test2',
         reference: ['test1'] as [string],
@@ -33,12 +34,16 @@ describe('Storage', () => {
     }
 
     {
+      const mem = new MemoryAdapter();
+      const storage = new Storage(mem);
       const obj = { id: 'test3', property: { k: 'v' } };
       await storage.slowlyMergeObject(obj);
       expect(await storage.getObject(obj.id)).toEqual(obj);
     }
 
     {
+      const mem = new MemoryAdapter();
+      const storage = new Storage(mem);
       const obj = { id: 'test4', property: ['a', 'b'] };
       await storage.slowlyMergeObject(obj);
       expect(await storage.getObject(obj.id)).toEqual(obj);

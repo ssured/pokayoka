@@ -31,8 +31,8 @@ function isO(v: any): v is o {
 type JsonArrayNotContainingAnyMap = (JsonPrimitive | JsonArray)[];
 
 export type timestamp = string;
-type s = string;
-type p = string[];
+type s = string[];
+type p = string;
 type o = JsonPrimitive | JsonArrayNotContainingAnyMap;
 interface Tuple {
   s: s;
@@ -62,7 +62,7 @@ interface UnIdentifiedStorableObject {
 }
 
 export interface StorableObject extends UnIdentifiedStorableObject {
-  id: s;
+  id: string;
 }
 
 export interface StorableObjectInverse {
@@ -237,38 +237,35 @@ export class Storage {
     // all writes are at the same moment
     const machineState = this.getMachineState();
 
-    const tuples: StampedTuple[] = [];
-    for (const [p, rawO] of poInObject(other)) {
-      tuples.push({ s: id, p, o: rawO as o, t: machineState });
-    }
+    const tuples: StampedTuple[] = [...spoInObject([id], other, machineState)];
 
     return this.mergeTuples(tuples);
   }
 
-  public async getObject(s: s): Promise<StorableObject> {
+  public async getObject(id: string): Promise<StorableObject> {
     const tuples = await this.adapter
       .queryList<[string, s, p], [timestamp, o]>({
-        gt: ['sp', s, []],
-        lt: ['sp', s, [[]]],
+        gte: ['sp', [id]],
+        lt: ['sp', [id, []]],
       })
       .then(result =>
         result.map(({ key: [, s, p], value: [, o] }) => ({ s, p, o } as Tuple))
       );
 
-    const object: StorableObject = { id: s };
+    const object: StorableObject = { id };
 
-    for (const { p, o } of tuples) {
-      dset(object, p, o);
+    for (const { s, p, o } of tuples) {
+      dset(object, s.slice(1).concat(p), o);
     }
 
     return object;
   }
 
-  public async getInverse(s: s, p: p = []): Promise<StorableObjectInverse> {
+  public async getInverse(s: s, p?: p): Promise<StorableObjectInverse> {
     const tuples = await this.adapter
       .queryList<[string, o, p, s], true>({
-        gt: ['ops', s, p],
-        lt: ['ops', s, [...p, []]],
+        gte: ['ops', s, p ? p : ''],
+        lt: ['ops', s, p ? p : []],
       })
       .then(result =>
         result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple))
@@ -319,8 +316,8 @@ function stampedPatchToStampedTuple({
 }: StampedPatch): StampedTuple {
   console.log({ op, path, s });
   return {
-    s,
-    p: path.map(String),
+    s: s.concat(path.map(String).slice(0, -1)),
+    p: path.map(String).slice(-1)[0],
     o: op === 'remove' ? null : typeof value === 'undefined' ? null : value,
     t,
   };
@@ -334,29 +331,30 @@ function stampedTupleToStampedPatch({
   t,
 }: StampedTuple): StampedPatch {
   return {
-    s,
+    s: s.slice(0, 1),
     t,
     op: 'replace',
-    path: p,
+    path: s.slice(1).concat(p),
     value: o,
   };
 }
 
-function* poInObject(
-  obj: UnIdentifiedStorableObject
-): IterableIterator<[p, o]> {
+function* spoInObject(
+  s: s,
+  obj: UnIdentifiedStorableObject,
+  t: timestamp
+): IterableIterator<StampedTuple> {
   for (const [key, value] of Object.entries(obj)) {
     if (isO(value)) {
-      yield [[key], value];
+      yield { s, p: key, o: value, t };
     } else if (isObject(value)) {
+      // TODO this will be possible!
       if (Array.isArray(value)) {
         throw new Error(
           'cannot write arrays in graph, except subject references'
         );
       }
-      for (const [path, innerVal] of poInObject(value)) {
-        yield [[key].concat(path), innerVal];
-      }
+      yield* spoInObject(s.concat(key), value, t);
     }
   }
 }
