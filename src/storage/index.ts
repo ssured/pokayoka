@@ -28,13 +28,12 @@ function isO(v: any): v is o {
   return false;
 }
 
-type JsonNoMap = (JsonPrimitive | JsonArray)[];
-interface JsonNoMapArray extends JsonNoMap {}
+type JsonArrayNotContainingAnyMap = (JsonPrimitive | JsonArray)[];
 
 export type timestamp = string;
 type s = string;
 type p = string[];
-type o = JsonPrimitive | JsonNoMapArray;
+type o = JsonPrimitive | JsonArrayNotContainingAnyMap;
 interface Tuple {
   s: s;
   p: p;
@@ -77,8 +76,8 @@ function createOperationsForDeferredTuple(
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
     { key: ['spt', s, p, t], value: [o] }, // used to store future values, wrap o as [o] to support storing o = null
+    { key: ['tsp', t, s, p], value: true }, // timeline of current values and future updates
     // { key: ['st', s, t], value: true }, // what is the next update for a subject?
-    // { key: ['tsp', t, s, p], value: true },
   ];
   return type === 'put'
     ? pairs.map(pair => ({ ...pair, type }))

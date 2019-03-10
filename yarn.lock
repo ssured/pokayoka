@@ -12057,6 +12057,13 @@ run-series@^1.1.4:
   resolved "https://registry.yarnpkg.com/run-series/-/run-series-1.1.8.tgz#2c4558f49221e01cd6371ff4e0a1e203e460fc36"
   integrity sha512-+GztYEPRpIsQoCSraWHDBs9WVy4eVME16zhOtDB4H9J4xN0XRhknnmLOl+4gRgZtu8dpp9N/utSPjKH/xmDzXg==
 
+runtypes@^3.1.2:
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/runtypes/-/runtypes-3.1.2.tgz#81e186500b6882e0d5badeb5c6deef72e3fcc068"
+  integrity sha512-oxAaykMNPeuxBTHFPHb4N/WiOMln/Sg73CRfEywpdO5FQyi+lVvGvehGny/QtP2hHvfm7/4E8KLcchfZBnMK6Q==
+  dependencies:
+    reflect-metadata "^0.1.12"
+
 rx-lite-aggregates@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/rx-lite-aggregates/-/rx-lite-aggregates-4.0.8.tgz#753b87a89a11c95467c4ac1626c4efc4e05c67be"
