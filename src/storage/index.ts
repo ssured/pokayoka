@@ -2,7 +2,7 @@ import dlv from 'dlv';
 import dset from 'dset';
 import mlts from 'monotonic-lexicographic-timestamp';
 import SubscribableEvent from 'subscribableevent';
-import { JsonArray, JsonPrimitive } from '../utils/json';
+import { JsonPrimitive } from '../utils/json';
 import {
   BatchOperations,
   KeyType,
@@ -157,7 +157,6 @@ export class Storage {
       incomingTuple.p,
       machineState
     );
-    console.log(currentTuples);
 
     const currentTuple =
       currentTuples.length === 0
@@ -170,7 +169,6 @@ export class Storage {
       if (machineState < incomingTuple.t) {
         operations = createOperationsForDeferredTuple(incomingTuple);
       } else {
-        console.log(incomingTuple);
         operations = createOperations(incomingTuple, currentTuples);
       }
     } else {
@@ -310,7 +308,6 @@ export class Storage {
     );
 
     const stampedTuples = stampedPatches.map(stampedPatchToStampedTuple);
-    console.log(stampedTuples);
 
     return this.queueTransaction(stampedTuples, machineState);
   }
