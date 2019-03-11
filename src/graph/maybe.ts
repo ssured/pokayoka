@@ -31,4 +31,5 @@ export const nothing: Nothing = new Proxy<Nothing>(
     },
   }
 );
-export const isNothing = (v: any): v is Nothing => v === nothing;
+export const isNothing = <T>(v: Maybe<T>): v is Nothing => v === nothing;
+export const isSomething = <T>(v: Maybe<T>): v is T => v !== nothing;

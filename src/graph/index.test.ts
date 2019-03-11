@@ -2,7 +2,6 @@ import { Storage } from '../storage/index';
 import { MemoryAdapter } from '../storage/adapters/memory';
 import { Store, referenceTo, asReference } from './index';
 import { types as t, getSnapshot, Instance } from 'mobx-state-tree';
-import console = require('console');
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -61,7 +60,6 @@ describe('Storage', () => {
     const storage = new Storage(mem);
     let tuplesCount = 0;
     storage.subscribe(tuple => {
-      console.log(tuple);
       tuplesCount += 1;
     });
 
