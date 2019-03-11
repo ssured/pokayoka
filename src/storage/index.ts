@@ -74,7 +74,7 @@ export interface StorableObjectInverse {
   [key: string]: s[];
 }
 
-function createOperationsForDeferredTuple(
+function createOperationsForTimeline(
   tuple: StampedTuple,
   type: 'del' | 'put' = 'put'
 ): BatchOperations {
@@ -89,7 +89,7 @@ function createOperationsForDeferredTuple(
     : pairs.map(({ key }) => ({ key, type }));
 }
 
-function operationsForTuple(
+function createOperationsForStore(
   tuple: StampedTuple,
   type: 'del' | 'put'
 ): BatchOperations {
@@ -106,7 +106,7 @@ function operationsForTuple(
     type === 'put'
       ? pairs.map(pair => ({ ...pair, type }))
       : pairs.map(({ key }) => ({ key, type }));
-  return [...ops, ...createOperationsForDeferredTuple(tuple, type)];
+  return [...ops, ...createOperationsForTimeline(tuple, type)];
 }
 
 function createOperations(
@@ -114,8 +114,8 @@ function createOperations(
   toRemove: StampedTuple[] = []
 ): BatchOperations {
   return toRemove
-    .flatMap(tuple => operationsForTuple(tuple, 'del'))
-    .concat(...operationsForTuple(toAdd, 'put'));
+    .flatMap(tuple => createOperationsForStore(tuple, 'del'))
+    .concat(...createOperationsForStore(toAdd, 'put'));
 }
 
 export const numberToState = (n?: number) =>
@@ -167,7 +167,7 @@ export class Storage {
     let merged = false;
     if (currentTuple === undefined) {
       if (machineState < incomingTuple.t) {
-        operations = createOperationsForDeferredTuple(incomingTuple);
+        operations = createOperationsForTimeline(incomingTuple);
       } else {
         operations = createOperations(incomingTuple, currentTuples);
       }
@@ -184,7 +184,7 @@ export class Storage {
         operations = createOperations(incomingTuple, currentTuples);
         merged = true;
       } else if (comparison.resolution === 'defer') {
-        operations = createOperationsForDeferredTuple(incomingTuple);
+        operations = createOperationsForTimeline(incomingTuple);
       }
     }
 

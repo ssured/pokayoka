@@ -75,6 +75,8 @@ describe('Storage', () => {
     expect(store.patches.length).toBe(1);
     mroot.setName('b');
     expect(store.patches.length).toBe(2);
+    mroot.setName('c');
+    expect(store.patches.length).toBe(3);
 
     await store.commit();
     expect(store.patches.length).toBe(0);
@@ -83,7 +85,7 @@ describe('Storage', () => {
 
     expect(getSnapshot(rootStore.loadInstance(M, mroot.id)!)).toEqual({
       id: 'root',
-      name: 'b',
+      name: 'c',
     });
   });
 
