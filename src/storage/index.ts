@@ -28,7 +28,12 @@ function isO(v: any): v is o {
   return false;
 }
 
-type JsonArrayNotContainingAnyMap = (JsonPrimitive | JsonArray)[];
+type JsonArrayNotContainingAnyMapValue =
+  | JsonPrimitive
+  | JsonArrayNotContainingAnyMap;
+type JsonArrayNotContainingAnyMapValueArray = JsonArrayNotContainingAnyMapValue[];
+interface JsonArrayNotContainingAnyMap
+  extends JsonArrayNotContainingAnyMapValueArray {}
 
 export type timestamp = string;
 type s = string[];
@@ -91,14 +96,12 @@ function operationsForTuple(
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
     { key: ['sp', s, p], value: [t, o] }, // only one value can exist for s+p
-    // { key: ['ps', p, s], value: o },
-  ];
-  if (!Array.isArray(o)) {
-    pairs.push({ key: ['ops', o, p, s], value: true });
+    // { key: ['ps', p, s], value: [o] },
+    { key: ['ops', o, p, s], value: true },
     // { key: ['sop', s, o, p], value: true },
     // { key: ['osp', o, s, p], value: true },
     // { key: ['pos', p, o, s], value: true },
-  }
+  ];
   const ops =
     type === 'put'
       ? pairs.map(pair => ({ ...pair, type }))
@@ -154,6 +157,7 @@ export class Storage {
       incomingTuple.p,
       machineState
     );
+    console.log(currentTuples);
 
     const currentTuple =
       currentTuples.length === 0
@@ -166,6 +170,7 @@ export class Storage {
       if (machineState < incomingTuple.t) {
         operations = createOperationsForDeferredTuple(incomingTuple);
       } else {
+        console.log(incomingTuple);
         operations = createOperations(incomingTuple, currentTuples);
       }
     } else {
@@ -213,7 +218,7 @@ export class Storage {
     );
   }
 
-  private async mergeTuples(
+  private async queueTransaction(
     tuples: StampedTuple[],
     machineState = this.getMachineState()
   ): Promise<boolean> {
@@ -239,7 +244,7 @@ export class Storage {
 
     const tuples: StampedTuple[] = [...spoInObject([id], other, machineState)];
 
-    return this.mergeTuples(tuples);
+    return this.queueTransaction(tuples, machineState);
   }
 
   public async getObject(id: string): Promise<StorableObject> {
@@ -264,17 +269,20 @@ export class Storage {
   public async getInverse(s: s, p?: p): Promise<StorableObjectInverse> {
     const tuples = await this.adapter
       .queryList<[string, o, p, s], true>({
-        gte: ['ops', s, p ? p : ''],
-        lt: ['ops', s, p ? p : []],
+        gt: ['ops', s, p ? p : '', null],
+        lt: ['ops', s, p ? p : [], undefined],
       })
-      .then(result =>
-        result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple))
-      );
+      .then(result => {
+        return result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple));
+      });
 
     const object: StorableObjectInverse = {};
 
     for (const { p, s } of tuples) {
-      const entry = dlv<StorableObjectInverse[string] | undefined>(object, p);
+      const entry = dlv<StorableObjectInverse[string] | undefined>(
+        object,
+        s.slice(1).concat(p)
+      );
       if (Array.isArray(entry)) {
         entry[entry.length] = s;
       } else {
@@ -302,8 +310,9 @@ export class Storage {
     );
 
     const stampedTuples = stampedPatches.map(stampedPatchToStampedTuple);
+    console.log(stampedTuples);
 
-    return this.mergeTuples(stampedTuples, machineState);
+    return this.queueTransaction(stampedTuples, machineState);
   }
 }
 
@@ -314,7 +323,7 @@ function stampedPatchToStampedTuple({
   path,
   value,
 }: StampedPatch): StampedTuple {
-  console.log({ op, path, s });
+  // console.log({ op, path, s });
   return {
     s: s.concat(path.map(String).slice(0, -1)),
     p: path.map(String).slice(-1)[0],

@@ -13,7 +13,7 @@ describe('Storage', () => {
     expect(storage).toBeDefined();
   });
 
-  test.only('snapshots can be written and persisted', async () => {
+  test('snapshots can be written and persisted', async () => {
     {
       const mem = new MemoryAdapter();
       const storage = new Storage(mem);
@@ -134,7 +134,7 @@ describe('Storage', () => {
     });
     onPatch(instance, patch =>
       storage.mergePatches([
-        { ...patch, path: splitJsonPath(patch.path), s: id },
+        { ...patch, path: splitJsonPath(patch.path), s: [id] },
       ])
     );
 
@@ -191,7 +191,7 @@ describe('Storage', () => {
     });
     onPatch(instance, patch =>
       storage.mergePatches([
-        { ...patch, path: splitJsonPath(patch.path), s: id },
+        { ...patch, path: splitJsonPath(patch.path), s: [id] },
       ])
     );
 
@@ -213,28 +213,28 @@ describe('Storage', () => {
     const storage = new Storage(mem);
 
     const obj1 = { id: 'obj1', key: 'value' };
-    const inv1 = { id: 'inv1', ref1: obj1.id };
+    const inv1 = { id: 'inv1', ref1: [obj1.id] };
     const inv2 = {
       id: 'inv2',
-      ref1: obj1.id,
-      ref2: obj1.id,
+      ref1: [obj1.id],
+      ref2: [obj1.id],
     };
 
     await storage.slowlyMergeObject(obj1);
     await storage.slowlyMergeObject(inv1);
     await storage.slowlyMergeObject(inv2);
 
+    expect(await storage.getInverse([obj1.id])).toEqual({
+      ref1: [[inv1.id], [inv2.id]],
+      ref2: [[inv2.id]],
+    });
+
     // expect(
     //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')
     // ).toEqual('');
 
-    expect(await storage.getInverse(obj1.id)).toEqual({
-      ref1: [inv1.id, inv2.id],
-      ref2: [inv2.id],
-    });
-
-    expect(await storage.getInverse(obj1.id, ['ref2'])).toEqual({
-      ref2: [inv2.id],
+    expect(await storage.getInverse([obj1.id], 'ref2')).toEqual({
+      ref2: [[inv2.id]],
     });
   });
 

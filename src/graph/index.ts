@@ -95,7 +95,7 @@ export class Store extends BaseStore {
         t, // timestamp is not needed here
         ...patch
       } of patches) {
-        const obj = this.cache.get(id);
+        const obj = this.cache.get(id[0]);
         if (obj == null) continue;
         applyPatch(obj, {
           ...patch,
@@ -198,22 +198,22 @@ class RecordingStore extends BaseStore {
     Type: T,
     snapshot: Omit<SnapshotIn<T>, 'id'> & Partial<Pick<SnapshotIn<T>, 'id'>>
   ): Instance<T> {
-    const identifiedSnapshot = snapshot.id
+    const snapshotWithId = snapshot.id
       ? snapshot
       : {
           id: generateId() as SnapshotIn<T>['id'],
           ...snapshot,
         };
     // @ts-ignore
-    const instance = this.createInstance(Type, identifiedSnapshot);
+    const instance = this.createInstance(Type, snapshotWithId);
 
     const { id, ...definedProperties } = getSnapshot(instance);
-    const action = { name: 'newInstance', args: [Type, identifiedSnapshot] };
+    const action = { name: 'newInstance', args: [Type, snapshotWithId] };
     const timestamp = Date.now();
 
     produce(
       {},
-      () => definedProperties,
+      draft => Object.assign(draft, definedProperties),
       (patches, inversePatches) =>
         patches.forEach((patch, i) => {
           const inverse = inversePatches[i];
@@ -264,7 +264,9 @@ class RecordingStore extends BaseStore {
           {},
           draft => Object.assign(draft, applyPatches(draft, patches)),
           patches => {
-            stampedPatches.push(...patches.map(patch => ({ ...patch, s: id })));
+            stampedPatches.push(
+              ...patches.map(patch => ({ ...patch, s: [id] }))
+            );
           }
         );
       }
