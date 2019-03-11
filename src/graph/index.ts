@@ -5,8 +5,6 @@ import {
   addDisposer,
   onPatch,
   getSnapshot,
-  IReferenceType,
-  types,
   getEnv,
   applyPatch,
   ISerializedActionCall,
@@ -19,6 +17,7 @@ import { Storage, Patch } from '../storage/index';
 import { generateId } from '../utils/id';
 import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
 import console = require('console');
+import { asyncReference, asPlaceholder } from './asyncReference';
 
 export interface GraphEnv {
   // observable view which triggers loading the instance from the storage as a side effect
@@ -26,6 +25,10 @@ export interface GraphEnv {
     Type: T,
     id: string
   ): Instance<T> | null;
+  getInstance<T extends IAnyModelType>(
+    Type: T,
+    id: string
+  ): Promise<Instance<T>>;
 }
 
 abstract class BaseStore implements GraphEnv {
@@ -51,7 +54,7 @@ abstract class BaseStore implements GraphEnv {
     return instance;
   }
 
-  protected async getInstance<T extends IAnyModelType>(
+  async getInstance<T extends IAnyModelType>(
     Type: T,
     id: string
   ): Promise<Instance<T>> {
@@ -280,23 +283,16 @@ class RecordingStore extends BaseStore {
   }
 }
 
-export function referenceTo<IT extends IAnyModelType>(
-  Type: IT
-): IReferenceType<IT> {
+export function referenceTo<IT extends IAnyModelType>(Type: IT) {
   // TODO do something with safeReference?
-  return types.reference<IT>(Type, {
-    get(identifier, parent) {
-      if (parent == null) return null;
-      const env = getEnv<GraphEnv>(parent);
-      return env.loadInstance(Type, `${identifier}`) as any;
-    },
-    set(value) {
-      // @ts-ignore
-      return value.id;
-    },
+  return asyncReference(Type, (identifier, parent) => {
+    if (parent == null) throw new Error('parent must be defined');
+    const env = getEnv<GraphEnv>(parent);
+    return env.getInstance(Type, `${identifier}`);
   });
 }
 
+export const asReference = asPlaceholder;
 // // create an object with 1 prop which is typed to the value
 // const objFromProp = <T extends string, U>(
 //   name: T,

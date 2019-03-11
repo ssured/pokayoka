@@ -1,7 +1,7 @@
 import { Storage } from '../storage/index';
 import { MemoryAdapter } from '../storage/adapters/memory';
-import { Store, referenceTo } from './index';
-import { types as t, getSnapshot } from 'mobx-state-tree';
+import { Store, referenceTo, asReference } from './index';
+import { types as t, getSnapshot, Instance } from 'mobx-state-tree';
 import console = require('console');
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -16,33 +16,43 @@ describe('Storage', () => {
   });
 
   test('can store a reference', async () => {
-    const rootStore = new Store(new Storage(new MemoryAdapter()));
+    const mainStore = new Store(new Storage(new MemoryAdapter()));
 
-    const M: any = t
-      .model('M', {
+    const Referenced = t
+      .model('Referenced', {
         id: t.identifier,
-        ma: t.maybeNull(referenceTo(t.late(() => M))),
       })
-      .actions(self => ({
-        setMa(ma: any) {
-          self.ma = ma;
+      .views(self => ({
+        get name() {
+          return `Referenced ${self.id}`;
         },
       }));
 
-    const store = rootStore.record();
+    const Model = t
+      .model('M', {
+        id: t.identifier,
+        ref: t.maybe(referenceTo(Referenced)),
+      })
+      .actions(self => ({
+        setRef(ref: Instance<typeof Referenced>) {
+          self.ref = asReference(ref);
+        },
+      }));
 
-    const mroot = store.newInstance(M, { id: 'root' });
+    const subStore = mainStore.record();
+
+    const mroot = subStore.newInstance(Model, { id: 'root' });
     expect(mroot.id).toBeDefined();
-    expect(store.patches.length).toBe(1);
+    expect(subStore.patches.length).toBe(1);
 
-    mroot.setMa(store.newInstance(M, { id: 'sub' }));
-    expect(store.patches.length).toBe(3);
+    mroot.setRef(subStore.newInstance(Referenced, { id: 'sub' }));
+    expect(subStore.patches.length).toBe(2);
 
-    await store.commit();
+    await subStore.commit();
 
-    expect(getSnapshot(rootStore.loadInstance(M, mroot.id))).toEqual({
+    expect(getSnapshot(await mainStore.getInstance(Model, mroot.id))).toEqual({
       id: 'root',
-      ma: 'sub',
+      ref: 'sub',
     });
   });
 

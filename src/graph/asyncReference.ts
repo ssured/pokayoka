@@ -1,52 +1,48 @@
 import {
   IType,
   IAnyStateTreeNode,
-  IAnyComplexType,
   IStateTreeNode,
   ReferenceIdentifier,
   types,
   getIdentifier,
   IAnyModelType,
-  IAnyType,
   ReferenceOptionsOnInvalidated,
+  Instance,
 } from 'mobx-state-tree';
 import { IObservableObject, observable, transaction, runInAction } from 'mobx';
 import { nothing, Maybe } from './maybe';
 
 // Types are copied from internal mobx-state-tree types
-type ExtractT<T extends IAnyType> = T extends IType<any, any, infer X>
-  ? X
-  : never;
 type RedefineIStateTreeNode<
   T,
   STN extends IAnyStateTreeNode
 > = T extends IAnyStateTreeNode ? Omit<T, '!!types'> & STN : T;
 
-interface AsyncReferenceOptionsGetSet<IT extends IAnyComplexType> {
+interface AsyncReferenceOptionsGetSet<IT extends IAnyModelType> {
   get(
     identifier: ReferenceIdentifier,
     parent: IAnyStateTreeNode | null
-  ): ObservableAsyncPlaceholder<ExtractT<IT>>;
+  ): ObservableAsyncPlaceholder<Instance<IT>>;
   set(
-    value: ExtractT<IT>,
+    value: Instance<IT>,
     parent: IAnyStateTreeNode | null
   ): ReferenceIdentifier;
 }
 
-type AsyncReferenceOptions<IT extends IAnyComplexType> =
+type AsyncReferenceOptions<IT extends IAnyModelType> =
   | AsyncReferenceOptionsGetSet<IT>
   | ReferenceOptionsOnInvalidated<IT>
   | (AsyncReferenceOptionsGetSet<IT> & ReferenceOptionsOnInvalidated<IT>);
 
 // HERE we amend the normal reference type
-// with a loading observable: `ObservableLoadingPlaceholder<ExtractT<IT>>,`
-interface IAsyncReferenceType<IT extends IAnyComplexType>
+// with a loading observable: `ObservableLoadingPlaceholder<Instance<IT>>,`
+export interface IAsyncReferenceType<IT extends IAnyModelType>
   extends IType<
     ReferenceIdentifier,
     ReferenceIdentifier,
     ObservableAsyncPlaceholder<
       RedefineIStateTreeNode<
-        ExtractT<IT>,
+        Instance<IT>,
         IStateTreeNode<ReferenceIdentifier, ReferenceIdentifier>
       >
     >
@@ -95,16 +91,16 @@ export function asyncReference<IT extends IAnyModelType>(
   loader: (
     id: ReferenceIdentifier,
     parent: IAnyStateTreeNode | null
-  ) => Promise<ExtractT<IT>>
+  ) => Promise<Instance<IT>>
 ): IAsyncReferenceType<IT> {
   const placeholders = new Map<
     ReferenceIdentifier,
-    ObservableAsyncPlaceholder<ExtractT<IT>>
+    ObservableAsyncPlaceholder<Instance<IT>>
   >();
 
   function getPlaceholder(
     id: ReferenceIdentifier
-  ): ObservableAsyncPlaceholder<ExtractT<IT>> {
+  ): ObservableAsyncPlaceholder<Instance<IT>> {
     if (!placeholders.has(id)) {
       placeholders.set(
         id,
@@ -166,7 +162,7 @@ export function asyncReference<IT extends IAnyModelType>(
 }
 
 export function asPlaceholder<IT extends IAnyModelType>(
-  value: ExtractT<IT>
-): ObservableAsyncPlaceholder<ExtractT<IT>> {
+  value: Instance<IT>
+): ObservableAsyncPlaceholder<Instance<IT>> {
   return value as any;
 }
