@@ -1,27 +1,9 @@
-import {
-  Boolean,
-  Number,
-  String,
-  Literal,
-  Array,
-  Tuple,
-  Record,
-  Union,
-} from 'runtypes';
 import { JsonMap } from '../utils/json';
-import {
-  observable,
-  isObservable,
-  configure,
-  IObservableObject,
-  when,
-  runInAction,
-} from 'mobx';
+import { observable, isObservable, configure } from 'mobx';
 import dlv from 'dlv';
 import dset from 'dset';
 import produce, { Patch } from 'immer';
 import console = require('console');
-import { types, IAnyModelType, Instance, SnapshotIn } from 'mobx-state-tree';
 
 configure({ enforceActions: 'always' });
 
@@ -146,114 +128,6 @@ describe('immer working with mobx', () => {
     expect(patches1).toEqual(patches2);
 
     console.log(typeof produce(() => {}, () => {}));
-  });
-});
-
-export type Unknown = { [key: string]: Unknown };
-export const unknown: Unknown = new Proxy<Unknown>(
-  {},
-  {
-    get(_, prop) {
-      if (typeof prop === 'symbol') {
-        if (prop === Symbol.toPrimitive) {
-          return (hint: 'number' | 'string' | 'default') =>
-            hint === 'number' ? 0 : '[object Unknown]';
-        }
-        // @ts-ignore
-        return {}[prop];
-      }
-      if (prop === 'toString') {
-        return () => '[object Unknown]';
-      }
-      if (prop === 'valueOf') {
-        return () => {
-          const obj = {};
-          // @ts-ignore
-          obj[Symbol.toStringTag] = 'Unknown';
-          return obj;
-        };
-      }
-      return unknown;
-    },
-  }
-);
-export const isUnknown = (v: any): v is Unknown => v === unknown;
-
-describe('can we use a proxy to sync instantiate an mst model from a a db?', () => {
-  test('', async () => {
-    const TestModel = types.model('Test', {
-      id: types.string,
-      name: types.string,
-    });
-
-    async function loader(id: string): Promise<SnapshotIn<typeof TestModel>> {
-      await delay(10);
-      return { id, name: `I am ${id}` };
-    }
-
-    async function testModelLoader(
-      id: string
-    ): Promise<Instance<typeof TestModel>> {
-      return TestModel.create(await loader(id));
-    }
-
-    type ObservableLoadingPlaceholder<T> = (
-      | {
-          id: string;
-          state: 'loading';
-          success: Unknown;
-          error: undefined;
-        }
-      | {
-          id: string;
-          state: 'success';
-          success: T;
-          error: undefined;
-        }
-      | {
-          id: string;
-          state: 'error';
-          success: Unknown;
-          error: Error;
-        }) &
-      IObservableObject;
-
-    function getModel<T extends IAnyModelType>(
-      loader: (id: string) => Promise<Instance<T>>,
-      id: string
-    ): ObservableLoadingPlaceholder<Instance<T>> {
-      const placeholder = observable({
-        id,
-        state: 'loading',
-        success: unknown,
-        error: undefined,
-      });
-
-      loader(id)
-        .then(instance =>
-          runInAction(() => {
-            placeholder.state = 'success';
-            placeholder.success = instance;
-          })
-        )
-        .catch(e =>
-          runInAction(() => {
-            placeholder.state = 'error';
-            placeholder.error = e;
-          })
-        );
-
-      return placeholder as any;
-    }
-
-    const instance = getModel(testModelLoader, '123');
-
-    expect(instance.id).toBe('123');
-    expect(instance.state).toBe('loading');
-
-    await when(() => !!instance.success.name);
-
-    expect(instance.success.name).toBe('I am 123');
   });
 });
 

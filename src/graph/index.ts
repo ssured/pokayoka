@@ -288,8 +288,7 @@ export function referenceTo<IT extends IAnyModelType>(
     get(identifier, parent) {
       if (parent == null) return null;
       const env = getEnv<GraphEnv>(parent);
-      // @ts-ignore
-      return env.loadInstance(Type, identifier, env);
+      return env.loadInstance(Type, `${identifier}`) as any;
     },
     set(value) {
       // @ts-ignore
