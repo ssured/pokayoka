@@ -11,7 +11,7 @@ import {
 
 import { BelongsToProject } from './Project';
 import { singleton, nameFromType, Env } from './utils';
-import { SpatialStructureElement } from './IFC';
+import { IFCSpatialStructureElement } from './IFC';
 import { label, compoundPlaneAngleMeasure, postalAddress } from './types';
 import { HasManyBuildings } from './Building';
 
@@ -24,7 +24,7 @@ export const Site = singleton(() =>
   t
     .compose(
       nameFromType(type),
-      SpatialStructureElement(),
+      IFCSpatialStructureElement(),
       t.model({
         type,
         typeVersion: 1,

@@ -10,7 +10,7 @@ import {
 } from 'mobx-state-tree';
 
 import { singleton, nameFromType, Env } from './utils';
-import { SpatialStructureElement } from './IFC';
+import { IFCSpatialStructureElement } from './IFC';
 import { BelongsToBuilding } from './Building';
 import { HasManySpaces } from './Space';
 
@@ -24,7 +24,7 @@ export const BuildingStorey = singleton(() =>
   t
     .compose(
       nameFromType(type),
-      SpatialStructureElement(),
+      IFCSpatialStructureElement(),
       t.model({
         type,
         typeVersion: 1,

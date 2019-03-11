@@ -11,7 +11,7 @@ import {
 
 import { HasManySites } from './Site';
 import { singleton, nameFromType, Env } from './utils';
-import { Object } from './IFC';
+import { IFCObject } from './IFC';
 import { label } from './types';
 
 import { Maybe, Result } from 'true-myth';
@@ -23,7 +23,7 @@ export const Project = singleton(() =>
   t
     .compose(
       nameFromType(type),
-      Object(),
+      IFCObject(),
       t.model({
         type,
         typeVersion: 1,

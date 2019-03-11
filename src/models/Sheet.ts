@@ -10,7 +10,7 @@ import {
 } from 'mobx-state-tree';
 
 import { singleton, nameFromType, Env } from './utils';
-import { Object } from './IFC';
+import { IFCObject } from './IFC';
 
 import { Maybe, Result } from 'true-myth';
 import { BelongsToBuildingStorey } from './BuildingStorey';
@@ -22,7 +22,7 @@ export const Sheet = singleton(() =>
   t
     .compose(
       nameFromType(type),
-      Object(),
+      IFCObject(),
       t.model({
         type,
         typeVersion: 1,

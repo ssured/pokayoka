@@ -3,7 +3,7 @@ import { singleton } from './utils';
 import { label, text, globallyUniqueId, elementCompositionEnum } from './types';
 import { base } from './base';
 
-export const Root = singleton(() =>
+export const IFCRoot = singleton(() =>
   base()
     .props({
       globalId: types.maybe(types.string),
@@ -30,21 +30,21 @@ export const Root = singleton(() =>
     }))
 );
 
-export const ObjectDefinition = Root;
+export const IFCObjectDefinition = IFCRoot;
 
-export const Object = ObjectDefinition; /*singleton(() =>
+export const IFCObject = IFCObjectDefinition; /*singleton(() =>
   ObjectDefinition().props({ objectType: types.maybe(label) })
 );*/
 
-export const Product = Object; /*singleton(() =>
+export const IFCProduct = IFCObject; /*singleton(() =>
   Object().props({
     // public ObjectPlacement: IIfcObjectPlacement | undefined
     // public Representation: IIfcProductRepresentation | undefined
   })
 );*/
 
-export const SpatialStructureElement = singleton(() =>
-  Product().props({
+export const IFCSpatialStructureElement = singleton(() =>
+  IFCProduct().props({
     longName: types.maybe(label),
     compositionType: elementCompositionEnum,
   })
