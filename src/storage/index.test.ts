@@ -1,7 +1,7 @@
-import { Storage, StampedPatch } from './index';
+import { Storage, StampedPatch, spoInObject, StorableObject } from './index';
 import { MemoryAdapter } from './adapters/memory';
 import { types, getSnapshot, onPatch, splitJsonPath } from 'mobx-state-tree';
-import stringify from 'fast-json-stable-stringify';
+import { hash as h } from './hash';
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -49,6 +49,27 @@ describe('Storage', () => {
       expect(await storage.getObject(obj.id)).toEqual(obj);
     }
 
+    {
+      const mem = new MemoryAdapter();
+      const storage = new Storage(mem);
+      const obj: StorableObject = {
+        id: 'test4',
+        property: [{ a: 'A' }, { b: 'B' }],
+      };
+      await storage.slowlyMergeObject(obj);
+      expect(await storage.getObject(obj.id, true)).toEqual(obj);
+    }
+
+    {
+      const mem = new MemoryAdapter();
+      const storage = new Storage(mem);
+      const obj: StorableObject = {
+        id: 'test4',
+        property: [{ a: [{ a: 'A' }, { b: ['B'] }] }, { b: 'B' }],
+      };
+      await storage.slowlyMergeObject(obj);
+      expect(await storage.getObject(obj.id, true)).toEqual(obj);
+    }
     // expect(
     //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')
     // ).toEqual('');
@@ -224,16 +245,12 @@ describe('Storage', () => {
     await storage.slowlyMergeObject(inv1);
     await storage.slowlyMergeObject(inv2);
 
-    expect(await storage.getInverse([obj1.id])).toEqual({
+    expect(await storage.getInverse(obj1)).toEqual({
       ref1: [[inv1.id], [inv2.id]],
       ref2: [[inv2.id]],
     });
 
-    // expect(
-    //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')
-    // ).toEqual('');
-
-    expect(await storage.getInverse([obj1.id], 'ref2')).toEqual({
+    expect(await storage.getInverse(obj1, 'ref2')).toEqual({
       ref2: [[inv2.id]],
     });
   });
@@ -251,6 +268,84 @@ describe('Storage', () => {
     unsubscribe();
 
     expect(tuples.length).toBe(1);
+  });
+
+  test('spoInObject', () => {
+    const scenarios: { args: any[]; out: any[] }[] = [
+      { args: [['obj'], {}], out: [] },
+
+      {
+        args: [['obj'], { a: 'A' }],
+        out: [{ s: ['obj'], p: 'a', o: 'A' }],
+      },
+
+      {
+        args: [['obj'], { a: 'A', b: 'B' }],
+        out: [{ s: ['obj'], p: 'a', o: 'A' }, { s: ['obj'], p: 'b', o: 'B' }],
+      },
+
+      {
+        args: [['obj'], { a: 'A', b: { c: 'C' } }],
+        out: [
+          { s: ['obj'], p: 'a', o: 'A' },
+          { s: ['obj', 'b'], p: 'c', o: 'C' },
+        ],
+      },
+
+      {
+        args: [['obj'], { set: ['a'] }],
+        out: [
+          {
+            s: ['obj'],
+            p: 'set',
+            o: ['a'],
+          },
+        ],
+      },
+
+      {
+        args: [['obj'], { set: ['a', { b: 'B' }] }],
+        out: [
+          {
+            s: ['obj', 'set[]'],
+            p: h(['obj', 'set', 0, 'a']),
+            o: 'a',
+          },
+          {
+            s: ['obj', 'set[]', h(['obj', 'set', 1, { b: 'B' }])],
+            p: 'b',
+            o: 'B',
+          },
+        ],
+      },
+
+      {
+        args: [['obj'], { set: [{ a: 'A' }, { b: 'B' }] }],
+        out: [
+          {
+            s: ['obj', 'set[]', h(['obj', 'set', 0, { a: 'A' }])],
+            p: 'a',
+            o: 'A',
+          },
+          {
+            s: ['obj', 'set[]', h(['obj', 'set', 1, { b: 'B' }])],
+            p: 'b',
+            o: 'B',
+          },
+        ],
+      },
+    ];
+
+    expect.assertions(scenarios.length);
+
+    for (const { args, out } of scenarios) {
+      expect([...spoInObject.apply(null, args.concat('now') as any)]).toEqual(
+        out.map(item => ({
+          ...item,
+          t: 'now',
+        }))
+      );
+    }
   });
 });
 

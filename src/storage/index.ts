@@ -2,7 +2,7 @@ import dlv from 'dlv';
 import dset from 'dset';
 import mlts from 'monotonic-lexicographic-timestamp';
 import SubscribableEvent from 'subscribableevent';
-import { JsonPrimitive } from '../utils/json';
+import { JsonPrimitive, JsonMap, JsonEntry } from '../utils/json';
 import {
   BatchOperations,
   KeyType,
@@ -10,7 +10,7 @@ import {
   ValueType,
 } from './adapters/shared';
 import { ham } from './ham';
-import console = require('console');
+import { hash } from './hash';
 
 function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
@@ -23,22 +23,18 @@ function isO(v: any): v is o {
     case 'number':
       return true;
     case 'object':
-      return v == null || Array.isArray(v);
+      return (
+        v == null ||
+        (Array.isArray(v) && v.reduce((allO, item) => allO && isO(item), true))
+      );
   }
   return false;
 }
 
-type JsonArrayNotContainingAnyMapValue =
-  | JsonPrimitive
-  | JsonArrayNotContainingAnyMap;
-type JsonArrayNotContainingAnyMapValueArray = JsonArrayNotContainingAnyMapValue[];
-interface JsonArrayNotContainingAnyMap
-  extends JsonArrayNotContainingAnyMapValueArray {}
-
 export type timestamp = string;
 type s = string[];
 type p = string;
-type o = JsonPrimitive | JsonArrayNotContainingAnyMap;
+type o = JsonPrimitive | string[];
 interface Tuple {
   s: s;
   p: p;
@@ -62,12 +58,9 @@ export interface StampedPatch extends Patch {
   t: timestamp;
 }
 
-interface UnIdentifiedStorableObject {
-  [key: string]: UnIdentifiedStorableObject | o;
-}
-
-export interface StorableObject extends UnIdentifiedStorableObject {
+export interface StorableObject {
   id: string;
+  [key: string]: JsonEntry;
 }
 
 export interface StorableObjectInverse {
@@ -245,30 +238,46 @@ export class Storage {
     return this.queueTransaction(tuples, machineState);
   }
 
-  public async getObject(id: string): Promise<StorableObject> {
+  private async getNested(s: s, deep: boolean = false): Promise<JsonMap> {
     const tuples = await this.adapter
       .queryList<[string, s, p], [timestamp, o]>({
-        gte: ['sp', [id]],
-        lt: ['sp', [id, []]],
+        gte: ['sp', s],
+        lt: ['sp', [...s, []]],
       })
       .then(result =>
         result.map(({ key: [, s, p], value: [, o] }) => ({ s, p, o } as Tuple))
       );
 
-    const object: StorableObject = { id };
+    const object: JsonMap = {};
 
     for (const { s, p, o } of tuples) {
-      dset(object, s.slice(1).concat(p), o);
+      setObjectAtSP(
+        object,
+        s,
+        p,
+        deep && !isO(o) ? await this.getNested(o) : o
+      );
     }
 
     return object;
   }
 
-  public async getInverse(s: s, p?: p): Promise<StorableObjectInverse> {
+  public async getObject(
+    id: string,
+    deep: boolean = false
+  ): Promise<StorableObject> {
+    return { ...(await this.getNested([id], deep)), id };
+  }
+
+  public async getInverse(
+    obj: StorableObject,
+    property?: p
+  ): Promise<StorableObjectInverse> {
+    const s: s = [obj.id];
     const tuples = await this.adapter
       .queryList<[string, o, p, s], true>({
-        gt: ['ops', s, p ? p : '', null],
-        lt: ['ops', s, p ? p : [], undefined],
+        gt: ['ops', s, property ? property : '', null],
+        lt: ['ops', s, property ? property : [], undefined],
       })
       .then(result => {
         return result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple));
@@ -277,14 +286,11 @@ export class Storage {
     const object: StorableObjectInverse = {};
 
     for (const { p, s } of tuples) {
-      const entry = dlv<StorableObjectInverse[string] | undefined>(
-        object,
-        s.slice(1).concat(p)
-      );
+      const entry = dlv<s[] | undefined>(object, s.slice(1).concat(p));
       if (Array.isArray(entry)) {
         entry[entry.length] = s;
       } else {
-        dset(object, p, [s]);
+        dset(object, isArrayKey(p) ? removeArrayKey(p) : p, [s]);
       }
     }
 
@@ -320,7 +326,6 @@ function stampedPatchToStampedTuple({
   path,
   value,
 }: StampedPatch): StampedTuple {
-  // console.log({ op, path, s });
   return {
     s: s.concat(path.map(String).slice(0, -1)),
     p: path.map(String).slice(-1)[0],
@@ -345,22 +350,126 @@ function stampedTupleToStampedPatch({
   };
 }
 
-function* spoInObject(
+function isArrayKey(key: any) {
+  return typeof key === 'string' && key.match(/\[\]$/) != null;
+}
+function makeArrayKey(key: string) {
+  return `${key}[]`;
+}
+function removeArrayKey(key: string) {
+  return key.substr(0, key.length - 2);
+}
+
+export function* spoInObject(
   s: s,
-  obj: UnIdentifiedStorableObject,
+  obj: JsonMap,
   t: timestamp
 ): IterableIterator<StampedTuple> {
   for (const [key, value] of Object.entries(obj)) {
     if (isO(value)) {
       yield { s, p: key, o: value, t };
     } else if (isObject(value)) {
-      // TODO this will be possible!
       if (Array.isArray(value)) {
-        throw new Error(
-          'cannot write arrays in graph, except subject references'
-        );
+        for (const [index, itemValue] of value.entries()) {
+          const arrayKey = makeArrayKey(key);
+          const arraySubj = s.concat(arrayKey);
+
+          // create a property name which guarantees to be unique for the
+          // - subject `...s`
+          // - the predicate `key`
+          // - the position in the array `index`
+          // - the value of the item
+          // its maybe inefficient, but items in the array will never collide this way.
+
+          const hashIndex = hash([...s, key, index, itemValue]);
+          yield* spoInObject(arraySubj, { [hashIndex]: itemValue }, t);
+        }
+        return;
       }
       yield* spoInObject(s.concat(key), value, t);
     }
+  }
+}
+
+const arrayHashMap = new WeakMap<any, Set<string>>();
+
+function itemHasKey(item: any, key: string): boolean {
+  return arrayHashMap.has(item) && arrayHashMap.get(item)!.has(key);
+}
+
+function itemAddKey(item: any, key: string): void {
+  if (typeof item !== 'object') return;
+
+  if (!arrayHashMap.has(item)) {
+    arrayHashMap.set(item, new Set<string>([key]));
+    return;
+  }
+
+  arrayHashMap.get(item)!.add(key);
+}
+
+function getObjectAtSP(source: JsonMap, s: s, p: p): any {
+  let pointer: any = source;
+  for (const rawKey of s.slice(1).concat(p)) {
+    if (typeof pointer !== 'object') {
+      return undefined;
+    }
+
+    const isArray = isArrayKey(rawKey);
+    const key = isArray ? removeArrayKey(rawKey) : rawKey;
+
+    if (
+      (isArray && !Array.isArray(pointer[key])) ||
+      (!isArray && !pointer.hasOwnProperty(key))
+    ) {
+      return undefined;
+    }
+
+    if (Array.isArray(pointer)) {
+      pointer = pointer.find((item: any) => itemHasKey(item, key));
+      if (pointer == null) return undefined;
+    } else {
+      pointer = pointer[key];
+    }
+  }
+  return pointer;
+}
+
+function setObjectAtSP(source: JsonMap, s: s, p: p, value: any): any {
+  let pointer: any = source;
+  for (const rawKey of s.slice(1)) {
+    const keyIsArray = isArrayKey(rawKey);
+    const key = keyIsArray ? removeArrayKey(rawKey) : rawKey;
+
+    if (Array.isArray(pointer)) {
+      let item = pointer.find((item: any) => itemHasKey(item, key));
+      if (item == null) {
+        item = keyIsArray ? [] : {};
+        itemAddKey(item, key);
+        pointer.push(item);
+      }
+      pointer = item;
+    } else {
+      // pointer is object
+      if (
+        !pointer.hasOwnProperty(key) ||
+        pointer[key] == null ||
+        typeof pointer[key] !== 'object'
+      ) {
+        pointer[key] = keyIsArray ? [] : {};
+      }
+      pointer = pointer[key];
+    }
+  }
+
+  if (Array.isArray(pointer)) {
+    const currentIndex = pointer.find((item: any) => itemHasKey(item, p));
+    if (currentIndex > -1) {
+      pointer.splice(currentIndex, 1);
+    }
+    itemAddKey(value, p);
+    pointer.push(value);
+  } else {
+    pointer[p] = value;
   }
 }
