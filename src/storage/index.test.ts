@@ -54,10 +54,13 @@ describe('Storage', () => {
       const storage = new Storage(mem);
       const obj: StorableObject = {
         id: 'test4',
-        property: [{ a: 'A' }, { b: 'B' }],
+        property: [{ a: 'A' }, { b: 'B' }, { c: 'C' }],
       };
       await storage.slowlyMergeObject(obj);
-      expect(await storage.getObject(obj.id, true)).toEqual(obj);
+      // compare where all arrays are treated as sets
+      expect(h(await storage.getObject(obj.id, true), true)).toEqual(
+        h(obj, true)
+      );
     }
 
     {
@@ -65,10 +68,13 @@ describe('Storage', () => {
       const storage = new Storage(mem);
       const obj: StorableObject = {
         id: 'test4',
-        property: [{ a: [{ a: 'A' }, { b: ['B'] }] }, { b: 'B' }],
+        property: [{ a: [{ a: 'A' }, { c: ['C'] }] }, 'B'],
       };
       await storage.slowlyMergeObject(obj);
-      expect(await storage.getObject(obj.id, true)).toEqual(obj);
+      // compare where all arrays are treated as sets
+      expect(h(await storage.getObject(obj.id, true), true)).toEqual(
+        h(obj, true)
+      );
     }
     // expect(
     //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')

@@ -3,6 +3,11 @@ import { hash, disableCacheForTesting } from './hash';
 disableCacheForTesting();
 
 test('hash', () => {
+  const obj = { a: 'A' };
+  const hash1 = hash(obj);
+  obj.a = 'B';
+  expect(hash1).not.toBe(hash(obj)); // if this fails, the cache is on!
+
   expect(hash('hello world')).toBe(
     '9ddefe4435b21d901439e546d54a14a175a3493b9fd8fbf38d9ea6d3cbf70826'
   );

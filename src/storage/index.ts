@@ -1,5 +1,3 @@
-import dlv from 'dlv';
-import dset from 'dset';
 import mlts from 'monotonic-lexicographic-timestamp';
 import SubscribableEvent from 'subscribableevent';
 import { JsonPrimitive, JsonMap, JsonEntry } from '../utils/json';
@@ -286,11 +284,11 @@ export class Storage {
     const object: StorableObjectInverse = {};
 
     for (const { p, s } of tuples) {
-      const entry = dlv<s[] | undefined>(object, s.slice(1).concat(p));
+      const entry = getObjectAtSP(object, s, p);
       if (Array.isArray(entry)) {
         entry[entry.length] = s;
       } else {
-        dset(object, isArrayKey(p) ? removeArrayKey(p) : p, [s]);
+        setObjectAtSP(object, s, p, [s]);
       }
     }
 
