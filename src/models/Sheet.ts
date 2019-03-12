@@ -26,7 +26,7 @@ export const Sheet = singleton(() =>
       t.model({
         type,
         typeVersion: 1,
-        tiles: t.array(t.string),
+        $tiles: t.array(t.string),
       }),
       BelongsToBuildingStorey()
     )

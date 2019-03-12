@@ -8,8 +8,58 @@ import debug from 'debug';
 import nano from 'nano';
 import { generateId } from '../src/utils/id';
 import { getSnapshot, getType } from 'mobx-state-tree';
+import crypto from 'crypto';
+import PQueue from 'p-queue';
+import fs from 'fs-extra';
+import path from 'path';
+import mime from 'mime';
+import { Storage } from '../src/storage';
+import { ServerAdapter } from '../src/storage/adapters/server';
 
 const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
+
+const cdnDir = path.join(__dirname, '../cdn');
+fs.ensureDirSync(cdnDir);
+
+const dbDir = path.join(__dirname, '../db');
+fs.ensureDirSync(dbDir);
+
+type AttachmentInfo = {
+  name: string;
+  content_type: string;
+  revpos: number;
+  digest: string;
+  length: number;
+  stub: boolean;
+};
+
+function sha256OfStream(
+  streamThunk: () => NodeJS.ReadStream,
+  fileInfo: AttachmentInfo
+): Promise<string> {
+  return new Promise<string>(async res => {
+    const sha256 = await new Promise<string>((resolve, reject) =>
+      streamThunk()
+        .on('error', reject)
+        .pipe(crypto.createHash('sha256').setEncoding('hex'))
+        .once('finish', function(this: any) {
+          resolve(this.read());
+        })
+    );
+
+    const filename = `${sha256}.${mime.getExtension(fileInfo.content_type)}`;
+    const target = path.join(cdnDir, filename);
+
+    try {
+      await fs.stat(target);
+      res(filename);
+    } catch (e) {
+      streamThunk()
+        .pipe(fs.createWriteStream(target))
+        .on('close', () => res(filename));
+    }
+  });
+}
 
 (async function main() {
   try {
@@ -22,11 +72,11 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
       _attachments: any;
     }>(fromDbName);
 
-    try {
-      await server.db.destroy(toDbName);
-    } catch (e) {}
-    await server.db.create(toDbName);
-    const toDb = server.use(toDbName);
+    // try {
+    //   await server.db.destroy(toDbName);
+    // } catch (e) {}
+    // await server.db.create(toDbName);
+    const toDb = new Storage(new ServerAdapter(path.join(dbDir, toDbName)));
 
     const allRows = (await fromDb.list({ include_docs: true })).rows;
 
@@ -48,15 +98,16 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
     projects.forEach(project => {
       const _projectId = project._id; // generateId();
       const newProject = Project().create({
-        _id: _projectId,
+        id: _projectId,
         globalId: _projectId,
         name: project.title,
+        $files: Object.keys(project._attachments || {}),
       });
       newObjects.set(newProject, project._id);
 
       const _siteId = generateId();
       const newSite = Site().create({
-        _id: _siteId,
+        id: _siteId,
         globalId: _siteId,
         name: project.title,
       });
@@ -65,12 +116,13 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
       newSite.setProject(newProject);
       newProject.addSite(newSite);
 
-      const _id = generateId();
+      const id = generateId();
       const newBuilding = Building().create({
-        _id,
-        globalId: _id,
+        id,
+        globalId: id,
         name: project.title,
         description: project.description,
+        $files: Object.keys(project._attachments || {}),
       });
       newObjects.set(newBuilding, project._id);
 
@@ -81,16 +133,16 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
         .filter(
           row => parts(row.id)[0] === project._id && parts(row.id).length === 2
         )
-        .map(row => row.doc!)
-        .filter(storey => storey.title != null);
+        .map(row => row.doc!);
 
       storeys.forEach(storey => {
-        const _id = generateId();
+        const id = generateId();
         const newStorey = BuildingStorey().create({
-          _id,
-          globalId: _id,
-          name: storey.title,
+          id,
+          globalId: id,
+          name: storey.title || '-- left blank --',
           description: storey.description,
+          $files: Object.keys(storey._attachments || {}),
         });
         newObjects.set(newStorey, storey._id);
 
@@ -99,10 +151,10 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
 
         const _sheetId = generateId();
         const newSheet = Sheet().create({
-          _id: _sheetId,
+          id: _sheetId,
           globalId: _sheetId,
           name: storey.title,
-          tiles: Object.keys(storey._attachments),
+          $tiles: Object.keys(storey._attachments || {}),
         });
         newObjects.set(newSheet, storey._id);
 
@@ -116,16 +168,16 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
               parts(row.id)[1] === parts(storey._id)[1] &&
               parts(row.id).length === 3
           )
-          .map(row => row.doc!)
-          .filter(space => space.title != null);
+          .map(row => row.doc!);
 
         spaces.forEach(space => {
-          const _id = generateId();
+          const id = generateId();
           const newSpace = Space().create({
-            _id,
-            globalId: _id,
-            name: space.title,
+            id,
+            globalId: id,
+            name: space.title || '-- left blank --',
             description: space.description,
+            $files: Object.keys(space._attachments || {}),
           });
           newObjects.set(newSpace, space._id);
 
@@ -135,20 +187,64 @@ const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
       });
     });
 
+    const queue = new PQueue({ concurrency: 5 });
+
     for (const [object, originalId] of newObjects.entries()) {
+      const snapshot = getSnapshot(object);
+      let snapshotString = JSON.stringify(snapshot);
+
+      const fileHashes = await Promise.all(
+        Object.entries(
+          (await fromDb.get(originalId))._attachments || {}
+        ).reduce(
+          (hashes, [filename, fileinfo]) => {
+            hashes.push(
+              queue
+                .add(
+                  () =>
+                    sha256OfStream(
+                      (() =>
+                        fromDb.attachment.getAsStream(
+                          originalId,
+                          filename
+                        )) as any,
+                      {
+                        ...fileinfo,
+                        name: filename,
+                      } as AttachmentInfo
+                    ) as any
+                )
+                .then((sha: string) => [filename, sha] as [string, string])
+            );
+            return hashes;
+          },
+          [] as Promise<[string, string]>[]
+        )
+      );
+
+      for (const [filename, sha] of fileHashes) {
+        let newString = snapshotString.replace(filename, sha);
+        while (newString !== snapshotString) {
+          snapshotString = newString;
+          newString = snapshotString.replace(filename, sha);
+        }
+      }
+
+      const newSnapshot = JSON.parse(snapshotString);
+
+      log(newSnapshot);
+
       log(
-        await toDb.insert({
-          ...getSnapshot(object),
-          // @ts-ignore
-          _attachments:
-            getType(object) === Sheet() || getType(object) === Building()
-              ? (await fromDb.get(originalId, {
-                  attachments: true,
-                }))._attachments
-              : undefined,
-        })
+        `Write ${newSnapshot.id} result: %j`,
+        await toDb.slowlyMergeObject(newSnapshot)
       );
     }
+
+    const foundIds = [...newObjects.values()];
+    const snagIds = ids
+      .filter(id => !foundIds.find(fid => fid === id))
+      .filter(id => id[0] !== '_');
+    log({ snagIds });
   } catch (e) {
     log('Uncaught error %O', e);
   }

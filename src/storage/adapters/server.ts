@@ -5,10 +5,10 @@ import charwise from 'charwise';
 import { SharedAdapter, StorageAdapter, KeyType, ValueType } from './shared';
 
 export class ServerAdapter extends SharedAdapter implements StorageAdapter {
-  constructor(public name: string) {
+  constructor(public path: string) {
     super();
     this.level = levelup(
-      encode<KeyType, ValueType>(leveldown(`./${name}.db`), {
+      encode<KeyType, ValueType>(leveldown(path), {
         keyEncoding: charwise,
         valueEncoding: 'json',
       })
