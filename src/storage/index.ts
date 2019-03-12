@@ -14,7 +14,7 @@ function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
 }
 
-function isO(v: any): v is o {
+function isO(v: any): v is objt {
   switch (typeof v) {
     case 'string':
     case 'boolean':
@@ -30,13 +30,13 @@ function isO(v: any): v is o {
 }
 
 export type timestamp = string;
-type s = string[];
-type p = string;
-type o = JsonPrimitive | string[];
+type subj = string[];
+type pred = string;
+type objt = JsonPrimitive | string[];
 interface Tuple {
-  s: s;
-  p: p;
-  o: o;
+  s: subj;
+  p: pred;
+  o: objt;
 }
 interface StampedTuple extends Tuple {
   t: timestamp;
@@ -49,7 +49,7 @@ interface RFC6902Patch {
 }
 
 export interface Patch extends RFC6902Patch {
-  s: s;
+  s: subj;
 }
 
 export interface StampedPatch extends Patch {
@@ -62,7 +62,7 @@ export interface StorableObject {
 }
 
 export interface StorableObjectInverse {
-  [key: string]: s[];
+  [key: string]: subj[];
 }
 
 function createOperationsForTimeline(
@@ -127,11 +127,14 @@ export class Storage {
   ) {}
 
   private async getCurrent(
-    s: s,
-    p: p,
+    s: subj,
+    p: pred,
     machineState = this.getMachineState()
   ): Promise<StampedTuple[]> {
-    return (await this.adapter.queryList<[string, s, p, timestamp], [o]>({
+    return (await this.adapter.queryList<
+      [string, subj, pred, timestamp],
+      [objt]
+    >({
       gt: ['spt', s, p, ''],
       lte: ['spt', s, p, machineState],
     })).map(({ key: [, s, p, t], value: [o] }) => ({ s, p, o, t }));
@@ -236,9 +239,9 @@ export class Storage {
     return this.queueTransaction(tuples, machineState);
   }
 
-  private async getNested(s: s, deep: boolean = false): Promise<JsonMap> {
+  private async getNested(s: subj, deep: boolean = false): Promise<JsonMap> {
     const tuples = await this.adapter
-      .queryList<[string, s, p], [timestamp, o]>({
+      .queryList<[string, subj, pred], [timestamp, objt]>({
         gte: ['sp', s],
         lt: ['sp', [...s, []]],
       })
@@ -269,11 +272,11 @@ export class Storage {
 
   public async getInverse(
     obj: StorableObject,
-    property?: p
+    property?: pred
   ): Promise<StorableObjectInverse> {
-    const s: s = [obj.id];
+    const s: subj = [obj.id];
     const tuples = await this.adapter
-      .queryList<[string, o, p, s], true>({
+      .queryList<[string, objt, pred, subj], true>({
         gt: ['ops', s, property ? property : '', null],
         lt: ['ops', s, property ? property : [], undefined],
       })
@@ -359,7 +362,7 @@ function removeArrayKey(key: string) {
 }
 
 export function* spoInObject(
-  s: s,
+  s: subj,
   obj: JsonMap,
   t: timestamp
 ): IterableIterator<StampedTuple> {
@@ -406,7 +409,7 @@ function itemAddKey(item: any, key: string): void {
   arrayHashMap.get(item)!.add(key);
 }
 
-function getObjectAtSP(source: JsonMap, s: s, p: p): any {
+function getObjectAtSP(source: JsonMap, s: subj, p: pred): any {
   let pointer: any = source;
   for (const rawKey of s.slice(1).concat(p)) {
     if (typeof pointer !== 'object') {
@@ -433,7 +436,7 @@ function getObjectAtSP(source: JsonMap, s: s, p: p): any {
   return pointer;
 }
 
-function setObjectAtSP(source: JsonMap, s: s, p: p, value: any): any {
+function setObjectAtSP(source: JsonMap, s: subj, p: pred, value: any): any {
   let pointer: any = source;
   for (const rawKey of s.slice(1)) {
     const keyIsArray = isArrayKey(rawKey);
