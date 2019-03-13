@@ -20,9 +20,11 @@ fs.ensureDirSync(dbDir);
     const adapter = new ServerAdapter(path.join(dbDir, toDbName));
     const toDb = new Storage(adapter);
 
-    // const id = 'co9fbyh0wu';
-    // const obj = await toDb.getObject(id);
-    // log(obj);
+    log(await toDb.stateWindow());
+
+    const id = 'coaulivw3n';
+    const obj = await toDb.getObject(id);
+    log(obj);
 
     // log(await toDb.getInverse(obj));
 
@@ -33,17 +35,15 @@ fs.ensureDirSync(dbDir);
     //   })
     // );
 
-    log(await toDb.stateWindow());
-
-    const patches: StampedPatch[] = [];
-    let count = 0;
-    for await (const patch of toDb.patchesSince('')) {
-      // patches.push(patch);
-      log({ patch });
-      count += 1;
-      if (count > 10) break;
-    }
-    console.log(JSON.stringify(patches));
+    // const patches: StampedPatch[] = [];
+    // // let count = 0;
+    // for await (const patch of toDb.patchesSince('')) {
+    //   patches.push(patch);
+    //   // log({ patch });
+    //   // count += 1;
+    //   // if (count > 10) break;
+    // }
+    // console.log(JSON.stringify(patches));
   } catch (e) {
     log('Uncaught error %O', e);
   }

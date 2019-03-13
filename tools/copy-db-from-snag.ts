@@ -72,6 +72,9 @@ function sha256OfStream(
       _attachments: any;
     }>(fromDbName);
 
+    // old to new
+    const idMap: { [key: string]: string } = {};
+
     // try {
     //   await server.db.destroy(toDbName);
     // } catch (e) {}
@@ -157,6 +160,7 @@ function sha256OfStream(
           $tiles: Object.keys(storey._attachments || {}),
         });
         newObjects.set(newSheet, storey._id);
+        idMap[storey._id] = _sheetId;
 
         newSheet.setBuildingStorey(newStorey);
         newStorey.addSheet(newSheet);
@@ -180,6 +184,7 @@ function sha256OfStream(
             $files: Object.keys(space._attachments || {}),
           });
           newObjects.set(newSpace, space._id);
+          idMap[space._id] = id;
 
           newSpace.setBuildingStorey(newStorey);
           newStorey.addSpace(newSpace);
@@ -243,8 +248,69 @@ function sha256OfStream(
     const foundIds = [...newObjects.values()];
     const snagIds = ids
       .filter(id => !foundIds.find(fid => fid === id))
-      .filter(id => id[0] !== '_');
-    log({ snagIds });
+      .filter(id => id[0] !== '_')
+      .filter(id => id.indexOf('task$') > -1);
+
+    snagIds.forEach(async id => {
+      const row = allRows.find(row => row.id === id);
+      if (row == null) {
+        throw new Error('row not found');
+      }
+
+      const { _id, _rev, _attachments, ...doc } = row.doc as any;
+
+      const fileHashes = await Promise.all(
+        Object.entries(_attachments || {}).reduce(
+          (hashes, [filename, fileinfo]) => {
+            hashes.push(
+              queue
+                .add(
+                  () =>
+                    sha256OfStream(
+                      (() =>
+                        fromDb.attachment.getAsStream(id, filename)) as any,
+                      {
+                        ...fileinfo,
+                        name: filename,
+                      } as AttachmentInfo
+                    ) as any
+                )
+                .then((sha: string) => [filename, sha] as [string, string])
+            );
+            return hashes;
+          },
+          [] as Promise<[string, string]>[]
+        )
+      );
+
+      let snapshotString = JSON.stringify({
+        id: parts(id)
+          .pop()!
+          .split('$')[1],
+        type: 'fact',
+        typeVersion: 1,
+        parent:
+          idMap[
+            parts(id)
+              .slice(0, -1)
+              .join('_')
+          ],
+        ...doc,
+        $images: Object.keys(_attachments),
+      });
+      for (const [filename, sha] of fileHashes) {
+        let newString = snapshotString.replace(filename, sha);
+        while (newString !== snapshotString) {
+          snapshotString = newString;
+          newString = snapshotString.replace(filename, sha);
+        }
+      }
+      const newSnapshot = JSON.parse(snapshotString);
+      log(
+        `Write ${newSnapshot.id} result: %j`,
+        await toDb.slowlyMergeObject(newSnapshot)
+      );
+    });
   } catch (e) {
     log('Uncaught error %O', e);
   }
