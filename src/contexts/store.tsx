@@ -3,7 +3,6 @@ import { Storage } from '../storage/index';
 import { WebAdapter } from '../storage/adapters/web';
 import { Store } from '../graph/index';
 import { IAnyModelType } from 'mobx-state-tree';
-import { asyncReference } from '../graph/asyncReference';
 import { observableAsyncPlaceholder } from '../graph/asyncPlaceholder';
 
 const stores: { [key: string]: Store } = {};
@@ -11,7 +10,8 @@ const stores: { [key: string]: Store } = {};
 function createStore(name: string): Store {
   if (stores[name]) return stores[name];
 
-  const storage = new Storage(new WebAdapter(name));
+  const adapter = new WebAdapter(name);
+  const storage = new Storage(adapter);
 
   (async function() {
     const { id: remoteId } = (await fetch(`/data/${name}/info`).then(res =>
@@ -25,7 +25,7 @@ function createStore(name: string): Store {
 
     fetch(`/data/${name}/patches?since=${timestamp}`)
       .then(res => res.json())
-      .then(patches => {
+      .then(async patches => {
         console.log(patches);
         storage.mergePatches(patches);
 
@@ -33,6 +33,19 @@ function createStore(name: string): Store {
           const { t: maxTimestamp } = patches.slice(-1)[0];
           storage.updateTimestampForStorage(remoteId, maxTimestamp);
         }
+
+        console.log(
+          await adapter
+            .queryList<[string, any, any, any], true>({
+              gt: ['ops', 'site', '', null],
+              lt: ['ops', 'site', [], undefined],
+            })
+            .then(result => {
+              return result.map(({ key: [, o, p, s] }) => ({ s, p, o }));
+            })
+        );
+
+        // console.log(await storage.getObject('c1d1ila9an'));
       });
   })();
 
@@ -52,13 +65,12 @@ export const useModel = <T extends IAnyModelType>(
   id: string
 ) => {
   const store = useContext(StoreContext);
-  return useMemo(
-    () =>
-      observableAsyncPlaceholder(store.getInstance(model(), id), {
-        id,
-      }),
-    [store, model, id]
-  );
+
+  return useMemo(() => {
+    return observableAsyncPlaceholder(store.getInstance(model(), id), {
+      id,
+    });
+  }, [store, model, id]);
 };
 
 export const ProvideStore: React.SFC<{ name: string }> = ({

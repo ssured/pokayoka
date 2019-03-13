@@ -10,7 +10,7 @@ import {
   ISerializedActionCall,
   onAction,
   splitJsonPath,
-  joinJsonPath,
+  applySnapshot,
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
 import { Storage, Patch } from '../storage/index';
@@ -18,6 +18,7 @@ import { generateId } from '../utils/id';
 import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
 import { asyncReference, asPlaceholder } from './asyncReference';
 import { Omit } from '../utils/typescript';
+import dset from 'dset';
 
 export interface GraphEnv {
   // observable view which triggers loading the instance from the storage as a side effect
@@ -100,10 +101,16 @@ export class Store extends BaseStore {
       } of patches) {
         const obj = this.cache.get(id[0]);
         if (obj == null) continue;
-        applyPatch(obj, {
-          ...patch,
-          path: joinJsonPath(patch.path.map(String)),
-        });
+
+        const snapshot = JSON.parse(JSON.stringify(getSnapshot(obj)));
+        try {
+          dset(snapshot, patch.path as any, null);
+          const newSnapshot = applyPatches(snapshot, [patch]);
+          applySnapshot(obj, newSnapshot);
+        } catch (e) {
+          debugger;
+        } finally {
+        }
       }
     });
   }

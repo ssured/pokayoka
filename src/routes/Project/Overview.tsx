@@ -15,13 +15,12 @@ export const Overview: React.FunctionComponent<
 
   return useObserver(() => (
     <Box>
-      <Heading>Project {projectId}</Heading>
       {project.fold(
         () => (
           <p>Loading...</p>
         ),
         project => (
-          <h2>{project.name}</h2>
+          <Heading>Project {project.name}</Heading>
         ),
         error => (
           <h3>Uh oh, something happened {error.message}</h3>

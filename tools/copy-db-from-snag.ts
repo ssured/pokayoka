@@ -7,7 +7,7 @@ import { Space, ISpace } from '../src/models/Space';
 import debug from 'debug';
 import nano from 'nano';
 import { generateId } from '../src/utils/id';
-import { getSnapshot, getType } from 'mobx-state-tree';
+import { getSnapshot } from 'mobx-state-tree';
 import crypto from 'crypto';
 import PQueue from 'p-queue';
 import fs from 'fs-extra';
@@ -15,14 +15,13 @@ import path from 'path';
 import mime from 'mime';
 import { Storage } from '../src/storage';
 import { ServerAdapter } from '../src/storage/adapters/server';
+import { pathForCdn, pathForStorage } from '../server/config';
 
 const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
 
-const cdnDir = path.join(__dirname, '../cdn');
-fs.ensureDirSync(cdnDir);
-
-const dbDir = path.join(__dirname, '../db');
-fs.ensureDirSync(dbDir);
+const fromDbName = 'bk0wb0a7sz';
+const toDbName = fromDbName;
+const server = nano('http://admin:admin@localhost:5984');
 
 type AttachmentInfo = {
   name: string;
@@ -48,7 +47,7 @@ function sha256OfStream(
     );
 
     const filename = `${sha256}.${mime.getExtension(fileInfo.content_type)}`;
-    const target = path.join(cdnDir, filename);
+    const target = path.join(pathForCdn(toDbName), filename);
 
     try {
       await fs.stat(target);
@@ -61,11 +60,18 @@ function sha256OfStream(
   });
 }
 
+function attachmentsToMap(attachments: { [key: string]: string }) {
+  return Object.keys(attachments || {}).reduce(
+    (map, name) => {
+      map[name] = { $cdn: name };
+      return map;
+    },
+    {} as { [key: string]: { $cdn: string } }
+  );
+}
+
 (async function main() {
   try {
-    const fromDbName = 'bk0wb0a7sz';
-    const toDbName = `pokayoka${fromDbName}`;
-    const server = nano('http://admin:admin@localhost:5984');
     const fromDb = server.use<{
       title: string;
       description: string;
@@ -79,7 +85,7 @@ function sha256OfStream(
     //   await server.db.destroy(toDbName);
     // } catch (e) {}
     // await server.db.create(toDbName);
-    const toDb = new Storage(new ServerAdapter(path.join(dbDir, toDbName)));
+    const toDb = new Storage(new ServerAdapter(pathForStorage(toDbName)));
 
     const allRows = (await fromDb.list({ include_docs: true })).rows;
 
@@ -104,7 +110,7 @@ function sha256OfStream(
         id: projectId,
         globalId: projectId,
         name: project.title,
-        $files: Object.keys(project._attachments || {}),
+        files: attachmentsToMap(project._attachments),
       });
       newObjects.set(newProject, project._id);
 
@@ -123,7 +129,7 @@ function sha256OfStream(
         globalId: buildingId,
         name: project.title,
         description: project.description,
-        $files: Object.keys(project._attachments || {}),
+        files: attachmentsToMap(project._attachments),
         site: siteId,
       });
       newObjects.set(newBuilding, project._id);
@@ -142,7 +148,7 @@ function sha256OfStream(
           globalId: storeyId,
           name: storey.title || '-- left blank --',
           description: storey.description,
-          $files: Object.keys(storey._attachments || {}),
+          files: attachmentsToMap(storey._attachments),
           building: buildingId,
         });
         newObjects.set(newStorey, storey._id);
@@ -152,7 +158,7 @@ function sha256OfStream(
           id: sheetId,
           globalId: sheetId,
           name: storey.title,
-          $tiles: Object.keys(storey._attachments || {}),
+          tiles: attachmentsToMap(storey._attachments),
           buildingStorey: storeyId,
         });
         newObjects.set(newSheet, storey._id);
@@ -174,7 +180,7 @@ function sha256OfStream(
             globalId: id,
             name: space.title || '-- left blank --',
             description: space.description,
-            $files: Object.keys(space._attachments || {}),
+            files: attachmentsToMap(space._attachments),
             buildingStorey: storeyId,
           });
           newObjects.set(newSpace, space._id);
@@ -289,7 +295,7 @@ function sha256OfStream(
               .join('_')
           ],
         ...doc,
-        $images: Object.keys(_attachments || {}),
+        files: attachmentsToMap(_attachments),
       });
       for (const [filename, sha] of fileHashes) {
         let newString = snapshotString.replace(filename, sha);

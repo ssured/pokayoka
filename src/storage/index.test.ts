@@ -14,68 +14,76 @@ describe('Storage', () => {
   });
 
   test('snapshots can be written and persisted', async () => {
-    {
-      const mem = new MemoryAdapter();
-      const storage = new Storage(mem);
-      const obj = { id: 'test1', property: 'A' };
-      await storage.slowlyMergeObject(obj);
-      expect(await storage.getObject(obj.id)).toEqual(obj);
-    }
-
-    {
-      const mem = new MemoryAdapter();
-      const storage = new Storage(mem);
-      const obj = {
-        id: 'test2',
-        reference: ['test1'] as [string],
-      };
-      await storage.slowlyMergeObject(obj);
-      expect(await storage.getObject(obj.id)).toEqual(obj);
-    }
-
-    {
-      const mem = new MemoryAdapter();
-      const storage = new Storage(mem);
-      const obj = { id: 'test3', property: { k: 'v' } };
-      await storage.slowlyMergeObject(obj);
-      expect(await storage.getObject(obj.id)).toEqual(obj);
-    }
-
-    {
-      const mem = new MemoryAdapter();
-      const storage = new Storage(mem);
-      const obj = { id: 'test4', property: ['a', 'b'] };
-      await storage.slowlyMergeObject(obj);
-      expect(await storage.getObject(obj.id)).toEqual(obj);
-    }
-
-    {
-      const mem = new MemoryAdapter();
-      const storage = new Storage(mem);
-      const obj: StorableObject = {
-        id: 'test4',
-        property: [{ a: 'A' }, { b: 'B' }, { c: 'C' }],
-      };
-      await storage.slowlyMergeObject(obj);
-      // compare where all arrays are treated as sets
-      expect(h(await storage.getObject(obj.id, true), true)).toEqual(
-        h(obj, true)
-      );
-    }
-
-    {
-      const mem = new MemoryAdapter();
-      const storage = new Storage(mem);
-      const obj: StorableObject = {
-        id: 'test4',
-        property: [{ a: [{ a: 'A' }, { c: ['C'] }] }, 'B'],
-      };
-      await storage.slowlyMergeObject(obj);
-      // compare where all arrays are treated as sets
-      expect(h(await storage.getObject(obj.id, true), true)).toEqual(
-        h(obj, true)
-      );
-    }
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+    const obj = { id: 'test1', property: 'A' };
+    await storage.slowlyMergeObject(obj);
+    expect(await storage.getObject(obj.id)).toEqual(obj);
+  });
+  test('snapshots can be written and persisted', async () => {
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+    const obj = {
+      id: 'test2',
+      reference: ['test1'] as [string],
+    };
+    await storage.slowlyMergeObject(obj);
+    expect(await storage.getObject(obj.id)).toEqual(obj);
+  });
+  test('snapshots can be written and persisted', async () => {
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+    const obj = { id: 'test3', property: { k: 'v' } };
+    await storage.slowlyMergeObject(obj);
+    expect(await storage.getObject(obj.id)).toEqual(obj);
+  });
+  test('snapshots can be written and persisted', async () => {
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+    const obj = { id: 'test4', property: ['a', 'b'] };
+    await storage.slowlyMergeObject(obj);
+    expect(await storage.getObject(obj.id)).toEqual(obj);
+  });
+  test('snapshots can be written and persisted', async () => {
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+    const obj: StorableObject = {
+      id: 'test4',
+      property: [{ a: 'A' }, { b: 'B' }, { c: 'C' }],
+    };
+    await storage.slowlyMergeObject(obj);
+    // compare where all arrays are treated as sets
+    expect(h(await storage.getObject(obj.id, true), true)).toEqual(
+      h(obj, true)
+    );
+  });
+  test('snapshots can be written and persisted', async () => {
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+    const obj: StorableObject = {
+      id: 'test5',
+      property: [{ a: [{ a: 'A' }, { c: ['C'] }] }, 'B'],
+    };
+    await storage.slowlyMergeObject(obj);
+    // compare where all arrays are treated as sets
+    expect(h(await storage.getObject(obj.id, true), true)).toEqual(
+      h(obj, true)
+    );
+  });
+  test('snapshots can be written and persisted', async () => {
+    const mem = new MemoryAdapter();
+    const storage = new Storage(mem);
+    const obj: StorableObject = {
+      id: 'test6',
+      property: [],
+      another: 'a',
+    };
+    await storage.slowlyMergeObject(obj);
+    // compare where all arrays are treated as sets
+    expect(await storage.getObject(obj.id, true)).toEqual({
+      id: 'test6',
+      another: 'a',
+    });
     // expect(
     //   (await mem.queryList({})).map(JSON.stringify as any).join('\n')
     // ).toEqual('');

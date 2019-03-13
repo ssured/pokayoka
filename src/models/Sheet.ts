@@ -15,6 +15,7 @@ import { IFCObject } from './IFC';
 import { Maybe, Result } from 'true-myth';
 import { BuildingStorey } from './BuildingStorey';
 import { referenceTo } from '../graph/index';
+import { File } from './base';
 const { just, nothing } = Maybe;
 
 const type = 'sheet';
@@ -27,7 +28,7 @@ export const Sheet = singleton(() =>
       t.model({
         type,
         typeVersion: 1,
-        $tiles: t.array(t.string),
+        tiles: t.map(File()),
         buildingStorey: referenceTo(BuildingStorey()),
       })
     )

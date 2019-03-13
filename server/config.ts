@@ -10,9 +10,13 @@ export const dbDir = path.join(baseDir, 'db');
 fs.ensureDirSync(dbDir);
 
 export function pathForStorage(name: string) {
-  return path.join(dbDir, name);
+  const dir = path.join(dbDir, name);
+  fs.ensureDirSync(dir);
+  return dir;
 }
 
 export function pathForCdn(name: string) {
-  return path.join(cdnDir, name);
+  const dir = path.join(cdnDir, name);
+  fs.ensureDirSync(dir);
+  return dir;
 }

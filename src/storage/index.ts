@@ -489,7 +489,7 @@ export function* spoInObject(
           const hashIndex = hash([...s, key, index, itemValue]);
           yield* spoInObject(arraySubj, { [hashIndex]: itemValue }, t);
         }
-        return;
+        continue;
       }
       yield* spoInObject(s.concat(key), value, t);
     }
