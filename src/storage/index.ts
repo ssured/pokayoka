@@ -9,12 +9,13 @@ import {
 } from './adapters/shared';
 import { ham } from './ham';
 import { hash } from './hash';
+import console = require('console');
 
 function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
 }
 
-function isO(v: any): v is objt {
+function isObjt(v: any): v is objt {
   switch (typeof v) {
     case 'string':
     case 'boolean':
@@ -23,7 +24,9 @@ function isO(v: any): v is objt {
     case 'object':
       return (
         v == null ||
-        (Array.isArray(v) && v.reduce((allO, item) => allO && isO(item), true))
+        (Array.isArray(v) &&
+          v.length > 0 &&
+          v.reduce((allO, item) => allO && isObjt(item), true))
       );
   }
   return false;
@@ -32,7 +35,7 @@ function isO(v: any): v is objt {
 export type timestamp = string;
 type subj = string[];
 type pred = string;
-type objt = JsonPrimitive | string[];
+type objt = JsonPrimitive | ([string] & string[]);
 interface Tuple {
   s: subj;
   p: pred;
@@ -72,7 +75,7 @@ function createOperationsForTimeline(
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
     { key: ['spt', s, p, t], value: [o] }, // used to store future values, wrap o as [o] to support storing o = null
-    { key: ['tsp', t, s, p], value: true }, // timeline of current values and future updates
+    { key: ['tsp', t, s, p], value: [o] }, // timeline of current values and future updates
     // { key: ['st', s, t], value: true }, // what is the next update for a subject?
   ];
   return type === 'put'
@@ -112,6 +115,9 @@ function createOperations(
 export const numberToState = (n?: number) =>
   typeof n === 'number' ? mlts(n) : mlts();
 
+type querySinceOptions = {
+  skipFirst?: boolean;
+};
 export class Storage {
   private updatedTuplesEmitter = new SubscribableEvent<
     (tuples: StampedPatch[]) => void
@@ -125,6 +131,59 @@ export class Storage {
     private adapter: StorageAdapter,
     public getMachineState = numberToState()
   ) {}
+
+  /**
+   * Returns the correct range of this database
+   */
+  public async stateWindow(): Promise<[timestamp, timestamp]> {
+    const start = await this.adapter.queryList<[string, timestamp], true>({
+      gte: ['tsp', null],
+      lt: ['tsp', undefined],
+      limit: 1,
+    });
+    const end = await this.adapter.queryList<[string, timestamp], true>({
+      gte: ['tsp', null],
+      lt: ['tsp', undefined],
+      limit: 1,
+      reverse: true,
+    });
+    return [start[0] ? start[0].key[1] : '', end[0] ? end[0].key[1] : '!'];
+  }
+
+  private async *tuplesSince(
+    timestamp: timestamp,
+    options: querySinceOptions = {}
+  ): AsyncIterableIterator<StampedTuple> {
+    let latest: timestamp | null = null;
+
+    const { skipFirst }: querySinceOptions = { skipFirst: false, ...options };
+
+    for await (const {
+      key: [_, t, s, p],
+      value: [o],
+    } of this.adapter.query<[string, timestamp, subj, pred], [objt]>({
+      gte: ['tsp', timestamp + (skipFirst ? '!' : '')],
+      lt: ['tsp', undefined],
+    })) {
+      yield { s, p, o, t };
+      latest = t;
+    }
+
+    // repeat until we get an empty result
+    if (latest != null) {
+      console.log('run again');
+      yield* this.tuplesSince(latest, { ...options, skipFirst: true });
+    }
+  }
+
+  public async *patchesSince(
+    timestamp: timestamp,
+    options: querySinceOptions = {}
+  ): AsyncIterableIterator<StampedPatch> {
+    for await (const tuple of this.tuplesSince(timestamp, options)) {
+      yield stampedTupleToStampedPatch(tuple);
+    }
+  }
 
   private async getCurrent(
     s: subj,
@@ -256,7 +315,7 @@ export class Storage {
         object,
         s,
         p,
-        deep && !isO(o) ? await this.getNested(o) : o
+        deep && !isObjt(o) ? await this.getNested(o) : o
       );
     }
 
@@ -367,7 +426,7 @@ export function* spoInObject(
   t: timestamp
 ): IterableIterator<StampedTuple> {
   for (const [key, value] of Object.entries(obj)) {
-    if (isO(value)) {
+    if (isObjt(value)) {
       yield { s, p: key, o: value, t };
     } else if (isObject(value)) {
       if (Array.isArray(value)) {
