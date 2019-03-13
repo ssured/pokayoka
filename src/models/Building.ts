@@ -12,10 +12,10 @@ import {
 import { singleton, nameFromType, Env } from './utils';
 import { IFCSpatialStructureElement } from './IFC';
 import { postalAddress } from './types';
-import { BelongsToSite } from './Site';
-import { HasManyBuildingStoreys } from './BuildingStorey';
+import { Site } from './Site';
 
 import { Maybe, Result } from 'true-myth';
+import { referenceTo } from '../graph/index';
 const { just, nothing } = Maybe;
 
 const type = 'building';
@@ -31,9 +31,8 @@ export const Building = singleton(() =>
         elevationOfRefHeight: t.maybe(t.number),
         elevationOfTerrain: t.maybe(t.number),
         buildingAddress: t.maybe(postalAddress),
-      }),
-      BelongsToSite(),
-      HasManyBuildingStoreys()
+        site: referenceTo(Site()),
+      })
     )
     .actions(self => ({}))
 );

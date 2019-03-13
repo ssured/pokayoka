@@ -12,9 +12,10 @@ import {
 import { singleton, nameFromType, Env } from './utils';
 import { IFCSpatialStructureElement } from './IFC';
 import { internalOrExternalEnum } from './types';
-import { BelongsToBuildingStorey } from './BuildingStorey';
+import { BuildingStorey } from './BuildingStorey';
 
 import { Maybe, Result } from 'true-myth';
+import { referenceTo } from '../graph/index';
 const { just, nothing } = Maybe;
 
 const type = 'space';
@@ -29,8 +30,8 @@ export const Space = singleton(() =>
         typeVersion: 1,
         interiorOrExteriorSpace: internalOrExternalEnum,
         elevationWithFlooring: t.maybe(t.number),
-      }),
-      BelongsToBuildingStorey()
+        buildingStorey: referenceTo(BuildingStorey()),
+      })
     )
     .actions(self => ({}))
 );

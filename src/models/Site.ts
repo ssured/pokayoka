@@ -9,13 +9,13 @@ import {
   getIdentifier,
 } from 'mobx-state-tree';
 
-import { BelongsToProject } from './Project';
+import { Project } from './Project';
 import { singleton, nameFromType, Env } from './utils';
 import { IFCSpatialStructureElement } from './IFC';
 import { label, compoundPlaneAngleMeasure, postalAddress } from './types';
-import { HasManyBuildings } from './Building';
 
 import { Maybe, Result } from 'true-myth';
+import { referenceTo } from '../graph/index';
 const { just, nothing } = Maybe;
 
 const type = 'site';
@@ -33,9 +33,8 @@ export const Site = singleton(() =>
         refElevation: t.maybe(t.number),
         landTitleNumber: t.maybe(label),
         siteAddress: t.maybe(postalAddress),
-      }),
-      BelongsToProject(),
-      HasManyBuildings()
+        project: referenceTo(Project()),
+      })
     )
     .actions(self => ({}))
 );

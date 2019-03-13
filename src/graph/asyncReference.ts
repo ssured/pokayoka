@@ -11,6 +11,7 @@ import {
 } from 'mobx-state-tree';
 import { IObservableObject, observable, transaction, runInAction } from 'mobx';
 import { nothing, Maybe } from './maybe';
+import { Omit } from '../utils/typescript';
 
 // Types are copied from internal mobx-state-tree types
 type RedefineIStateTreeNode<

@@ -11,11 +11,10 @@ import {
 
 import { singleton, nameFromType, Env } from './utils';
 import { IFCSpatialStructureElement } from './IFC';
-import { BelongsToBuilding } from './Building';
-import { HasManySpaces } from './Space';
+import { Building } from './Building';
 
 import { Maybe, Result } from 'true-myth';
-import { HasManySheets } from './Sheet';
+import { referenceTo } from '../graph/index';
 const { just, nothing } = Maybe;
 
 const type = 'buildingStorey';
@@ -29,10 +28,8 @@ export const BuildingStorey = singleton(() =>
         type,
         typeVersion: 1,
         elevation: t.maybe(t.number),
-      }),
-      BelongsToBuilding(),
-      HasManySpaces(),
-      HasManySheets()
+        building: referenceTo(Building()),
+      })
     )
     .actions(self => ({}))
 );

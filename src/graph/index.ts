@@ -18,6 +18,7 @@ import { generateId } from '../utils/id';
 import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
 import console = require('console');
 import { asyncReference, asPlaceholder } from './asyncReference';
+import { Omit } from '../utils/typescript';
 
 export interface GraphEnv {
   // observable view which triggers loading the instance from the storage as a side effect

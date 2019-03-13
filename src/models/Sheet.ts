@@ -13,7 +13,8 @@ import { singleton, nameFromType, Env } from './utils';
 import { IFCObject } from './IFC';
 
 import { Maybe, Result } from 'true-myth';
-import { BelongsToBuildingStorey } from './BuildingStorey';
+import { BuildingStorey } from './BuildingStorey';
+import { referenceTo } from '../graph/index';
 const { just, nothing } = Maybe;
 
 const type = 'sheet';
@@ -27,8 +28,8 @@ export const Sheet = singleton(() =>
         type,
         typeVersion: 1,
         $tiles: t.array(t.string),
-      }),
-      BelongsToBuildingStorey()
+        buildingStorey: referenceTo(BuildingStorey()),
+      })
     )
     .actions(self => ({}))
 );

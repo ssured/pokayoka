@@ -1,6 +1,0 @@
-[33m[nodemon] 1.18.10[39m
-[33m[nodemon] to restart at any time, enter `rs`[39m
-[33m[nodemon] watching: tools/**/*.ts[39m
-[32m[nodemon] starting `yarn ts-node tools/query-db.ts`[39m
-yarn run v1.13.0
-$ /Users/sjoerddejong/Documents/Racido/pokayoka/node_modules/.bin/ts-node tools/query-db.ts

@@ -9,7 +9,6 @@ import {
   getIdentifier,
 } from 'mobx-state-tree';
 
-import { HasManySites } from './Site';
 import { singleton, nameFromType, Env } from './utils';
 import { IFCObject } from './IFC';
 import { label } from './types';
@@ -29,8 +28,7 @@ export const Project = singleton(() =>
         typeVersion: 1,
         longName: t.maybe(label), // Long name for the project as used for reference purposes.
         phase: t.maybe(label), // Current project phase, open to interpretation for all project partner, therefore given as IfcString.
-      }),
-      HasManySites()
+      })
     )
     .actions(self => ({}))
 );

@@ -99,38 +99,35 @@ function sha256OfStream(
     >();
 
     projects.forEach(project => {
-      const _projectId = project._id; // generateId();
+      const projectId = project._id; // generateId();
       const newProject = Project().create({
-        id: _projectId,
-        globalId: _projectId,
+        id: projectId,
+        globalId: projectId,
         name: project.title,
         $files: Object.keys(project._attachments || {}),
       });
       newObjects.set(newProject, project._id);
 
-      const _siteId = generateId();
+      const siteId = generateId();
       const newSite = Site().create({
-        id: _siteId,
-        globalId: _siteId,
+        id: siteId,
+        globalId: siteId,
         name: project.title,
+        project: projectId,
       });
       newObjects.set(newSite, project._id);
 
-      newSite.setProject(newProject);
-      newProject.addSite(newSite);
-
-      const id = generateId();
+      const buildingId = generateId();
       const newBuilding = Building().create({
-        id,
-        globalId: id,
+        id: buildingId,
+        globalId: buildingId,
         name: project.title,
         description: project.description,
         $files: Object.keys(project._attachments || {}),
+        site: siteId,
       });
       newObjects.set(newBuilding, project._id);
-
-      newBuilding.setSite(newSite);
-      newSite.addBuilding(newBuilding);
+      idMap[project._id] = buildingId;
 
       const storeys = nonLeafRows
         .filter(
@@ -139,31 +136,27 @@ function sha256OfStream(
         .map(row => row.doc!);
 
       storeys.forEach(storey => {
-        const id = generateId();
+        const storeyId = generateId();
         const newStorey = BuildingStorey().create({
-          id,
-          globalId: id,
+          id: storeyId,
+          globalId: storeyId,
           name: storey.title || '-- left blank --',
           description: storey.description,
           $files: Object.keys(storey._attachments || {}),
+          building: buildingId,
         });
         newObjects.set(newStorey, storey._id);
 
-        newStorey.setBuilding(newBuilding);
-        newBuilding.addBuildingStorey(newStorey);
-
-        const _sheetId = generateId();
+        const sheetId = generateId();
         const newSheet = Sheet().create({
-          id: _sheetId,
-          globalId: _sheetId,
+          id: sheetId,
+          globalId: sheetId,
           name: storey.title,
           $tiles: Object.keys(storey._attachments || {}),
+          buildingStorey: storeyId,
         });
         newObjects.set(newSheet, storey._id);
-        idMap[storey._id] = _sheetId;
-
-        newSheet.setBuildingStorey(newStorey);
-        newStorey.addSheet(newSheet);
+        idMap[storey._id] = sheetId;
 
         const spaces = nonLeafRows
           .filter(
@@ -182,12 +175,10 @@ function sha256OfStream(
             name: space.title || '-- left blank --',
             description: space.description,
             $files: Object.keys(space._attachments || {}),
+            buildingStorey: storeyId,
           });
           newObjects.set(newSpace, space._id);
           idMap[space._id] = id;
-
-          newSpace.setBuildingStorey(newStorey);
-          newStorey.addSpace(newSpace);
         });
       });
     });
@@ -200,7 +191,11 @@ function sha256OfStream(
 
       const fileHashes = await Promise.all(
         Object.entries(
-          (await fromDb.get(originalId))._attachments || {}
+          (
+            allRows.find(row => row.id === originalId) || {
+              doc: { _attachments: {} },
+            }
+          ).doc!._attachments || {}
         ).reduce(
           (hashes, [filename, fileinfo]) => {
             hashes.push(
@@ -237,10 +232,8 @@ function sha256OfStream(
 
       const newSnapshot = JSON.parse(snapshotString);
 
-      log(newSnapshot);
-
       log(
-        `Write ${newSnapshot.id} result: %j`,
+        `Write ${newSnapshot.id} ${newSnapshot.type} result: %j`,
         await toDb.slowlyMergeObject(newSnapshot)
       );
     }
