@@ -9,7 +9,6 @@ import {
 } from './adapters/shared';
 import { ham } from './ham';
 import { hash } from './hash';
-import console = require('console');
 
 function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
@@ -118,6 +117,8 @@ type querySinceOptions = {
   skipFirst?: boolean;
 };
 export class Storage {
+  private id: string | null = null;
+
   private updatedTuplesEmitter = new SubscribableEvent<
     (tuples: StampedPatch[]) => void
   >();
@@ -130,6 +131,52 @@ export class Storage {
     private adapter: StorageAdapter,
     public getMachineState = numberToState()
   ) {}
+
+  public async getStorageId(): Promise<string> {
+    if (this.id) return this.id;
+
+    const key: [undefined, string] = [undefined, 'database-id'];
+    const ids = await this.adapter.queryList<typeof key, string>({
+      gte: key,
+      lte: key,
+    });
+
+    if (ids.length === 1) {
+      return (this.id = ids[0].value);
+    }
+
+    const newId = hash([Date.now(), Math.random().toString(36)]);
+
+    await this.adapter.batch([{ key, value: newId, type: 'put' }]);
+
+    return (this.id = newId);
+  }
+
+  public async timestampForStorage(storageId: string): Promise<timestamp> {
+    const key: [undefined, string, string] = [
+      undefined,
+      'remote-timestamp',
+      storageId,
+    ];
+    const timestamps = await this.adapter.queryList<typeof key, timestamp>({
+      gte: key,
+      lte: key,
+    });
+
+    return timestamps.length === 1 ? timestamps[0].value : '';
+  }
+
+  public async updateTimestampForStorage(
+    storageId: string,
+    timestamp: timestamp
+  ): Promise<void> {
+    const key: [undefined, string, string] = [
+      undefined,
+      'remote-timestamp',
+      storageId,
+    ];
+    return this.adapter.batch([{ key, value: timestamp, type: 'put' }]);
+  }
 
   /**
    * Returns the correct range of this database
@@ -170,7 +217,6 @@ export class Storage {
 
     // repeat until we get an empty result
     if (latest != null) {
-      console.log('run again');
       yield* this.tuplesSince(latest, { ...options, skipFirst: true });
     }
   }

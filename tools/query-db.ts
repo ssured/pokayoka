@@ -1,9 +1,8 @@
 import debug from 'debug';
 import fs from 'fs-extra';
 import path from 'path';
-import { Storage, StampedPatch } from '../src/storage';
+import { Storage } from '../src/storage';
 import { ServerAdapter } from '../src/storage/adapters/server';
-import console = require('console');
 
 const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
 

@@ -3,7 +3,6 @@ import { observable, isObservable, configure } from 'mobx';
 import dlv from 'dlv';
 import dset from 'dset';
 import produce, { Patch } from 'immer';
-import console = require('console');
 
 configure({ enforceActions: 'always' });
 
@@ -141,7 +140,6 @@ describe('immer working with mobx', () => {
 // import dlv from 'dlv';
 // import dset from 'dset';
 // import { JsonEntry, JsonMap } from '../utils/json';
-// import console = require('console');
 // import SubscribableEvent from 'subscribableevent';
 
 // function bigBang<T>(): T {

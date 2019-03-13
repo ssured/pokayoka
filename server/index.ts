@@ -19,6 +19,7 @@ import webpackHotMiddleware from 'webpack-hot-middleware';
 import got from 'got';
 import nano from 'nano';
 import { Channel, fromEmitter } from 'queueable';
+import { storeRoutes } from './store';
 
 const log = debug(__filename.replace(__dirname, '~'));
 
@@ -37,6 +38,8 @@ app.use(
     extended: true,
   })
 );
+
+storeRoutes(app);
 
 const couchDbUrl = 'http://localhost:5984';
 app.use('/db', proxy(couchDbUrl, {}));
@@ -119,7 +122,7 @@ const compiler = webpack(webpackConfig);
 if (isDevelopment) {
   // Tell express to use the webpack-dev-middleware and use the webpack.config.js
   // configuration file as a base.
-  const devMiddleware = webpackDevMiddleware(compiler, {
+  const devMiddleware = webpackDevMiddleware(compiler as any, {
     // noInfo: true,
     publicPath: webpackConfig.output!.publicPath!,
   });
@@ -152,12 +155,11 @@ if (isDevelopment) {
     }
   });
   app.use(
-    webpackHotMiddleware(compiler, {
+    webpackHotMiddleware(compiler as any, {
       reload: true,
     })
   );
 }
-
 // Serve the files on port 3000.
 server.listen(3000, () => {
   log('PokaYoka listening on port 3000!\n');

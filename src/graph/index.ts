@@ -16,7 +16,6 @@ import { observable, runInAction, when } from 'mobx';
 import { Storage, Patch } from '../storage/index';
 import { generateId } from '../utils/id';
 import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
-import console = require('console');
 import { asyncReference, asPlaceholder } from './asyncReference';
 import { Omit } from '../utils/typescript';
 
