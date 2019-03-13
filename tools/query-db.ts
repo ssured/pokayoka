@@ -22,11 +22,11 @@ fs.ensureDirSync(dbDir);
 
     log(await toDb.stateWindow());
 
-    const id = 'coaulivw3n';
+    const id = 'coaxs1v6zs';
     const obj = await toDb.getObject(id);
     log(obj);
 
-    // log(await toDb.getInverse(obj));
+    log(await toDb.getInverse(obj));
 
     // log(
     //   await adapter.queryList({

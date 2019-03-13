@@ -76,7 +76,6 @@ function createOperationsForTimeline(
   const pairs: { key: KeyType; value: ValueType }[] = [
     { key: ['spt', s, p, t], value: [o] }, // used to store future values, wrap o as [o] to support storing o = null
     { key: ['tsp', t, s, p], value: [o] }, // timeline of current values and future updates
-    // { key: ['st', s, t], value: true }, // what is the next update for a subject?
   ];
   return type === 'put'
     ? pairs.map(pair => ({ ...pair, type }))
@@ -89,12 +88,12 @@ function createOperationsForStore(
 ): BatchOperations {
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
-    { key: ['sp', s, p], value: [t, o] }, // only one value can exist for s+p
-    // { key: ['ps', p, s], value: [o] },
+    { key: ['sp', s, p], value: [o, t] }, // only one value can exist for s+p
+    { key: ['ps', p, s], value: [o] },
     { key: ['ops', o, p, s], value: true },
-    // { key: ['sop', s, o, p], value: true },
-    // { key: ['osp', o, s, p], value: true },
-    // { key: ['pos', p, o, s], value: true },
+    { key: ['sop', s, o, p], value: true },
+    { key: ['osp', o, s, p], value: true },
+    { key: ['pos', p, o, s], value: true },
   ];
   const ops =
     type === 'put'
@@ -261,7 +260,7 @@ export class Storage {
       )
       .map(
         // @ts-ignore
-        ({ key: [, s, p], value: [t, o] }) => ({ s, p, o, t } as StampedTuple)
+        ({ key: [, s, p], value: [o, t] }) => ({ s, p, o, t } as StampedTuple)
       );
 
     this.updatedTuplesEmitter.fire(
@@ -305,7 +304,7 @@ export class Storage {
         lt: ['sp', [...s, []]],
       })
       .then(result =>
-        result.map(({ key: [, s, p], value: [, o] }) => ({ s, p, o } as Tuple))
+        result.map(({ key: [, s, p], value: [o] }) => ({ s, p, o } as Tuple))
       );
 
     const object: JsonMap = {};

@@ -289,7 +289,7 @@ function sha256OfStream(
               .join('_')
           ],
         ...doc,
-        $images: Object.keys(_attachments),
+        $images: Object.keys(_attachments || {}),
       });
       for (const [filename, sha] of fileHashes) {
         let newString = snapshotString.replace(filename, sha);
