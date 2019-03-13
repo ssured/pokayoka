@@ -4,28 +4,29 @@ import { RouteComponentProps } from '@reach/router';
 
 import { Box, Heading } from 'grommet';
 import { useProjectId } from './index';
-import { ProjectForm } from '../../components/ProjectForm';
-import { useStore } from '../../contexts/store';
+import { useModel } from '../../contexts/store';
+import { Project } from '../../models/Project';
 
 export const Overview: React.FunctionComponent<
   RouteComponentProps<{}>
 > = () => {
   const projectId = useProjectId();
-  const store = useStore();
-  // const project = useModel(Project, projectId);
-
-  // const project = useProjectAs(project => ({
-  //   current: project,
-  //   get capitalized() {
-  //     return project.title.toUpperCase();
-  //   },
-  // }));
+  const project = useModel(Project, projectId);
 
   return useObserver(() => (
     <Box>
-      <Heading>
-        Project {projectId} {typeof store.}
-      </Heading>
+      <Heading>Project {projectId}</Heading>
+      {project.fold(
+        () => (
+          <p>Loading...</p>
+        ),
+        project => (
+          <h2>{project.name}</h2>
+        ),
+        error => (
+          <h3>Uh oh, something happened {error.message}</h3>
+        )
+      )}
     </Box>
   ));
 };

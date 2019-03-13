@@ -14,18 +14,24 @@ fs.ensureDirSync(dbDir);
 
 (async function main() {
   try {
-    const fromDbName = 'bk0wb0a7sz';
-    const toDbName = `pokayoka${fromDbName}`;
+    const toDbName = 'bk0wb0a7sz';
     const adapter = new ServerAdapter(path.join(dbDir, toDbName));
     const toDb = new Storage(adapter);
 
     log(await toDb.stateWindow());
 
-    const id = 'coaxs1v6zs';
-    const obj = await toDb.getObject(id);
-    log(obj);
+    // const id = 'coaxs1v6zs';
+    // const obj = await toDb.getObject(id);
+    // log(obj);
 
-    log(await toDb.getInverse(obj));
+    // log(await toDb.getInverse(obj));
+
+    log(
+      (await adapter.queryList({
+        gt: ['pos', 'type', 'project', null],
+        lt: ['pos', 'type', 'project', undefined],
+      })).map(JSON.stringify as any)
+    );
 
     // log(
     //   await adapter.queryList({

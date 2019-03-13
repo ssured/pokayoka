@@ -1,7 +1,10 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { Storage } from '../storage/index';
 import { WebAdapter } from '../storage/adapters/web';
 import { Store } from '../graph/index';
+import { IAnyModelType } from 'mobx-state-tree';
+import { asyncReference } from '../graph/asyncReference';
+import { observableAsyncPlaceholder } from '../graph/asyncPlaceholder';
 
 const stores: { [key: string]: Store } = {};
 
@@ -42,6 +45,20 @@ export const useStore = () => {
   const store = useContext(StoreContext);
   if (store == null) throw new Error('Store is not initialized');
   return store;
+};
+
+export const useModel = <T extends IAnyModelType>(
+  model: () => T,
+  id: string
+) => {
+  const store = useContext(StoreContext);
+  return useMemo(
+    () =>
+      observableAsyncPlaceholder(store.getInstance(model(), id), {
+        id,
+      }),
+    [store, model, id]
+  );
 };
 
 export const ProvideStore: React.SFC<{ name: string }> = ({
