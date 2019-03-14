@@ -40,9 +40,13 @@ export function storeRoutes(app: Express) {
 
     const storage = getStorage(project);
     const patches: StampedPatch[] = [];
-    for await (const patch of storage.patchesSince(since)) {
+    let until = '';
+    for await (const [logTimestamp, patch] of storage.patchesSince(since)) {
       patches.push(patch);
+      if (logTimestamp > until) {
+        until = logTimestamp;
+      }
     }
-    res.json(patches);
+    res.json({ patches, until });
   });
 }

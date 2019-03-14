@@ -1,14 +1,10 @@
 import mlts from 'monotonic-lexicographic-timestamp';
 import SubscribableEvent from 'subscribableevent';
 import { JsonPrimitive, JsonMap, JsonEntry } from '../utils/json';
-import {
-  BatchOperations,
-  KeyType,
-  StorageAdapter,
-  ValueType,
-} from './adapters/shared';
+import { BatchOperations, StorageAdapter } from './adapters/shared';
 import { ham } from './ham';
 import { hash } from './hash';
+import { CharwiseKey } from 'charwise';
 
 function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
@@ -32,14 +28,46 @@ function isObjt(v: any): v is objt {
 }
 
 export type timestamp = string;
-type subj = string[];
-type pred = string;
-type objt = JsonPrimitive | ([string] & string[]);
+export type subj = string[];
+export type pred = string;
+export type objt = JsonPrimitive | ([string] & string[]);
+type indexes =
+  | 'spo'
+  | 'sop'
+  | 'pso'
+  | 'pos'
+  | 'ops'
+  | 'osp'
+  | 'spt'
+  | 'tsp'
+  | 'log';
 interface Tuple {
   s: subj;
   p: pred;
   o: objt;
 }
+
+type queryVariable = {
+  '#': string;
+  $: (val: subj | pred | objt) => subj | pred | objt;
+};
+export type queryResult = {
+  tuples: (Tuple)[];
+  variables: { [key: string]: subj | pred | objt };
+};
+export type query = {
+  s?: subj | queryVariable | { gte: subj | []; lt: subj | [undefined] };
+  p?: pred | queryVariable | { gte: pred | []; lt: pred | [undefined] };
+  o?:
+    | objt
+    | queryVariable
+    | { gte: objt | []; lt: objt | undefined | [undefined] };
+  filter?: (tuple: Tuple) => boolean;
+};
+
+type KeyType = CharwiseKey;
+type ValueType = JsonEntry;
+
 interface StampedTuple extends Tuple {
   t: timestamp;
 }
@@ -83,12 +111,14 @@ function createOperationsForTimeline(
 
 function createOperationsForStore(
   tuple: StampedTuple,
-  type: 'del' | 'put'
+  type: 'del' | 'put',
+  machineState: timestamp
 ): BatchOperations {
   const { s, p, o, t } = tuple;
   const pairs: { key: KeyType; value: ValueType }[] = [
-    { key: ['sp', s, p], value: [o, t] }, // only one value can exist for s+p
-    { key: ['ps', p, s], value: [o] },
+    { key: ['log', machineState, s, p, o, t], value: true },
+    { key: ['spo', s, p, o], value: [t, machineState] },
+    { key: ['pso', p, s, o], value: true },
     { key: ['ops', o, p, s], value: true },
     { key: ['sop', s, o, p], value: true },
     { key: ['osp', o, s, p], value: true },
@@ -97,17 +127,20 @@ function createOperationsForStore(
   const ops =
     type === 'put'
       ? pairs.map(pair => ({ ...pair, type }))
-      : pairs.map(({ key }) => ({ key, type }));
+      : pairs
+          .filter(({ key }) => (key as any)[0] !== 'log')
+          .map(({ key }) => ({ key, type }));
   return [...ops, ...createOperationsForTimeline(tuple, type)];
 }
 
 function createOperations(
   toAdd: StampedTuple,
-  toRemove: StampedTuple[] = []
+  toRemove: StampedTuple[] = [],
+  machineState: timestamp
 ): BatchOperations {
   return toRemove
-    .flatMap(tuple => createOperationsForStore(tuple, 'del'))
-    .concat(...createOperationsForStore(toAdd, 'put'));
+    .flatMap(tuple => createOperationsForStore(tuple, 'del', machineState))
+    .concat(...createOperationsForStore(toAdd, 'put', machineState));
 }
 
 export const numberToState = (n?: number) =>
@@ -199,19 +232,21 @@ export class Storage {
   private async *tuplesSince(
     timestamp: timestamp,
     options: querySinceOptions = {}
-  ): AsyncIterableIterator<StampedTuple> {
+  ): AsyncIterableIterator<[timestamp, StampedTuple]> {
     let latest: timestamp | null = null;
 
     const { skipFirst }: querySinceOptions = { skipFirst: false, ...options };
 
     for await (const {
-      key: [_, t, s, p],
-      value: [o],
-    } of this.adapter.query<[string, timestamp, subj, pred], [objt]>({
-      gte: ['tsp', timestamp + (skipFirst ? '!' : '')],
-      lt: ['tsp', undefined],
+      key: [_, logT, s, p, o, t],
+    } of this.adapter.query<
+      [string, timestamp, subj, pred, objt, timestamp],
+      true
+    >({
+      gte: ['log', timestamp + (skipFirst ? '!' : '')],
+      lt: ['log', undefined],
     })) {
-      yield { s, p, o, t };
+      yield [logT, { s, p, o, t }];
       latest = t;
     }
 
@@ -224,9 +259,9 @@ export class Storage {
   public async *patchesSince(
     timestamp: timestamp,
     options: querySinceOptions = {}
-  ): AsyncIterableIterator<StampedPatch> {
-    for await (const tuple of this.tuplesSince(timestamp, options)) {
-      yield stampedTupleToStampedPatch(tuple);
+  ): AsyncIterableIterator<[timestamp, StampedPatch]> {
+    for await (const [logT, tuple] of this.tuplesSince(timestamp, options)) {
+      yield [logT, stampedTupleToStampedPatch(tuple)];
     }
   }
 
@@ -267,7 +302,11 @@ export class Storage {
       if (machineState < incomingTuple.t) {
         operations = createOperationsForTimeline(incomingTuple);
       } else {
-        operations = createOperations(incomingTuple, currentTuples);
+        operations = createOperations(
+          incomingTuple,
+          currentTuples,
+          machineState
+        );
       }
     } else {
       const comparison = ham(
@@ -279,7 +318,11 @@ export class Storage {
       );
 
       if (comparison.resolution === 'merge' && comparison.incoming) {
-        operations = createOperations(incomingTuple, currentTuples);
+        operations = createOperations(
+          incomingTuple,
+          currentTuples,
+          machineState
+        );
         merged = true;
       } else if (comparison.resolution === 'defer') {
         operations = createOperationsForTimeline(incomingTuple);
@@ -302,11 +345,11 @@ export class Storage {
 
     const propertyUpdateTuples: StampedTuple[] = operations
       .filter(
-        op => op.type === 'put' && Array.isArray(op.key) && op.key[0] === 'sp'
+        op => op.type === 'put' && Array.isArray(op.key) && op.key[0] === 'spo'
       )
       .map(
         // @ts-ignore
-        ({ key: [, s, p], value: [o, t] }) => ({ s, p, o, t } as StampedTuple)
+        ({ key: [, s, p, o], value: [t] }) => ({ s, p, o, t } as StampedTuple)
       );
 
     this.updatedTuplesEmitter.fire(
@@ -329,7 +372,7 @@ export class Storage {
     const { id, ...other } = obj;
 
     // TODO this can be optimised as merge will be called lots of times, and merge will
-    // lookup all combinations of s,p separately from the 'sp' database.
+    // lookup all combinations of s,p separately from the 'spo' database.
     // probably this function is not called very often
     console.info(
       'writeRawSnapshot is slow, please only write patches. Also note object values are not allowed'
@@ -345,12 +388,14 @@ export class Storage {
 
   private async getNested(s: subj, deep: boolean = false): Promise<JsonMap> {
     const tuples = await this.adapter
-      .queryList<[string, subj, pred], [timestamp, objt]>({
-        gte: ['sp', s],
-        lt: ['sp', [...s, []]],
+      .queryList<[string, subj, pred, objt], [timestamp, timestamp]>({
+        gte: ['spo', s],
+        lt: ['spo', [...s, []]],
       })
       .then(result =>
-        result.map(({ key: [, s, p], value: [o] }) => ({ s, p, o } as Tuple))
+        result.map(
+          ({ key: [, s, p, o] /*, value: t*/ }) => ({ s, p, o } as Tuple)
+        )
       );
 
     const object: JsonMap = {};
@@ -421,6 +466,118 @@ export class Storage {
     const stampedTuples = stampedPatches.map(stampedPatchToStampedTuple);
 
     return this.queueTransaction(stampedTuples, machineState);
+  }
+
+  private async *query<T extends indexes>(
+    idx: T,
+    p1?: T extends 'spo' | 'sop'
+      ? subj | { gte: subj | []; lt: subj | [undefined] }
+      : T extends 'pso' | 'pos'
+      ? pred | { gte: pred | []; lt: pred | [undefined] }
+      : objt | { gte: objt | []; lt: objt | undefined | [undefined] },
+    p2?: T extends 'pso' | 'osp'
+      ? subj | { gte: subj | []; lt: subj | [undefined] }
+      : T extends 'ops' | 'spo'
+      ? pred | { gte: pred | []; lt: pred | [undefined] }
+      : objt | { gte: objt | []; lt: objt | undefined | [undefined] },
+    p3?: T extends 'pos' | 'ops'
+      ? { gte: subj | []; lt: subj | [undefined] }
+      : T extends 'sop' | 'osp'
+      ? { gte: pred | []; lt: pred | [undefined] }
+      : { gte: objt | []; lt: objt | undefined | [undefined] }
+  ): AsyncIterableIterator<Tuple> {
+    const lowerBound: (subj | pred | objt)[] = [idx];
+    const upperBound: (subj | pred | objt | undefined)[] = [idx];
+    let includeUpperBound = false;
+
+    if (typeof p1 !== 'undefined') {
+      // @ts-ignore
+      lowerBound.push(isRange(p1) ? p1.gte : p1);
+      // @ts-ignore
+      upperBound.push(isRange(p1) ? p1.lt : p1);
+    }
+    if (typeof p2 !== 'undefined') {
+      // @ts-ignore
+      lowerBound.push(isRange(p2) ? p2.gte : p2);
+      // @ts-ignore
+      upperBound.push(isRange(p2) ? p2.lt : p2);
+    }
+    if (typeof p3 !== 'undefined') {
+      // @ts-ignore
+      lowerBound.push(isRange(p3) ? p3.gte : p3);
+      // @ts-ignore
+      upperBound.push(isRange(p3) ? p3.lt : p3);
+      includeUpperBound = true;
+    } else {
+      lowerBound.push(null);
+      upperBound.push(undefined);
+    }
+
+    for await (const data of this.adapter.query({
+      gte: lowerBound,
+      [includeUpperBound ? 'lte' : 'lt']: upperBound,
+    })) {
+      const [idx, v0, v1, v2] = (data as any).key;
+      yield { [idx[0]]: v0, [idx[1]]: v1, [idx[2]]: v2 } as Tuple;
+    }
+  }
+
+  public async *ezq(
+    queries: query[],
+    result: queryResult = { tuples: [], variables: {} }
+  ): AsyncIterableIterator<queryResult> {
+    if (queries.length === 0) return;
+    const {
+      s = variable(),
+      p = variable(),
+      o = variable(),
+      filter,
+    } = queries[0];
+    const fS =
+      isVariable(s) && s['#'] !== '' && s['#'] in result.variables
+        ? s.$(result.variables[s['#']])
+        : s;
+    const fP =
+      isVariable(p) && p['#'] !== '' && p['#'] in result.variables
+        ? p.$(result.variables[p['#']])
+        : p;
+    const fO =
+      isVariable(o) && o['#'] !== '' && o['#'] in result.variables
+        ? o.$(result.variables[o['#']])
+        : o;
+
+    const args: any = isVariable(fS)
+      ? isVariable(fP)
+        ? isVariable(fO)
+          ? ['spo']
+          : ['ops', fO]
+        : isVariable(fO)
+        ? ['pso', fP]
+        : ['pos', fP, fO]
+      : isVariable(fP)
+      ? isVariable(fO)
+        ? ['spo', fS]
+        : ['sop', fS, fO]
+      : isVariable(fO)
+      ? ['spo', fS, fP]
+      : ['spo', fS, fP, fO];
+
+    for await (const tuple of this.query.apply(this, args)) {
+      if (filter == null || filter(tuple)) {
+        const newResult = clone(result);
+        newResult.tuples.push(tuple);
+
+        if (isVariable(fS)) newResult.variables[fS['#']] = tuple.s;
+        if (isVariable(fP)) newResult.variables[fP['#']] = tuple.p;
+        if (isVariable(fO)) newResult.variables[fO['#']] = tuple.o;
+
+        if (queries.length === 1) {
+          yield newResult;
+        } else {
+          yield* this.ezq(queries.slice(1), newResult);
+        }
+      }
+    }
   }
 }
 
@@ -577,4 +734,32 @@ function setObjectAtSP(source: JsonMap, s: subj, p: pred, value: any): any {
   } else {
     pointer[p] = value;
   }
+}
+
+function isRange(
+  obj: any
+): obj is {
+  gte: subj | pred | objt;
+  lt: subj | pred | objt;
+} {
+  return (
+    obj != null &&
+    typeof obj === 'object' &&
+    Object.keys(obj).length === 2 &&
+    'gte' in obj &&
+    'lt' in obj
+  );
+}
+
+function isVariable(arg: any): arg is queryVariable {
+  return arg != null && typeof arg === 'object' && '#' in arg && '$' in arg;
+}
+export function variable(
+  name: string = '',
+  mapper: queryVariable['$'] = (i: any) => i
+): queryVariable {
+  return { '#': name, $: mapper };
+}
+function clone<T extends any>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
 }

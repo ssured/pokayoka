@@ -11,14 +11,30 @@ import {
   onAction,
   splitJsonPath,
   applySnapshot,
+  IAnyStateTreeNode,
+  types,
+  ModelInstanceType,
+  ModelProperties,
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
-import { Storage, Patch } from '../storage/index';
+import {
+  Storage,
+  Patch,
+  queryResult,
+  query,
+  variable,
+  objt,
+} from '../storage/index';
 import { generateId } from '../utils/id';
 import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
 import { asyncReference, asPlaceholder } from './asyncReference';
 import { Omit } from '../utils/typescript';
 import dset from 'dset';
+import { observableAsyncPlaceholder } from './asyncPlaceholder';
+
+type KeysOfType<A extends object, B> = {
+  [K in keyof A]-?: A[K] extends B ? K : never
+}[keyof A];
 
 export interface GraphEnv {
   // observable view which triggers loading the instance from the storage as a side effect
@@ -30,6 +46,7 @@ export interface GraphEnv {
     Type: T,
     id: string
   ): Promise<Instance<T>>;
+  ezq: Storage['ezq'];
 }
 
 abstract class BaseStore implements GraphEnv {
@@ -63,6 +80,13 @@ abstract class BaseStore implements GraphEnv {
     return this.loadInstance(Type, id) as any;
   }
 
+  public ezq(
+    queries: query[],
+    result?: queryResult
+  ): AsyncIterableIterator<queryResult> {
+    throw new Error('must be implemented in subclass');
+  }
+
   loadInstance<T extends IAnyModelType>(
     Type: T,
     id: string
@@ -91,6 +115,8 @@ abstract class BaseStore implements GraphEnv {
 export class Store extends BaseStore {
   constructor(public storage: Storage) {
     super();
+
+    this.ezq = storage.ezq.bind(storage);
 
     // actively listen for updates to keep the store up to date
     storage.subscribe(patches => {
@@ -159,6 +185,7 @@ class RecordingStore extends BaseStore {
     ) => Promise<Instance<T>>
   ) {
     super();
+    this.ezq = storage.ezq.bind(storage);
   }
 
   protected createInstance<T extends IAnyModelType>(
@@ -301,13 +328,31 @@ export function referenceTo<IT extends IAnyModelType>(Type: IT) {
 
 export const asReference = asPlaceholder;
 // // create an object with 1 prop which is typed to the value
-// const objFromProp = <T extends string, U>(
-//   name: T,
-//   value: U
-// ): { [key in T]: U } => ({ [name]: value } as any);
-
-// const createM = <T extends string>(prop: T) => {
-//   return types.model('any', objFromProp(prop, types.string));
-// };
-
-// // export function hasMany
+export function lookupInverse<
+  IT extends IAnyModelType,
+  K extends keyof Instance<IT>
+>(env: GraphEnv, object: objt, Type: IT, inverseProp: K) {
+  return observableAsyncPlaceholder(
+    (async () => {
+      const inverseObjects: Promise<Instance<IT>>[] = [];
+      for await (const result of env.ezq([
+        {
+          s: variable('siteId'),
+          p: inverseProp as string,
+          o: object,
+        },
+        {
+          s: variable('siteId'),
+          p: 'type',
+          o: Type.name,
+        },
+      ])) {
+        inverseObjects.push(
+          env.getInstance(Type, (result.variables as any).siteId[0])
+        );
+      }
+      return Promise.all(inverseObjects);
+    })(),
+    {}
+  );
+}

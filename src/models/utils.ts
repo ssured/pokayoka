@@ -8,8 +8,7 @@ export const singleton = <T>(thunk: () => T) => {
   return () => value || (value = thunk());
 };
 
-export const nameFromType = (s: string) =>
-  s.substr(0, 1).toUpperCase() + s.substr(1);
+export const nameFromType = (s: string) => s;
 
 export interface Env {
   load<T extends IAnyModelType>(

@@ -14,6 +14,8 @@ import { IFCObject } from './IFC';
 import { label } from './types';
 
 import { Maybe, Result } from 'true-myth';
+import { lookupInverse } from '../graph/index';
+import { Site } from './Site';
 const { just, nothing } = Maybe;
 
 const type = 'project';
@@ -30,6 +32,11 @@ export const Project = singleton(() =>
         phase: t.maybe(label), // Current project phase, open to interpretation for all project partner, therefore given as IfcString.
       })
     )
+    .views(self => ({
+      get sites() {
+        return lookupInverse(getEnv(self), self.id, Site(), 'project');
+      },
+    }))
     .actions(self => ({}))
 );
 

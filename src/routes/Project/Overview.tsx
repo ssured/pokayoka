@@ -20,7 +20,30 @@ export const Overview: React.FunctionComponent<
           <p>Loading...</p>
         ),
         project => (
-          <Heading>Project {project.name}</Heading>
+          <>
+            <Heading>Project {project.name}</Heading>
+
+            <div>
+              {project.sites.fold(
+                () => (
+                  <p>Loading sites</p>
+                ),
+                sites => (
+                  <>
+                    <Heading>{sites.length} sites gevonden:</Heading>
+                    <ul>
+                      {sites.map(site => (
+                        <li key={site.id}>{site.name}</li>
+                      ))}
+                    </ul>
+                  </>
+                ),
+                error => (
+                  <h3>Uh oh, something happened {error.message}</h3>
+                )
+              )}
+            </div>
+          </>
         ),
         error => (
           <h3>Uh oh, something happened {error.message}</h3>

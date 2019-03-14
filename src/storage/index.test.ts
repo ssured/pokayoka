@@ -96,16 +96,26 @@ describe('Storage', () => {
     const obj1 = { id: 'test', a: 'A', b: 'b' };
     await storage.slowlyMergeObject(obj1);
     const contentLength1 = (await mem.queryList({})).length;
+    const logEntries1 = (await mem.queryList({
+      gte: ['log'],
+      lt: ['log', undefined],
+    })).length;
+    expect(logEntries1).toBe(2);
 
     const obj2 = { id: 'test', b: 'B' };
     await storage.slowlyMergeObject(obj2);
     const contentLength2 = (await mem.queryList({})).length;
+    const logEntries2 = (await mem.queryList({
+      gte: ['log'],
+      lt: ['log', undefined],
+    })).length;
+    expect(logEntries2).toBe(3);
 
     const result = await storage.getObject(obj1.id);
     expect(result).toEqual({ ...obj1, ...obj2 });
 
     // only 2 props are stored, which means the old data is correctly removed
-    expect(contentLength1).toBe(contentLength2);
+    expect(contentLength1 + logEntries2 - logEntries1).toBe(contentLength2);
   });
 
   test('snapshots handle conflicts', async () => {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { Storage } from '../storage/index';
+import { Storage, variable } from '../storage/index';
 import { WebAdapter } from '../storage/adapters/web';
 import { Store } from '../graph/index';
 import { IAnyModelType } from 'mobx-state-tree';
@@ -25,27 +25,13 @@ function createStore(name: string): Store {
 
     fetch(`/data/${name}/patches?since=${timestamp}`)
       .then(res => res.json())
-      .then(async patches => {
-        console.log(patches);
+      .then(async ({ patches, until }) => {
+        console.log(`Got ${patches.length} patches, until: ${until}`);
         storage.mergePatches(patches);
 
         if (patches.length > 0) {
-          const { t: maxTimestamp } = patches.slice(-1)[0];
-          storage.updateTimestampForStorage(remoteId, maxTimestamp);
+          storage.updateTimestampForStorage(remoteId, until);
         }
-
-        console.log(
-          await adapter
-            .queryList<[string, any, any, any], true>({
-              gt: ['ops', 'site', '', null],
-              lt: ['ops', 'site', [], undefined],
-            })
-            .then(result => {
-              return result.map(({ key: [, o, p, s] }) => ({ s, p, o }));
-            })
-        );
-
-        // console.log(await storage.getObject('c1d1ila9an'));
       });
   })();
 
