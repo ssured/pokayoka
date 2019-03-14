@@ -5,12 +5,15 @@ import {
   SnapshotIn,
   SnapshotOut,
   types,
+  getEnv,
 } from 'mobx-state-tree';
-import { referenceTo } from '../graph/index';
+import { referenceTo, lookupInverse } from '../graph/index';
 import { IFCSpatialStructureElement } from './IFC';
 import { Project } from './Project';
 import { compoundPlaneAngleMeasure, label, postalAddress } from './types';
 import { singleton } from './utils';
+import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
+import { IBuilding, Building } from './Building';
 
 const type = 'site';
 
@@ -56,6 +59,14 @@ export const Site = singleton(() =>
         project: referenceTo(Project()),
       })
     )
+    .views(self => ({
+      /**
+       * Buildings for this site
+       */
+      get buildings(): ObservableAsyncPlaceholder<IBuilding[]> {
+        return lookupInverse(getEnv(self), self.id, Building(), 'site');
+      },
+    }))
     .actions(self => ({}))
 );
 

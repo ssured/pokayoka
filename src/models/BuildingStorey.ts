@@ -5,11 +5,14 @@ import {
   SnapshotIn,
   SnapshotOut,
   types,
+  getEnv,
 } from 'mobx-state-tree';
-import { referenceTo } from '../graph/index';
+import { referenceTo, lookupInverse } from '../graph/index';
 import { Building } from './Building';
 import { IFCSpatialStructureElement } from './IFC';
 import { singleton } from './utils';
+import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
+import { ISpace, Space } from './Space';
 
 const type = 'buildingStorey';
 
@@ -25,6 +28,14 @@ export const BuildingStorey = singleton(() =>
         building: referenceTo(Building()),
       })
     )
+    .views(self => ({
+      /**
+       * Spaces for this buildingStorey
+       */
+      get spaces(): ObservableAsyncPlaceholder<ISpace[]> {
+        return lookupInverse(getEnv(self), self.id, Space(), 'buildingStorey');
+      },
+    }))
     .actions(self => ({}))
 );
 

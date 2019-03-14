@@ -1,3 +1,4 @@
+import { File } from '../src/models/base';
 import { Project, IProject } from '../src/models/Project';
 import { Site, ISite } from '../src/models/Site';
 import { Building, IBuilding } from '../src/models/Building';
@@ -7,7 +8,7 @@ import { Space, ISpace } from '../src/models/Space';
 import debug from 'debug';
 import nano from 'nano';
 import { generateId } from '../src/utils/id';
-import { getSnapshot } from 'mobx-state-tree';
+import { getSnapshot, SnapshotIn } from 'mobx-state-tree';
 import crypto from 'crypto';
 import PQueue from 'p-queue';
 import fs from 'fs-extra';
@@ -63,10 +64,10 @@ function sha256OfStream(
 function attachmentsToMap(attachments: { [key: string]: string }) {
   return Object.keys(attachments || {}).reduce(
     (map, name) => {
-      map[name] = { $cdn: name };
+      map[name] = { sha256: `$${name}`, name };
       return map;
     },
-    {} as { [key: string]: { $cdn: string } }
+    {} as { [key: string]: SnapshotIn<ReturnType<typeof File>> }
   );
 }
 
@@ -229,10 +230,10 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
       );
 
       for (const [filename, sha] of fileHashes) {
-        let newString = snapshotString.replace(filename, sha);
+        let newString = snapshotString.replace(`$${filename}`, sha);
         while (newString !== snapshotString) {
           snapshotString = newString;
-          newString = snapshotString.replace(filename, sha);
+          newString = snapshotString.replace(`$${filename}`, sha);
         }
       }
 
@@ -298,10 +299,10 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
         files: attachmentsToMap(_attachments),
       });
       for (const [filename, sha] of fileHashes) {
-        let newString = snapshotString.replace(filename, sha);
+        let newString = snapshotString.replace(`$${filename}`, sha);
         while (newString !== snapshotString) {
           snapshotString = newString;
-          newString = snapshotString.replace(filename, sha);
+          newString = snapshotString.replace(`$${filename}`, sha);
         }
       }
       const newSnapshot = JSON.parse(snapshotString);

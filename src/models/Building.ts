@@ -5,12 +5,15 @@ import {
   SnapshotIn,
   SnapshotOut,
   types,
+  getEnv,
 } from 'mobx-state-tree';
-import { referenceTo } from '../graph/index';
+import { referenceTo, lookupInverse } from '../graph/index';
 import { IFCSpatialStructureElement } from './IFC';
 import { Site } from './Site';
 import { postalAddress } from './types';
 import { singleton } from './utils';
+import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
+import { IBuildingStorey, BuildingStorey } from './BuildingStorey';
 
 const type = 'building';
 
@@ -28,6 +31,19 @@ export const Building = singleton(() =>
         site: referenceTo(Site()),
       })
     )
+    .views(self => ({
+      /**
+       * BuildingStoreys for this building
+       */
+      get storeys(): ObservableAsyncPlaceholder<IBuildingStorey[]> {
+        return lookupInverse(
+          getEnv(self),
+          self.id,
+          BuildingStorey(),
+          'building'
+        );
+      },
+    }))
     .actions(self => ({}))
 );
 

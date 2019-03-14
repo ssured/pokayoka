@@ -29,10 +29,10 @@ export const Sheet = singleton(() =>
         tiles: types.map(File()),
 
         /**
-         * The building storey of which this is the sheet
-         * Can be empty
+         * The object for which this is a sheet
+         * Can be a Site, Building or BuildingStorey
          */
-        buildingStorey: types.maybe(referenceTo(BuildingStorey())),
+        buildingStorey: referenceTo(BuildingStorey()),
       })
     )
     .actions(self => ({}))
