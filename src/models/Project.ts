@@ -14,7 +14,7 @@ import { ISite, Site } from './Site';
 import { label } from './types';
 import { singleton } from './utils';
 
-const type = 'project';
+const type: 'project' = 'project';
 
 export const Project = singleton(() =>
   types

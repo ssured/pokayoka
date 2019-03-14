@@ -160,7 +160,7 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
           globalId: sheetId,
           name: storey.title,
           tiles: attachmentsToMap(storey._attachments),
-          buildingStorey: storeyId,
+          forObject: storeyId,
         });
         newObjects.set(newSheet, storey._id);
         idMap[storey._id] = sheetId;

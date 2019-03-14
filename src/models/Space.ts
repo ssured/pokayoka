@@ -12,7 +12,7 @@ import { IFCSpatialStructureElement } from './IFC';
 import { internalOrExternalEnum } from './types';
 import { singleton } from './utils';
 
-const type = 'space';
+const type: 'space' = 'space';
 
 export const Space = singleton(() =>
   types

@@ -1,21 +1,21 @@
 import { types } from 'mobx-state-tree';
 
 // use this
-export const mustBeOverwritten = types.custom<unknown, undefined>({
-  name: 'mustBeOverwritten',
-  fromSnapshot() {
-    return undefined;
-  },
-  toSnapshot() {
-    return undefined;
-  },
-  isTargetType() {
-    return false;
-  },
-  getValidationMessage() {
-    return 'mustBeOverwritten';
-  },
-});
+// export const mustBeOverwritten = types.custom<unknown, undefined>({
+//   name: 'mustBeOverwritten',
+//   fromSnapshot() {
+//     return undefined;
+//   },
+//   toSnapshot() {
+//     return undefined;
+//   },
+//   isTargetType() {
+//     return false;
+//   },
+//   getValidationMessage() {
+//     return 'mustBeOverwritten';
+//   },
+// });
 
 function isString(s: string) {
   return typeof s === 'string';

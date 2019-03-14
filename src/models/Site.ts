@@ -14,8 +14,9 @@ import { compoundPlaneAngleMeasure, label, postalAddress } from './types';
 import { singleton } from './utils';
 import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
 import { IBuilding, Building } from './Building';
+import { ISheet, Sheet } from './Sheet';
 
-const type = 'site';
+const type: 'site' = 'site';
 
 export const Site = singleton(() =>
   types
@@ -65,6 +66,13 @@ export const Site = singleton(() =>
        */
       get buildings(): ObservableAsyncPlaceholder<IBuilding[]> {
         return lookupInverse(getEnv(self), self.id, Building(), 'site');
+      },
+
+      /**
+       * Sheets for this site
+       */
+      get sheets(): ObservableAsyncPlaceholder<ISheet[]> {
+        return lookupInverse(getEnv(self), self.id, Sheet(), 'forObject');
       },
     }))
     .actions(self => ({}))

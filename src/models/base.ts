@@ -1,10 +1,11 @@
 import { types } from 'mobx-state-tree';
 import { singleton } from './utils';
-import { mustBeOverwritten } from './types';
+
+const fileType: 'file' = 'file';
 
 export const File = singleton(() =>
   types.model('file', {
-    type: 'file',
+    type: fileType,
     sha256: types.string,
     name: types.maybe(types.string),
     mime: types.maybe(types.string),
@@ -14,8 +15,6 @@ export const File = singleton(() =>
 export const base = singleton(() =>
   types.model({
     id: types.identifier,
-    type: mustBeOverwritten,
-    typeVersion: mustBeOverwritten,
     files: types.map(File()),
   })
 );

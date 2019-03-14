@@ -14,8 +14,9 @@ import { postalAddress } from './types';
 import { singleton } from './utils';
 import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
 import { IBuildingStorey, BuildingStorey } from './BuildingStorey';
+import { ISheet, Sheet } from './Sheet';
 
-const type = 'building';
+const type: 'building' = 'building';
 
 export const Building = singleton(() =>
   types
@@ -42,6 +43,13 @@ export const Building = singleton(() =>
           BuildingStorey(),
           'building'
         );
+      },
+
+      /**
+       * Sheets for this building
+       */
+      get sheets(): ObservableAsyncPlaceholder<ISheet[]> {
+        return lookupInverse(getEnv(self), self.id, Sheet(), 'forObject');
       },
     }))
     .actions(self => ({}))

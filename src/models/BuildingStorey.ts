@@ -13,8 +13,9 @@ import { IFCSpatialStructureElement } from './IFC';
 import { singleton } from './utils';
 import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
 import { ISpace, Space } from './Space';
+import { ISheet, Sheet } from './Sheet';
 
-const type = 'buildingStorey';
+const type: 'buildingStorey' = 'buildingStorey';
 
 export const BuildingStorey = singleton(() =>
   types
@@ -34,6 +35,13 @@ export const BuildingStorey = singleton(() =>
        */
       get spaces(): ObservableAsyncPlaceholder<ISpace[]> {
         return lookupInverse(getEnv(self), self.id, Space(), 'buildingStorey');
+      },
+
+      /**
+       * Sheets for this buildingStorey
+       */
+      get sheets(): ObservableAsyncPlaceholder<ISheet[]> {
+        return lookupInverse(getEnv(self), self.id, Sheet(), 'forObject');
       },
     }))
     .actions(self => ({}))
