@@ -31,16 +31,7 @@ export type timestamp = string;
 export type subj = string[];
 export type pred = string;
 export type objt = JsonPrimitive | ([string] & string[]);
-type indexes =
-  | 'spo'
-  | 'sop'
-  | 'pso'
-  | 'pos'
-  | 'ops'
-  | 'osp'
-  | 'spt'
-  | 'tsp'
-  | 'log';
+type indexes = 'spo' | 'sop' | 'pso' | 'pos' | 'ops' | 'osp' | 'spt' | 'log';
 interface Tuple {
   s: subj;
   p: pred;
@@ -114,10 +105,10 @@ function createOperationsForStore(
   const pairs: { key: KeyType; value: ValueType }[] = [
     { key: ['log', machineState, s, p, o, t], value: true },
     { key: ['spo', s, p, o], value: [t, machineState] },
-    { key: ['pso', p, s, o], value: true },
+    // { key: ['pso', p, s, o], value: true },
     { key: ['ops', o, p, s], value: true },
     { key: ['sop', s, o, p], value: true },
-    { key: ['osp', o, s, p], value: true },
+    // { key: ['osp', o, s, p], value: true },
     { key: ['pos', p, o, s], value: true },
   ];
   const ops =
@@ -530,7 +521,7 @@ export class Storage {
           ? ['spo']
           : ['ops', fO]
         : isVariable(fO)
-        ? ['pso', fP]
+        ? ['pos', fP]
         : ['pos', fP, fO]
       : isVariable(fP)
       ? isVariable(fO)
