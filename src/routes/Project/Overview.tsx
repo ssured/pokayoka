@@ -6,6 +6,23 @@ import { Box, Heading } from 'grommet';
 import { useProjectId } from './index';
 import { useModel } from '../../contexts/store';
 import { Project } from '../../models/Project';
+import { ISite } from '../../models/Site';
+
+const LoadingIndicator = () => <p>Loading...</p>;
+const ErrorMessage = (error: Error) => (
+  <h3>Uh oh, something happened {error.message}</h3>
+);
+
+const SitesList: React.SFC<{ sites: ISite[] }> = ({ sites }) => (
+  <>
+    <Heading>{sites.length} sites gevonden:</Heading>
+    <ul>
+      {sites.map(site => (
+        <li key={site.id}>{site.name}</li>
+      ))}
+    </ul>
+  </>
+);
 
 export const Overview: React.FunctionComponent<
   RouteComponentProps<{}>
@@ -16,38 +33,21 @@ export const Overview: React.FunctionComponent<
   return useObserver(() => (
     <Box>
       {project.fold(
-        () => (
-          <p>Loading...</p>
-        ),
+        LoadingIndicator,
         project => (
           <>
             <Heading>Project {project.name}</Heading>
 
             <div>
               {project.sites.fold(
-                () => (
-                  <p>Loading sites</p>
-                ),
-                sites => (
-                  <>
-                    <Heading>{sites.length} sites gevonden:</Heading>
-                    <ul>
-                      {sites.map(site => (
-                        <li key={site.id}>{site.name}</li>
-                      ))}
-                    </ul>
-                  </>
-                ),
-                error => (
-                  <h3>Uh oh, something happened {error.message}</h3>
-                )
+                LoadingIndicator,
+                sites => SitesList({ sites }),
+                ErrorMessage
               )}
             </div>
           </>
         ),
-        error => (
-          <h3>Uh oh, something happened {error.message}</h3>
-        )
+        ErrorMessage
       )}
     </Box>
   ));

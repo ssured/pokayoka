@@ -1,35 +1,38 @@
 import {
-  types as t,
-  SnapshotIn,
   Instance,
-  SnapshotOut,
-  IStateTreeNode,
   isStateTreeNode,
-  getEnv,
-  getIdentifier,
+  IStateTreeNode,
+  SnapshotIn,
+  SnapshotOut,
+  types,
 } from 'mobx-state-tree';
-
-import { singleton, nameFromType, Env } from './utils';
-import { IFCObject } from './IFC';
-
-import { Maybe, Result } from 'true-myth';
-import { BuildingStorey } from './BuildingStorey';
 import { referenceTo } from '../graph/index';
 import { File } from './base';
-const { just, nothing } = Maybe;
+import { BuildingStorey } from './BuildingStorey';
+import { IFCObject } from './IFC';
+import { singleton } from './utils';
 
 const type = 'sheet';
 
 export const Sheet = singleton(() =>
-  t
+  types
     .compose(
-      nameFromType(type),
+      type,
       IFCObject(),
-      t.model({
+      types.model({
         type,
         typeVersion: 1,
-        tiles: t.map(File()),
-        buildingStorey: referenceTo(BuildingStorey()),
+
+        /**
+         * Map of files, where the key encodes the position of the
+         */
+        tiles: types.map(File()),
+
+        /**
+         * The building storey of which this is the sheet
+         * Can be empty
+         */
+        buildingStorey: types.maybe(referenceTo(BuildingStorey())),
       })
     )
     .actions(self => ({}))
@@ -37,47 +40,6 @@ export const Sheet = singleton(() =>
 
 export const isSheet = (obj: IStateTreeNode): obj is TSheetInstance =>
   isStateTreeNode(obj) && (obj as any).type === type;
-
-export const BelongsToSheet = singleton(() =>
-  t
-    .model('BelongsToSheet', { sheetId: t.maybe(t.string) })
-    .views(self => ({
-      get sheet(): Maybe<Result<Maybe<ISheet>, string>> {
-        if (self.sheetId == null) return nothing();
-        return just(getEnv<Env>(self).load(Sheet, self.sheetId));
-      },
-    }))
-    .actions(self => ({
-      setSheet(sheet?: ISheet) {
-        self.sheetId = sheet && getIdentifier(sheet)!;
-      },
-    }))
-);
-
-export const HasManySheets = singleton(() =>
-  t
-    .model('HasManySheets', { sheetIds: t.map(t.boolean) })
-    .views(self => ({
-      get sheets(): Result<Maybe<ISheet>, string>[] {
-        const validEntries = [...self.sheetIds.entries()].filter(
-          ([, value]) => value
-        );
-        const { load } = getEnv<Env>(self);
-        return validEntries.map(([key]) => load(Sheet, key));
-      },
-    }))
-    .actions(self => ({
-      addSheet(sheet: ISheet) {
-        self.sheetIds.set(getIdentifier(sheet)!, true);
-      },
-      removeSheet(sheet: ISheet) {
-        const sheetId = getIdentifier(sheet)!;
-        if (self.sheetIds.has(sheetId)) {
-          self.sheetIds.set(sheetId, false);
-        }
-      },
-    }))
-);
 
 export type TSheet = ReturnType<typeof Sheet>;
 export type TSheetInstance = Instance<TSheet>;

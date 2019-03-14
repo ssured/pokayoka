@@ -6,15 +6,10 @@ import {
   onPatch,
   getSnapshot,
   getEnv,
-  applyPatch,
   ISerializedActionCall,
   onAction,
   splitJsonPath,
   applySnapshot,
-  IAnyStateTreeNode,
-  types,
-  ModelInstanceType,
-  ModelProperties,
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
 import {
@@ -31,10 +26,6 @@ import { asyncReference, asPlaceholder } from './asyncReference';
 import { Omit } from '../utils/typescript';
 import dset from 'dset';
 import { observableAsyncPlaceholder } from './asyncPlaceholder';
-
-type KeysOfType<A extends object, B> = {
-  [K in keyof A]-?: A[K] extends B ? K : never
-}[keyof A];
 
 export interface GraphEnv {
   // observable view which triggers loading the instance from the storage as a side effect

@@ -19,7 +19,6 @@ import createAbortable from 'pull-abortable';
 import debug from 'debug';
 import base, { filename } from 'paths.macro';
 import { observable, runInAction } from 'mobx';
-import { Env } from '../models/utils';
 import { Maybe, Result } from 'true-myth';
 
 const log = debug(`${base}${filename}`);
@@ -130,7 +129,7 @@ export const useModel = <C, S, T>(
             // getRoot() {
             //   return root;
             // },
-          } as Env);
+          } as any);
           setInstance(root);
         }
       } else {

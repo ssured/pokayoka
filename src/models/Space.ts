@@ -1,35 +1,41 @@
 import {
-  types as t,
-  SnapshotIn,
   Instance,
-  SnapshotOut,
-  IStateTreeNode,
   isStateTreeNode,
-  getEnv,
-  getIdentifier,
+  IStateTreeNode,
+  SnapshotIn,
+  SnapshotOut,
+  types,
 } from 'mobx-state-tree';
-
-import { singleton, nameFromType, Env } from './utils';
+import { referenceTo } from '../graph/index';
+import { BuildingStorey } from './BuildingStorey';
 import { IFCSpatialStructureElement } from './IFC';
 import { internalOrExternalEnum } from './types';
-import { BuildingStorey } from './BuildingStorey';
-
-import { Maybe, Result } from 'true-myth';
-import { referenceTo } from '../graph/index';
-const { just, nothing } = Maybe;
+import { singleton } from './utils';
 
 const type = 'space';
 
 export const Space = singleton(() =>
-  t
+  types
     .compose(
-      nameFromType(type),
+      type,
       IFCSpatialStructureElement(),
-      t.model({
+      types.model({
         type,
         typeVersion: 1,
+
+        /**
+         * 	Defines, whether the Space is interior (Internal), or exterior (External), i.e. part of the outer space.
+         */
         interiorOrExteriorSpace: internalOrExternalEnum,
-        elevationWithFlooring: t.maybe(t.number),
+
+        /**
+         * Level of flooring of this space; the average shall be taken, if the space ground surface is sloping or if there are level differences within this space.
+         */
+        elevationWithFlooring: types.maybe(types.number),
+
+        /**
+         * The building storey this space lies in
+         */
         buildingStorey: referenceTo(BuildingStorey()),
       })
     )
@@ -38,47 +44,6 @@ export const Space = singleton(() =>
 
 export const isSpace = (obj: IStateTreeNode): obj is TSpaceInstance =>
   isStateTreeNode(obj) && (obj as any).type === type;
-
-export const BelongsToSpace = singleton(() =>
-  t
-    .model('BelongsToSpace', { spaceId: t.maybe(t.string) })
-    .views(self => ({
-      get space(): Maybe<Result<Maybe<ISpace>, string>> {
-        if (self.spaceId == null) return nothing();
-        return just(getEnv<Env>(self).load(Space, self.spaceId));
-      },
-    }))
-    .actions(self => ({
-      setSpace(space?: ISpace) {
-        self.spaceId = space && getIdentifier(space)!;
-      },
-    }))
-);
-
-export const HasManySpaces = singleton(() =>
-  t
-    .model('HasManySpaces', { spaceIds: t.map(t.boolean) })
-    .views(self => ({
-      get spaces(): Result<Maybe<ISpace>, string>[] {
-        const validEntries = [...self.spaceIds.entries()].filter(
-          ([, value]) => value
-        );
-        const { load } = getEnv<Env>(self);
-        return validEntries.map(([key]) => load(Space, key));
-      },
-    }))
-    .actions(self => ({
-      addSpace(space: ISpace) {
-        self.spaceIds.set(getIdentifier(space)!, true);
-      },
-      removeSpace(space: ISpace) {
-        const spaceId = getIdentifier(space)!;
-        if (self.spaceIds.has(spaceId)) {
-          self.spaceIds.set(spaceId, false);
-        }
-      },
-    }))
-);
 
 export type TSpace = ReturnType<typeof Space>;
 export type TSpaceInstance = Instance<TSpace>;

@@ -1,38 +1,58 @@
 import {
-  types as t,
-  SnapshotIn,
   Instance,
-  SnapshotOut,
-  IStateTreeNode,
   isStateTreeNode,
-  getEnv,
-  getIdentifier,
+  IStateTreeNode,
+  SnapshotIn,
+  SnapshotOut,
+  types,
 } from 'mobx-state-tree';
-
-import { Project } from './Project';
-import { singleton, nameFromType, Env } from './utils';
-import { IFCSpatialStructureElement } from './IFC';
-import { label, compoundPlaneAngleMeasure, postalAddress } from './types';
-
-import { Maybe, Result } from 'true-myth';
 import { referenceTo } from '../graph/index';
-const { just, nothing } = Maybe;
+import { IFCSpatialStructureElement } from './IFC';
+import { Project } from './Project';
+import { compoundPlaneAngleMeasure, label, postalAddress } from './types';
+import { singleton } from './utils';
 
 const type = 'site';
 
 export const Site = singleton(() =>
-  t
+  types
     .compose(
-      nameFromType(type),
+      type,
       IFCSpatialStructureElement(),
-      t.model({
+      types.model({
         type,
         typeVersion: 1,
-        refLatitude: t.maybe(compoundPlaneAngleMeasure),
-        refLongitude: t.maybe(compoundPlaneAngleMeasure),
-        refElevation: t.maybe(t.number),
-        landTitleNumber: t.maybe(label),
-        siteAddress: t.maybe(postalAddress),
+
+        /**
+         * World Latitude at reference point (most likely defined in legal description). Defined as integer values for degrees, minutes, seconds, and, optionally, millionths of seconds with respect to the world geodetic system WGS84.
+         * Latitudes are measured relative to the geodetic equator, north of the equator by positive values - from 0 till +90, south of the equator by negative values - from 0 till -90.
+         */
+        refLatitude: types.maybe(compoundPlaneAngleMeasure),
+
+        /**
+         * World Longitude at reference point (most likely defined in legal description). Defined as integer values for degrees, minutes, seconds, and, optionally, millionths of seconds with respect to the world geodetic system WGS84.
+         * Longitudes are measured relative to the geodetic zero meridian, nominally the same as the Greenwich prime meridian: longitudes west of the zero meridian have positive values - from 0 till +180, longitudes east of the zero meridian have negative values - from 0 till -180.
+         */
+        refLongitude: types.maybe(compoundPlaneAngleMeasure),
+
+        /**
+         * 	Datum elevation relative to sea level.
+         */
+        refElevation: types.maybe(types.number),
+
+        /**
+         * The land title number (designation of the site within a regional system).
+         */
+        landTitleNumber: types.maybe(label),
+
+        /**
+         * Address given to the site for postal purposes.
+         */
+        siteAddress: types.maybe(postalAddress),
+
+        /**
+         * The project to which this site belongs to
+         */
         project: referenceTo(Project()),
       })
     )
@@ -41,47 +61,6 @@ export const Site = singleton(() =>
 
 export const isSite = (obj: IStateTreeNode): obj is TSiteInstance =>
   isStateTreeNode(obj) && (obj as any).type === type;
-
-export const BelongsToSite = singleton(() =>
-  t
-    .model('BelongsToSite', { siteId: t.maybe(t.string) })
-    .views(self => ({
-      get site(): Maybe<Result<Maybe<ISite>, string>> {
-        if (self.siteId == null) return nothing();
-        return just(getEnv<Env>(self).load(Site, self.siteId));
-      },
-    }))
-    .actions(self => ({
-      setSite(site?: ISite) {
-        self.siteId = site && getIdentifier(site)!;
-      },
-    }))
-);
-
-export const HasManySites = singleton(() =>
-  t
-    .model('HasManySites', { siteIds: t.map(t.boolean) })
-    .views(self => ({
-      get sites(): Result<Maybe<ISite>, string>[] {
-        const validEntries = [...self.siteIds.entries()].filter(
-          ([, value]) => value
-        );
-        const { load } = getEnv<Env>(self);
-        return validEntries.map(([key]) => load(Site, key));
-      },
-    }))
-    .actions(self => ({
-      addSite(site: ISite) {
-        self.siteIds.set(getIdentifier(site)!, true);
-      },
-      removeSite(site: ISite) {
-        const siteId = getIdentifier(site)!;
-        if (self.siteIds.has(siteId)) {
-          self.siteIds.set(siteId, false);
-        }
-      },
-    }))
-);
 
 export type TSite = ReturnType<typeof Site>;
 export type TSiteInstance = Instance<TSite>;

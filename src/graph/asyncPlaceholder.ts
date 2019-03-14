@@ -11,7 +11,7 @@ type FULFILLED = typeof FULFILLED;
 export const REJECTED = 3;
 type REJECTED = typeof REJECTED;
 
-type ObservableAsyncPlaceholder<T> = (
+export type ObservableAsyncPlaceholder<T> = (
   | {
       state: INITIAL | PENDING;
       value: undefined;

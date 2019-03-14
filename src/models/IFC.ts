@@ -1,29 +1,31 @@
 import { types } from 'mobx-state-tree';
 import { singleton } from './utils';
-import { label, text, globallyUniqueId, elementCompositionEnum } from './types';
+import { label, text, elementCompositionEnum } from './types';
 import { base } from './base';
 
 export const IFCRoot = singleton(() =>
   base()
     .props({
+      /**
+       * Assignment of a globally unique identifier within the entire software world.
+       */
       globalId: types.maybe(types.string),
-      // maybe we will support a map of multiple globalIds to refer to source objects
-      // globalIds: types.map(types.boolean),
+
+      /**
+       * 	Optional name for use by the participating software systems or users. For some subtypes of IfcRoot the insertion of the Name attribute may be required. This would be enforced by a where rule.
+       */
       name: types.maybe(label),
+
+      /**
+       * Optional description, provided for exchanging informative comments.
+       */
       description: types.maybe(text),
     })
     .actions(self => ({
-      // addGlobalId(id: string) {
-      //   self.globalIds.set(id, true);
-      // },
-      // removeGlobalId(id: string) {
-      //   if (self.globalIds.has(id)) {
-      //     self.globalIds.set(id, false);
-      //   }
-      // },
       setName(name: string | undefined) {
         self.name = name;
       },
+
       setDescription(description: string | undefined) {
         self.description = description;
       },
@@ -45,7 +47,14 @@ export const IFCProduct = IFCObject; /*singleton(() =>
 
 export const IFCSpatialStructureElement = singleton(() =>
   IFCProduct().props({
+    /**
+     * 	Long name for a spatial structure element, used for informal purposes. Maybe used in conjunction with the inherited Name attribute.
+     */
     longName: types.maybe(label),
+
+    /**
+     * Denotes, whether the predefined spatial structure element represents itself, or an aggregate (complex) or a part (part). The interpretation is given separately for each subtype of spatial structure element.
+     */
     compositionType: elementCompositionEnum,
   })
 );
