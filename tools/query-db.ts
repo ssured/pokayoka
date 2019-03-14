@@ -18,8 +18,6 @@ fs.ensureDirSync(dbDir);
     const adapter = new ServerAdapter(path.join(dbDir, toDbName));
     const toDb = new Storage(adapter);
 
-    log(await toDb.stateWindow());
-
     // const id = 'coaxs1v6zs';
     // const obj = await toDb.getObject(id);
     // log(obj);

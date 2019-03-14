@@ -28,9 +28,8 @@ export function storeRoutes(app: Express) {
     const storage = getStorage(project);
 
     const id = await storage.getStorageId();
-    const window = await storage.stateWindow();
 
-    res.json({ id, window });
+    res.json({ id });
   });
 
   app.get('/data/:project/patches', async (req, res) => {

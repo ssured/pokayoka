@@ -100,13 +100,9 @@ function createOperationsForTimeline(
   type: 'del' | 'put' = 'put'
 ): BatchOperations {
   const { s, p, o, t } = tuple;
-  const pairs: { key: KeyType; value: ValueType }[] = [
-    { key: ['spt', s, p, t], value: [o] }, // used to store future values, wrap o as [o] to support storing o = null
-    { key: ['tsp', t, s, p], value: [o] }, // timeline of current values and future updates
-  ];
   return type === 'put'
-    ? pairs.map(pair => ({ ...pair, type }))
-    : pairs.map(({ key }) => ({ key, type }));
+    ? [{ type: 'put', key: ['spt', s, p, t], value: [o] }] // used to store future values, wrap o as [o] to support storing o = null
+    : [{ type: 'del', key: ['spt', s, p, t] }];
 }
 
 function createOperationsForStore(
@@ -209,24 +205,6 @@ export class Storage {
       storageId,
     ];
     return this.adapter.batch([{ key, value: timestamp, type: 'put' }]);
-  }
-
-  /**
-   * Returns the correct range of this database
-   */
-  public async stateWindow(): Promise<[timestamp, timestamp]> {
-    const start = await this.adapter.queryList<[string, timestamp], true>({
-      gte: ['tsp', null],
-      lt: ['tsp', undefined],
-      limit: 1,
-    });
-    const end = await this.adapter.queryList<[string, timestamp], true>({
-      gte: ['tsp', null],
-      lt: ['tsp', undefined],
-      limit: 1,
-      reverse: true,
-    });
-    return [start[0] ? start[0].key[1] : '', end[0] ? end[0].key[1] : '!'];
   }
 
   private async *tuplesSince(
