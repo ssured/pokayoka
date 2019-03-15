@@ -11,6 +11,7 @@ import { referenceTo } from '../graph/index';
 import { singleton } from './utils';
 import { base } from './base';
 import { Space } from './Space';
+import { isNothing } from '../graph/maybe';
 
 const type: 'fact' = 'fact';
 
@@ -37,8 +38,15 @@ export const Fact = singleton(() =>
               prefix: types.string,
             })
             .views(self => ({
-              url(projectId: string) {
-                const files = [...getParent<IFact>(self, 2).files.values()];
+              get src() {
+                const fact = getParent<IFact>(self, 2);
+
+                const projectId =
+                  fact.parent.maybe.buildingStorey.maybe.building.maybe.site
+                    .maybe.project.id;
+                if (isNothing(projectId)) return '';
+
+                const files = [...fact.files.values()];
                 const file = files.find(file => file.name === self.prefix);
                 return `/cdn/${projectId}/${file && file.sha256}`;
               },

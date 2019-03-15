@@ -11,21 +11,12 @@ import { IBuilding } from '../../models/Building';
 import { IBuildingStorey } from '../../models/BuildingStorey';
 import { ISpace } from '../../models/Space';
 import { IFact } from '../../models/Fact';
+import { Fact } from './Fact';
 
 const LoadingIndicator = () => <p>Loading...</p>;
 const ErrorMessage = (error: Error) => (
   <h3>Uh oh, something happened {error.message}</h3>
 );
-
-const Fact: React.SFC<{ fact: IFact }> = ({ fact }) => {
-  const projectId = useProjectId();
-  return useObserver(() => (
-    <>
-      <Heading level="6">Fact: {fact.title}</Heading>
-      {fact.images.length > 0 && <img src={fact.images[0].url(projectId)} />}
-    </>
-  ));
-};
 
 const FactsList: React.SFC<{ facts: IFact[] }> = ({ facts }) =>
   useObserver(() => (
