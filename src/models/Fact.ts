@@ -5,6 +5,7 @@ import {
   SnapshotIn,
   SnapshotOut,
   types,
+  getParent,
 } from 'mobx-state-tree';
 import { referenceTo } from '../graph/index';
 import { singleton } from './utils';
@@ -27,6 +28,22 @@ export const Fact = singleton(() =>
           types.model({ u: types.string, p: types.maybeNull(types.number) })
         ),
         labels: types.array(types.string),
+        images: types.array(
+          types
+            .model({
+              geojson: types.frozen(),
+              height: types.number,
+              width: types.number,
+              prefix: types.string,
+            })
+            .views(self => ({
+              url(projectId: string) {
+                const files = [...getParent<IFact>(self, 2).files.values()];
+                const file = files.find(file => file.name === self.prefix);
+                return `/cdn/${projectId}/${file && file.sha256}`;
+              },
+            }))
+        ),
         parent: referenceTo(Space()),
         position: types.maybe(
           types.model({

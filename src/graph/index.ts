@@ -10,6 +10,7 @@ import {
   onAction,
   splitJsonPath,
   applySnapshot,
+  typecheck,
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
 import {
@@ -138,8 +139,13 @@ export class Store extends BaseStore {
   ): Promise<SnapshotIn<T>> {
     const snapshot = await this.storage.getObject(id);
     if (!Type.is(snapshot)) {
-      console.error('snapshot is wrong', Type, snapshot);
-      throw new Error('snapshot is wrong');
+      console.error('snapshot is wrong', Type.name, snapshot);
+      try {
+        typecheck(Type, snapshot);
+      } catch (e) {
+        console.error(e.message);
+      }
+      // throw new Error('snapshot is wrong');
     }
     return snapshot as any;
   }

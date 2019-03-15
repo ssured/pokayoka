@@ -10,23 +10,42 @@ import { ISite } from '../../models/Site';
 import { IBuilding } from '../../models/Building';
 import { IBuildingStorey } from '../../models/BuildingStorey';
 import { ISpace } from '../../models/Space';
+import { IFact } from '../../models/Fact';
 
 const LoadingIndicator = () => <p>Loading...</p>;
 const ErrorMessage = (error: Error) => (
   <h3>Uh oh, something happened {error.message}</h3>
 );
 
+const Fact: React.SFC<{ fact: IFact }> = ({ fact }) => {
+  const projectId = useProjectId();
+  return useObserver(() => (
+    <>
+      <Heading level="6">Fact: {fact.title}</Heading>
+      {fact.images.length > 0 && <img src={fact.images[0].url(projectId)} />}
+    </>
+  ));
+};
+
+const FactsList: React.SFC<{ facts: IFact[] }> = ({ facts }) =>
+  useObserver(() => (
+    <>
+      <p>{facts.length} facts gevonden:</p>
+      <ul>
+        {facts.map(fact => (
+          <Fact key={fact.id} fact={fact} />
+        ))}
+      </ul>
+    </>
+  ));
+
 const Space: React.SFC<{ space: ISpace }> = ({ space }) =>
   useObserver(() => (
     <>
-      <Heading>Space: {space.name}</Heading>
+      <Heading level="4">Space: {space.name}</Heading>
       {space.facts.fold(
-        () => (
-          <p>...</p>
-        ),
-        facts => (
-          <p>{facts.length} facts</p>
-        ),
+        LoadingIndicator,
+        facts => FactsList({ facts }),
         ErrorMessage
       )}
     </>
@@ -35,7 +54,7 @@ const Space: React.SFC<{ space: ISpace }> = ({ space }) =>
 const SpacesList: React.SFC<{ spaces: ISpace[] }> = ({ spaces }) =>
   useObserver(() => (
     <>
-      <Heading>{spaces.length} spaces gevonden:</Heading>
+      <p>{spaces.length} spaces gevonden:</p>
       <ul>
         {spaces.map(space => (
           <Space key={space.id} space={space} />
@@ -49,7 +68,7 @@ const BuildingStorey: React.SFC<{ buildingStorey: IBuildingStorey }> = ({
 }) =>
   useObserver(() => (
     <>
-      <Heading>BuildingStorey: {buildingStorey.name}</Heading>
+      <Heading level="3">BuildingStorey: {buildingStorey.name}</Heading>
 
       {buildingStorey.spaces.fold(
         LoadingIndicator,
@@ -64,7 +83,7 @@ const BuildingStoreysList: React.SFC<{
 }> = ({ buildingStoreys }) =>
   useObserver(() => (
     <>
-      <Heading>{buildingStoreys.length} buildingStoreys gevonden:</Heading>
+      <p>{buildingStoreys.length} buildingStoreys gevonden:</p>
       <ul>
         {buildingStoreys.map(buildingStorey => (
           <BuildingStorey
@@ -92,7 +111,7 @@ const Building: React.SFC<{ building: IBuilding }> = ({ building }) =>
 const BuildingsList: React.SFC<{ buildings: IBuilding[] }> = ({ buildings }) =>
   useObserver(() => (
     <>
-      <Heading>{buildings.length} buildings gevonden:</Heading>
+      <p>{buildings.length} buildings gevonden:</p>
       <ul>
         {buildings.map(building => (
           <Building key={building.id} building={building} />
@@ -116,7 +135,7 @@ const Site: React.SFC<{ site: ISite }> = ({ site }) =>
 const SitesList: React.SFC<{ sites: ISite[] }> = ({ sites }) =>
   useObserver(() => (
     <>
-      <Heading>{sites.length} sites gevonden:</Heading>
+      <p>{sites.length} sites gevonden:</p>
       <ul>
         {sites.map(site => (
           <Site key={site.id} site={site} />

@@ -1,6 +1,7 @@
 import { Express } from 'express';
 import fs from 'fs-extra';
 import mime from 'mime';
+import path from 'path';
 
 import { ObjectStorage, StampedPatch } from '../src/storage/object';
 import { ServerAdapter } from '../src/storage/adapters/server';
@@ -18,9 +19,9 @@ function getStorage(name: string) {
 
 export function storeRoutes(app: Express) {
   // cdn
-  app.get('/cdn/:hash', (req, res) => {
-    const { hash } = req.params;
-    const file = pathForCdn(hash);
+  app.get('/cdn/:project/:hash', (req, res) => {
+    const { project, hash } = req.params;
+    const file = path.join(pathForCdn(project), hash);
     res.setHeader('content-type', mime.getType(file) || 'text/plain');
     fs.createReadStream(file).pipe(res);
   });

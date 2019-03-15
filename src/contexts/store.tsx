@@ -34,12 +34,21 @@ function createStore(name: string): Store {
           storage.updateTimestampForStorage(remoteId, until);
         }
 
-        // for await (const result of storage.query([
-        //   { s: variable('s'), p: 'type', o: 'fact' },
-        // ])) {
-        //   console.log(await storage.getObject((result.variables as any).s[0]));
-        //   break;
-        // }
+        const hashes = new Set<string>();
+        for await (const result of storage.query([
+          { s: variable(), p: 'sha256', o: variable('hash') },
+        ])) {
+          hashes.add((result.variables as any).hash);
+        }
+        const cache = await window.caches.open('cdn');
+        for (const hash of hashes) {
+          const url = `/cdn/${name}/${hash}`;
+          if (!(await cache.match(url))) {
+            console.log(`ADD ${url}`);
+            cache.add(url);
+          } else {
+          }
+        }
       });
   })();
 
