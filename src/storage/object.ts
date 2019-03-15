@@ -75,7 +75,7 @@ export class ObjectStorage extends Storage {
     }
   }
 
-  public async mergePatches(
+  public mergePatches(
     patches: (Patch | StampedPatch)[],
     machineState = this.getMachineState()
   ) {

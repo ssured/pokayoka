@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { ObjectStorage } from '../storage/object';
+import { ObjectStorage, variable } from '../storage/object';
 import { WebAdapter } from '../storage/adapters/web';
 import { Store } from '../graph/index';
 import { IAnyModelType } from 'mobx-state-tree';
@@ -27,11 +27,19 @@ function createStore(name: string): Store {
       .then(res => res.json())
       .then(async ({ patches, until }) => {
         console.log(`Got ${patches.length} patches, until: ${until}`);
-        storage.mergePatches(patches);
+        await storage.mergePatches(patches).commitImmediately();
+        console.log(`Merged ${patches.length} patches, until: ${until}`);
 
         if (patches.length > 0) {
           storage.updateTimestampForStorage(remoteId, until);
         }
+
+        // for await (const result of storage.query([
+        //   { s: variable('s'), p: 'type', o: 'fact' },
+        // ])) {
+        //   console.log(await storage.getObject((result.variables as any).s[0]));
+        //   break;
+        // }
       });
   })();
 

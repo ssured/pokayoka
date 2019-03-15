@@ -16,11 +16,21 @@ const ErrorMessage = (error: Error) => (
   <h3>Uh oh, something happened {error.message}</h3>
 );
 
-const Space: React.SFC<{ space: ISpace }> = ({ space }) => (
-  <>
-    <Heading>Space: {space.name}</Heading>
-  </>
-);
+const Space: React.SFC<{ space: ISpace }> = ({ space }) =>
+  useObserver(() => (
+    <>
+      <Heading>Space: {space.name}</Heading>
+      {space.facts.fold(
+        () => (
+          <p>...</p>
+        ),
+        facts => (
+          <p>{facts.length} facts</p>
+        ),
+        ErrorMessage
+      )}
+    </>
+  ));
 
 const SpacesList: React.SFC<{ spaces: ISpace[] }> = ({ spaces }) =>
   useObserver(() => (

@@ -105,7 +105,7 @@ export const App: React.SFC<{}> = ({}) => {
                 ))}
               </Box>
             )}
-            <Box gridArea="main" justify="center" align="center">
+            <Box gridArea="main" justify="start" align="start">
               <Router>
                 <Home path="/" />
                 {/* <Debug path="debug" /> */}
