@@ -1,38 +1,23 @@
 import mlts from 'monotonic-lexicographic-timestamp';
 import SubscribableEvent from 'subscribableevent';
-import { JsonPrimitive, JsonMap, JsonEntry } from '../utils/json';
-import { BatchOperations, StorageAdapter } from './adapters/shared';
+import { JsonPrimitive, JsonEntry } from '../utils/json';
+import {
+  BatchOperations,
+  StorageAdapter,
+  BatchOperation,
+} from './adapters/shared';
 import { ham } from './ham';
 import { hash } from './hash';
 import { CharwiseKey } from 'charwise';
 
-function isObject(x: any): x is object {
-  return (typeof x === 'object' && x !== null) || typeof x === 'function';
-}
-
-function isObjt(v: any): v is objt {
-  switch (typeof v) {
-    case 'string':
-    case 'boolean':
-    case 'number':
-      return true;
-    case 'object':
-      return (
-        v == null ||
-        (Array.isArray(v) &&
-          v.length > 0 &&
-          v.reduce((allO, item) => allO && isObjt(item), true))
-      );
-  }
-  return false;
-}
+import { IterableQueue } from './iterable-queue';
 
 export type timestamp = string;
 export type subj = string[];
 export type pred = string;
 export type objt = JsonPrimitive | ([string] & string[]);
 type indexes = 'spo' | 'sop' | 'pso' | 'pos' | 'ops' | 'osp' | 'spt' | 'log';
-interface Tuple {
+export interface Tuple {
   s: subj;
   p: pred;
   o: objt;
@@ -59,32 +44,96 @@ export type query = {
 type KeyType = CharwiseKey;
 type ValueType = JsonEntry;
 
-interface StampedTuple extends Tuple {
+export interface StampedTuple extends Tuple {
   t: timestamp;
 }
 
-interface RFC6902Patch {
-  op: 'replace' | 'remove' | 'add';
-  path: (string | number)[];
-  value?: any;
+export class Transaction
+  implements
+    PromiseLike<CommitResult>,
+    Iterable<StampedTuple>,
+    AsyncIterable<BatchOperation> {
+  private defer = defer<CommitResult>();
+  public then = this.defer.promise.then.bind(this.defer.promise);
+  public tuples: StampedTuple[];
+
+  protected didCommit = false;
+
+  // tslint:disable-next-line function-name
+  public *[Symbol.iterator]() {
+    yield* this.tuples;
+  }
+
+  // tslint:disable-next-line function-name
+  public async *[Symbol.asyncIterator]() {
+    const machineState = this.storage.getMachineState();
+    for (const tuple of this.tuples) {
+      yield* await this.storage.mergeTuple(tuple, machineState);
+    }
+  }
+
+  constructor(
+    private storage: Storage,
+    tuples: Iterable<StampedTuple>,
+    public addedAt: timestamp
+  ) {
+    this.tuples = [...tuples];
+  }
+
+  registerCommit(commit: PromiseLike<CommitResult>) {
+    this.defer.resolve(commit);
+  }
+
+  commitImmediately() {
+    if (this.didCommit) return this as PromiseLike<CommitResult>;
+    this.didCommit = true;
+    return this.storage.commit([this]);
+  }
 }
 
-export interface Patch extends RFC6902Patch {
-  s: subj;
+class Commit implements PromiseLike<CommitResult> {
+  private defer = defer<CommitResult>();
+  public then = this.defer.promise.then.bind(this.defer.promise);
+  private transactions: Transaction[] = [];
+
+  constructor(
+    private adapter: StorageAdapter,
+    transactions: Iterable<Transaction>
+  ) {
+    for (const transaction of transactions) {
+      transaction.registerCommit(this);
+      this.transactions.push(transaction);
+    }
+
+    this.processCommit();
+  }
+
+  protected async processCommit() {
+    const operations: BatchOperations = [];
+    for await (const operation of combineAsyncIterables(...this.transactions)) {
+      operations.push(operation);
+    }
+
+    try {
+      await this.adapter.batch(operations);
+      this.defer.resolve({
+        ok: true,
+        transactions: this.transactions,
+      });
+    } catch (e) {
+      this.defer.reject(e);
+    }
+  }
 }
 
-export interface StampedPatch extends Patch {
-  t: timestamp;
-}
+type CommitResult = {
+  ok: boolean;
+  transactions: Iterable<Transaction>;
+};
 
-export interface StorableObject {
-  id: string;
-  [key: string]: JsonEntry;
-}
-
-export interface StorableObjectInverse {
-  [key: string]: subj[];
-}
+export type TransactionResult = Promise<CommitResult> & {
+  commitImmediately(): Promise<CommitResult>;
+};
 
 function createOperationsForTimeline(
   tuple: StampedTuple,
@@ -137,21 +186,16 @@ type querySinceOptions = {
   skipFirst?: boolean;
 };
 export class Storage {
-  private id: string | null = null;
-
-  private updatedTuplesEmitter = new SubscribableEvent<
-    (tuples: StampedPatch[]) => void
-  >();
-  public subscribe(listener: (tuples: StampedPatch[]) => void) {
-    const subscription = this.updatedTuplesEmitter.subscribe(listener);
-    return () => subscription.unsubscribe();
-  }
-
   constructor(
-    private adapter: StorageAdapter,
+    protected adapter: StorageAdapter,
     public getMachineState = numberToState()
   ) {}
 
+  /**
+   * Unique id of this storage
+   */
+
+  protected id: string | null = null;
   public async getStorageId(): Promise<string> {
     if (this.id) return this.id;
 
@@ -172,6 +216,18 @@ export class Storage {
     return (this.id = newId);
   }
 
+  /**
+   * expose an event for each written tuple
+   */
+  protected committedTransactions = new SubscribableEvent<
+    (transactions: Iterable<Transaction>) => void
+  >();
+
+  /**
+   * Get the last known timestamp for a remote storage
+   * enhances sync
+   * @param storageId Id of the remote storage instance
+   */
   public async timestampForStorage(storageId: string): Promise<timestamp> {
     const key: [undefined, string, string] = [
       undefined,
@@ -186,6 +242,11 @@ export class Storage {
     return timestamps.length === 1 ? timestamps[0].value : '';
   }
 
+  /**
+   * Save the latest known timestamp for later usage
+   * @param storageId Id of the remote storage instance
+   * @param timestamp Latest known timestamp to save
+   */
   public async updateTimestampForStorage(
     storageId: string,
     timestamp: timestamp
@@ -198,7 +259,12 @@ export class Storage {
     return this.adapter.batch([{ key, value: timestamp, type: 'put' }]);
   }
 
-  private async *tuplesSince(
+  /**
+   * Returns an async iterator of [timestamp, tuple] tuples
+   * @param timestamp Get all tuples which were written since this timestamp. This is not the timestamp of the tuple!
+   * @param options `skipFirst: boolean` skip the first timestamp.
+   */
+  protected async *tuplesSince(
     timestamp: timestamp,
     options: querySinceOptions = {}
   ): AsyncIterableIterator<[timestamp, StampedTuple]> {
@@ -225,16 +291,10 @@ export class Storage {
     }
   }
 
-  public async *patchesSince(
-    timestamp: timestamp,
-    options: querySinceOptions = {}
-  ): AsyncIterableIterator<[timestamp, StampedPatch]> {
-    for await (const [logT, tuple] of this.tuplesSince(timestamp, options)) {
-      yield [logT, stampedTupleToStampedPatch(tuple)];
-    }
-  }
-
-  private async getCurrent(
+  /**
+   * Return all current tuples
+   */
+  protected async getCurrent(
     s: subj,
     p: pred,
     machineState = this.getMachineState()
@@ -250,10 +310,10 @@ export class Storage {
 
   // merge a tuple with the current db
   // returns a boolean which tells if the passed tuple is now the current tuple
-  private async mergeTuple(
+  public async mergeTuple(
     incomingTuple: StampedTuple,
     machineState = this.getMachineState()
-  ): Promise<boolean> {
+  ): Promise<Iterable<BatchOperation>> {
     const currentTuples = await this.getCurrent(
       incomingTuple.s,
       incomingTuple.p,
@@ -298,146 +358,75 @@ export class Storage {
       }
     }
 
-    if (operations.length > 0) {
-      await this.commit(operations);
-    }
-
-    return merged;
+    return operations;
   }
 
-  private async commit(operations: BatchOperations) {
-    try {
-      await this.adapter.batch(operations);
-    } catch (e) {
-      throw e;
-    }
+  private transactionQueue = new IterableQueue<Transaction>();
 
-    const propertyUpdateTuples: StampedTuple[] = operations
-      .filter(
-        op => op.type === 'put' && Array.isArray(op.key) && op.key[0] === 'spo'
-      )
-      .map(
-        // @ts-ignore
-        ({ key: [, s, p, o], value: [t] }) => ({ s, p, o, t } as StampedTuple)
-      );
-
-    this.updatedTuplesEmitter.fire(
-      propertyUpdateTuples.map(stampedTupleToStampedPatch)
-    );
-  }
-
-  private async queueTransaction(
-    tuples: StampedTuple[],
+  protected enqueueTuples(
+    tuples: Iterable<StampedTuple>,
     machineState = this.getMachineState()
-  ): Promise<boolean> {
-    const merges = tuples.map(tuple => this.mergeTuple(tuple, machineState));
-
-    const results = await Promise.all(merges);
-
-    return results.reduce((res, subRes) => res || subRes, false) || false;
+  ) {
+    const transaction = new Transaction(this, tuples, machineState);
+    this.transactionQueue.add(transaction);
+    return transaction;
   }
 
-  public slowlyMergeObject(obj: StorableObject): Promise<boolean> {
-    const { id, ...other } = obj;
+  /**
+   * Commit ops to DB, returns a promise when the commit is done
+   */
+  public async commit(
+    specificTransactions?: Iterable<Transaction>
+  ): Promise<CommitResult> {
+    const transactions = specificTransactions || this.transactionQueue;
+    const commit = new Commit(this.adapter, transactions);
 
-    // TODO this can be optimised as merge will be called lots of times, and merge will
-    // lookup all combinations of s,p separately from the 'spo' database.
-    // probably this function is not called very often
-    console.info(
-      'writeRawSnapshot is slow, please only write patches. Also note object values are not allowed'
-    );
+    commit.then(result => {
+      const t = [...result.transactions]; //?
+      console.log(t.length);
+      console.log([...t[0]]);
+      this.committedTransactions.fire(result.transactions);
+    });
 
-    // all writes are at the same moment
-    const machineState = this.getMachineState();
+    return commit;
 
-    const tuples: StampedTuple[] = [...spoInObject([id], other, machineState)];
+    // this.waitingOperations.push(...operations);
+    // clearTimeout(this.batchTimeout);
 
-    return this.queueTransaction(tuples, machineState);
+    // this.batchTimeout = setTimeout(async () => {
+    //   const operations = this.waitingOperations.splice(
+    //     0,
+    //     this.waitingOperations.length
+    //   );
+    //   try {
+    //     await this.adapter.batch(operations);
+    //   } catch (e) {
+    //     this.waitingOperations.splice(0, 0, ...operations);
+    //     throw e;
+    //   }
+
+    //   const propertyUpdateTuples: StampedTuple[] = operations
+    //     .filter(
+    //       op =>
+    //         op.type === 'put' && Array.isArray(op.key) && op.key[0] === 'spo'
+    //     )
+    //     .map(
+    //       // @ts-ignore
+    //       ({ key: [, s, p, o], value: [t] }) => ({ s, p, o, t } as StampedTuple)
+    //     );
+
+    //   this.updatedTuplesEmitter.fire(propertyUpdateTuples);
+
+    //   // notify the ops are done
+    //   const operationsDone = this.operationsDone;
+    //   this.operationsDone = defer();
+    //   operationsDone.resolve();
+    // }, 100);
+
+    // return this.operationsDone;
   }
 
-  private async getNested(s: subj, deep: boolean = false): Promise<JsonMap> {
-    const tuples = await this.adapter
-      .queryList<[string, subj, pred, objt], [timestamp, timestamp]>({
-        gte: ['spo', s],
-        lt: ['spo', [...s, []]],
-      })
-      .then(result =>
-        result.map(
-          ({ key: [, s, p, o] /*, value: t*/ }) => ({ s, p, o } as Tuple)
-        )
-      );
-
-    const object: JsonMap = {};
-
-    for (const { s, p, o } of tuples) {
-      setObjectAtSP(
-        object,
-        s,
-        p,
-        deep && !isObjt(o) ? await this.getNested(o) : o
-      );
-    }
-
-    return object;
-  }
-
-  public async getObject(
-    id: string,
-    deep: boolean = false
-  ): Promise<StorableObject> {
-    return { ...(await this.getNested([id], deep)), id };
-  }
-
-  public async getInverse(
-    obj: StorableObject,
-    property?: pred
-  ): Promise<StorableObjectInverse> {
-    const s: subj = [obj.id];
-    const tuples = await this.adapter
-      .queryList<[string, objt, pred, subj], true>({
-        gt: ['ops', s, property ? property : '', null],
-        lt: ['ops', s, property ? property : [], undefined],
-      })
-      .then(result => {
-        return result.map(({ key: [, o, p, s] }) => ({ s, p, o } as Tuple));
-      });
-
-    const object: StorableObjectInverse = {};
-
-    for (const { p, s } of tuples) {
-      const entry = getObjectAtSP(object, s, p);
-      if (Array.isArray(entry)) {
-        entry[entry.length] = s;
-      } else {
-        setObjectAtSP(object, s, p, [s]);
-      }
-    }
-
-    return object;
-  }
-
-  private stampPatch(
-    patch: Patch | StampedPatch,
-    machineState = this.getMachineState()
-  ): StampedPatch {
-    // @ts-ignore
-    return typeof patch.t === 'string' ? patch : { ...patch, t: machineState };
-  }
-
-  public async mergePatches(
-    patches: (Patch | StampedPatch)[]
-  ): Promise<boolean> {
-    const machineState = this.getMachineState();
-    const stampedPatches = patches.map(patch =>
-      this.stampPatch(patch, machineState)
-    );
-
-    const stampedTuples = stampedPatches.map(stampedPatchToStampedTuple);
-
-    return this.queueTransaction(stampedTuples, machineState);
-  }
-
-  private async *query<T extends indexes>(
+  private async *singleQuery<T extends indexes>(
     idx: T,
     p1?: T extends 'spo' | 'sop'
       ? subj | { gte: subj | []; lt: subj | [undefined] }
@@ -491,7 +480,7 @@ export class Storage {
     }
   }
 
-  public async *ezq(
+  public async *query(
     queries: query[],
     result: queryResult = { tuples: [], variables: {} }
   ): AsyncIterableIterator<queryResult> {
@@ -531,7 +520,7 @@ export class Storage {
       ? ['spo', fS, fP]
       : ['spo', fS, fP, fO];
 
-    for await (const tuple of this.query.apply(this, args)) {
+    for await (const tuple of this.singleQuery.apply(this, args)) {
       if (filter == null || filter(tuple)) {
         const newResult = clone(result);
         newResult.tuples.push(tuple);
@@ -543,165 +532,10 @@ export class Storage {
         if (queries.length === 1) {
           yield newResult;
         } else {
-          yield* this.ezq(queries.slice(1), newResult);
+          yield* this.query(queries.slice(1), newResult);
         }
       }
     }
-  }
-}
-
-function stampedPatchToStampedTuple({
-  s,
-  t,
-  op,
-  path,
-  value,
-}: StampedPatch): StampedTuple {
-  return {
-    s: s.concat(path.map(String).slice(0, -1)),
-    p: path.map(String).slice(-1)[0],
-    o: op === 'remove' ? null : typeof value === 'undefined' ? null : value,
-    t,
-  };
-}
-
-// TODO always sends a replace, but could be an 'add'. Maybe not needed. Research
-function stampedTupleToStampedPatch({
-  s,
-  p,
-  o,
-  t,
-}: StampedTuple): StampedPatch {
-  return {
-    s: s.slice(0, 1),
-    t,
-    op: 'replace',
-    path: s.slice(1).concat(p),
-    value: o,
-  };
-}
-
-function isArrayKey(key: any) {
-  return typeof key === 'string' && key.match(/\[\]$/) != null;
-}
-function makeArrayKey(key: string) {
-  return `${key}[]`;
-}
-function removeArrayKey(key: string) {
-  return key.substr(0, key.length - 2);
-}
-
-export function* spoInObject(
-  s: subj,
-  obj: JsonMap,
-  t: timestamp
-): IterableIterator<StampedTuple> {
-  for (const [key, value] of Object.entries(obj)) {
-    if (isObjt(value)) {
-      yield { s, p: key, o: value, t };
-    } else if (isObject(value)) {
-      if (Array.isArray(value)) {
-        for (const [index, itemValue] of value.entries()) {
-          const arrayKey = makeArrayKey(key);
-          const arraySubj = s.concat(arrayKey);
-
-          // create a property name which guarantees to be unique for the
-          // - subject `...s`
-          // - the predicate `key`
-          // - the position in the array `index`
-          // - the value of the item
-          // its maybe inefficient, but items in the array will never collide this way.
-
-          const hashIndex = hash([...s, key, index, itemValue]);
-          yield* spoInObject(arraySubj, { [hashIndex]: itemValue }, t);
-        }
-        continue;
-      }
-      yield* spoInObject(s.concat(key), value, t);
-    }
-  }
-}
-
-const arrayHashMap = new WeakMap<any, Set<string>>();
-
-function itemHasKey(item: any, key: string): boolean {
-  return arrayHashMap.has(item) && arrayHashMap.get(item)!.has(key);
-}
-
-function itemAddKey(item: any, key: string): void {
-  if (typeof item !== 'object') return;
-
-  if (!arrayHashMap.has(item)) {
-    arrayHashMap.set(item, new Set<string>([key]));
-    return;
-  }
-
-  arrayHashMap.get(item)!.add(key);
-}
-
-function getObjectAtSP(source: JsonMap, s: subj, p: pred): any {
-  let pointer: any = source;
-  for (const rawKey of s.slice(1).concat(p)) {
-    if (typeof pointer !== 'object') {
-      return undefined;
-    }
-
-    const isArray = isArrayKey(rawKey);
-    const key = isArray ? removeArrayKey(rawKey) : rawKey;
-
-    if (
-      (isArray && !Array.isArray(pointer[key])) ||
-      (!isArray && !pointer.hasOwnProperty(key))
-    ) {
-      return undefined;
-    }
-
-    if (Array.isArray(pointer)) {
-      pointer = pointer.find((item: any) => itemHasKey(item, key));
-      if (pointer == null) return undefined;
-    } else {
-      pointer = pointer[key];
-    }
-  }
-  return pointer;
-}
-
-function setObjectAtSP(source: JsonMap, s: subj, p: pred, value: any): any {
-  let pointer: any = source;
-  for (const rawKey of s.slice(1)) {
-    const keyIsArray = isArrayKey(rawKey);
-    const key = keyIsArray ? removeArrayKey(rawKey) : rawKey;
-
-    if (Array.isArray(pointer)) {
-      let item = pointer.find((item: any) => itemHasKey(item, key));
-      if (item == null) {
-        item = keyIsArray ? [] : {};
-        itemAddKey(item, key);
-        pointer.push(item);
-      }
-      pointer = item;
-    } else {
-      // pointer is object
-      if (
-        !pointer.hasOwnProperty(key) ||
-        pointer[key] == null ||
-        typeof pointer[key] !== 'object'
-      ) {
-        pointer[key] = keyIsArray ? [] : {};
-      }
-      pointer = pointer[key];
-    }
-  }
-
-  if (Array.isArray(pointer)) {
-    const currentIndex = pointer.find((item: any) => itemHasKey(item, p));
-    if (currentIndex > -1) {
-      pointer.splice(currentIndex, 1);
-    }
-    itemAddKey(value, p);
-    pointer.push(value);
-  } else {
-    pointer[p] = value;
   }
 }
 
@@ -731,4 +565,31 @@ export function variable(
 }
 function clone<T extends any>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
+}
+
+interface DeferredPromise<T> {
+  promise: Promise<T>;
+  resolve: T extends void ? () => void : (value: T | PromiseLike<T>) => void;
+  reject: (error: Error) => void;
+}
+function defer<T = void>(): DeferredPromise<T> {
+  const deferred: any = {};
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+  return deferred;
+}
+
+function* combineIterables<T>(...iterables: Iterable<T>[]): Iterable<T> {
+  for (const iterable of iterables) {
+    yield* iterable;
+  }
+}
+async function* combineAsyncIterables<T>(
+  ...iterables: AsyncIterable<T>[]
+): AsyncIterable<T> {
+  for (const iterable of iterables) {
+    yield* iterable;
+  }
 }

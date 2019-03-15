@@ -1,4 +1,4 @@
-import { Storage } from '../storage/index';
+import { ObjectStorage as Storage } from '../storage/object';
 import { MemoryAdapter } from '../storage/adapters/memory';
 import { Store, referenceTo, asReference } from './index';
 import { types as t, getSnapshot, Instance } from 'mobx-state-tree';

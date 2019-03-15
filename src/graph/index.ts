@@ -13,13 +13,13 @@ import {
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
 import {
-  Storage,
+  ObjectStorage as Storage,
   Patch,
   queryResult,
   query,
   variable,
   objt,
-} from '../storage/index';
+} from '../storage/object';
 import { generateId } from '../utils/id';
 import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
 import { asyncReference, asPlaceholder } from './asyncReference';
@@ -37,7 +37,7 @@ export interface GraphEnv {
     Type: T,
     id: string
   ): Promise<Instance<T>>;
-  ezq: Storage['ezq'];
+  query: Storage['query'];
 }
 
 abstract class BaseStore implements GraphEnv {
@@ -71,7 +71,7 @@ abstract class BaseStore implements GraphEnv {
     return this.loadInstance(Type, id) as any;
   }
 
-  public ezq(
+  public query(
     queries: query[],
     result?: queryResult
   ): AsyncIterableIterator<queryResult> {
@@ -107,7 +107,7 @@ export class Store extends BaseStore {
   constructor(public storage: Storage) {
     super();
 
-    this.ezq = storage.ezq.bind(storage);
+    this.query = storage.query.bind(storage);
 
     // actively listen for updates to keep the store up to date
     storage.subscribe(patches => {
@@ -176,7 +176,7 @@ class RecordingStore extends BaseStore {
     ) => Promise<Instance<T>>
   ) {
     super();
-    this.ezq = storage.ezq.bind(storage);
+    this.query = storage.query.bind(storage);
   }
 
   protected createInstance<T extends IAnyModelType>(
@@ -298,7 +298,8 @@ class RecordingStore extends BaseStore {
           }
         );
       }
-      await this.storage.mergePatches(stampedPatches);
+      this.storage.mergePatches(stampedPatches);
+      await this.storage.commit();
       return true;
     } catch (e) {
       console.error('commit failed', e);
@@ -326,7 +327,7 @@ export function lookupInverse<
   return observableAsyncPlaceholder(
     (async () => {
       const inverseObjects: Promise<Instance<IT>>[] = [];
-      for await (const result of env.ezq([
+      for await (const result of env.query([
         {
           s: variable('siteId'),
           p: inverseProp as string,

@@ -6,7 +6,7 @@ const fileType: 'file' = 'file';
 export const File = singleton(() =>
   types.model('file', {
     type: fileType,
-    sha256: types.string,
+    sha256: types.maybe(types.string),
     name: types.maybe(types.string),
     mime: types.maybe(types.string),
   })
