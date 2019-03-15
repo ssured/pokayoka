@@ -382,48 +382,10 @@ export class Storage {
     const commit = new Commit(this.adapter, transactions);
 
     commit.then(result => {
-      const t = [...result.transactions]; //?
-      console.log(t.length);
-      console.log([...t[0]]);
       this.committedTransactions.fire(result.transactions);
     });
 
     return commit;
-
-    // this.waitingOperations.push(...operations);
-    // clearTimeout(this.batchTimeout);
-
-    // this.batchTimeout = setTimeout(async () => {
-    //   const operations = this.waitingOperations.splice(
-    //     0,
-    //     this.waitingOperations.length
-    //   );
-    //   try {
-    //     await this.adapter.batch(operations);
-    //   } catch (e) {
-    //     this.waitingOperations.splice(0, 0, ...operations);
-    //     throw e;
-    //   }
-
-    //   const propertyUpdateTuples: StampedTuple[] = operations
-    //     .filter(
-    //       op =>
-    //         op.type === 'put' && Array.isArray(op.key) && op.key[0] === 'spo'
-    //     )
-    //     .map(
-    //       // @ts-ignore
-    //       ({ key: [, s, p, o], value: [t] }) => ({ s, p, o, t } as StampedTuple)
-    //     );
-
-    //   this.updatedTuplesEmitter.fire(propertyUpdateTuples);
-
-    //   // notify the ops are done
-    //   const operationsDone = this.operationsDone;
-    //   this.operationsDone = defer();
-    //   operationsDone.resolve();
-    // }, 100);
-
-    // return this.operationsDone;
   }
 
   private async *singleQuery<T extends indexes>(

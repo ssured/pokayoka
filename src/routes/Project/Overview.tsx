@@ -22,93 +22,98 @@ const Space: React.SFC<{ space: ISpace }> = ({ space }) => (
   </>
 );
 
-const SpacesList: React.SFC<{ spaces: ISpace[] }> = ({ spaces }) => (
-  <>
-    <Heading>{spaces.length} spaces gevonden:</Heading>
-    <ul>
-      {spaces.map(space => (
-        <Space key={space.id} space={space} />
-      ))}
-    </ul>
-  </>
-);
+const SpacesList: React.SFC<{ spaces: ISpace[] }> = ({ spaces }) =>
+  useObserver(() => (
+    <>
+      <Heading>{spaces.length} spaces gevonden:</Heading>
+      <ul>
+        {spaces.map(space => (
+          <Space key={space.id} space={space} />
+        ))}
+      </ul>
+    </>
+  ));
 
 const BuildingStorey: React.SFC<{ buildingStorey: IBuildingStorey }> = ({
   buildingStorey,
-}) => (
-  <>
-    <Heading>BuildingStorey: {buildingStorey.name}</Heading>
+}) =>
+  useObserver(() => (
+    <>
+      <Heading>BuildingStorey: {buildingStorey.name}</Heading>
 
-    {buildingStorey.spaces.fold(
-      LoadingIndicator,
-      spaces => SpacesList({ spaces }),
-      ErrorMessage
-    )}
-  </>
-);
+      {buildingStorey.spaces.fold(
+        LoadingIndicator,
+        spaces => SpacesList({ spaces }),
+        ErrorMessage
+      )}
+    </>
+  ));
 
 const BuildingStoreysList: React.SFC<{
   buildingStoreys: IBuildingStorey[];
-}> = ({ buildingStoreys }) => (
-  <>
-    <Heading>{buildingStoreys.length} buildingStoreys gevonden:</Heading>
-    <ul>
-      {buildingStoreys.map(buildingStorey => (
-        <BuildingStorey
-          key={buildingStorey.id}
-          buildingStorey={buildingStorey}
-        />
-      ))}
-    </ul>
-  </>
-);
+}> = ({ buildingStoreys }) =>
+  useObserver(() => (
+    <>
+      <Heading>{buildingStoreys.length} buildingStoreys gevonden:</Heading>
+      <ul>
+        {buildingStoreys.map(buildingStorey => (
+          <BuildingStorey
+            key={buildingStorey.id}
+            buildingStorey={buildingStorey}
+          />
+        ))}
+      </ul>
+    </>
+  ));
 
-const Building: React.SFC<{ building: IBuilding }> = ({ building }) => (
-  <>
-    <Heading>Building: {building.name}</Heading>
+const Building: React.SFC<{ building: IBuilding }> = ({ building }) =>
+  useObserver(() => (
+    <>
+      <Heading>Building: {building.name}</Heading>
 
-    {building.storeys.fold(
-      LoadingIndicator,
-      buildingStoreys => BuildingStoreysList({ buildingStoreys }),
-      ErrorMessage
-    )}
-  </>
-);
+      {building.storeys.fold(
+        LoadingIndicator,
+        buildingStoreys => BuildingStoreysList({ buildingStoreys }),
+        ErrorMessage
+      )}
+    </>
+  ));
 
-const BuildingsList: React.SFC<{ buildings: IBuilding[] }> = ({
-  buildings,
-}) => (
-  <>
-    <Heading>{buildings.length} buildings gevonden:</Heading>
-    <ul>
-      {buildings.map(building => (
-        <Building key={building.id} building={building} />
-      ))}
-    </ul>
-  </>
-);
+const BuildingsList: React.SFC<{ buildings: IBuilding[] }> = ({ buildings }) =>
+  useObserver(() => (
+    <>
+      <Heading>{buildings.length} buildings gevonden:</Heading>
+      <ul>
+        {buildings.map(building => (
+          <Building key={building.id} building={building} />
+        ))}
+      </ul>
+    </>
+  ));
 
-const Site: React.SFC<{ site: ISite }> = ({ site }) => (
-  <>
-    <Heading>Site: {site.name}</Heading>
+const Site: React.SFC<{ site: ISite }> = ({ site }) =>
+  useObserver(() => (
+    <>
+      <Heading>Site: {site.name}</Heading>
 
-    {site.buildings.fold(
-      LoadingIndicator,
-      buildings => BuildingsList({ buildings }),
-      ErrorMessage
-    )}
-  </>
-);
-const SitesList: React.SFC<{ sites: ISite[] }> = ({ sites }) => (
-  <>
-    <Heading>{sites.length} sites gevonden:</Heading>
-    <ul>
-      {sites.map(site => (
-        <Site key={site.id} site={site} />
-      ))}
-    </ul>
-  </>
-);
+      {site.buildings.fold(
+        LoadingIndicator,
+        buildings => BuildingsList({ buildings }),
+        ErrorMessage
+      )}
+    </>
+  ));
+const SitesList: React.SFC<{ sites: ISite[] }> = ({ sites }) =>
+  useObserver(() => (
+    <>
+      <Heading>{sites.length} sites gevonden:</Heading>
+      <ul>
+        {sites.map(site => (
+          <Site key={site.id} site={site} />
+        ))}
+      </ul>
+    </>
+  ));
 
 export const Overview: React.FunctionComponent<
   RouteComponentProps<{}>

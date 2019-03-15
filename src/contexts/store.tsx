@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { Storage, variable } from '../storage/index';
+import { ObjectStorage } from '../storage/object';
 import { WebAdapter } from '../storage/adapters/web';
 import { Store } from '../graph/index';
 import { IAnyModelType } from 'mobx-state-tree';
@@ -11,7 +11,7 @@ function createStore(name: string): Store {
   if (stores[name]) return stores[name];
 
   const adapter = new WebAdapter(name);
-  const storage = new Storage(adapter);
+  const storage = new ObjectStorage(adapter);
 
   (async function() {
     const { id: remoteId } = (await fetch(`/data/${name}/info`).then(res =>

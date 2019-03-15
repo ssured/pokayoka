@@ -1,5 +1,5 @@
 import {
-  ObjectStorage as Storage,
+  ObjectStorage,
   StorableObject,
   StampedPatch,
   spoInObject,
@@ -12,22 +12,22 @@ const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 describe('Object Storage', () => {
   test('it loads', () => {
-    expect(Storage).toBeDefined();
+    expect(ObjectStorage).toBeDefined();
     expect(MemoryAdapter).toBeDefined();
-    const storage = new Storage(new MemoryAdapter());
+    const storage = new ObjectStorage(new MemoryAdapter());
     expect(storage).toBeDefined();
   });
 
   test('snapshots can be written and persisted', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
     const obj = { id: 'test1', property: 'A' };
     await storage.slowlyMergeObject(obj).commitImmediately();
     expect(await storage.getObject(obj.id)).toEqual(obj);
   });
   test('snapshots can be written and persisted', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
     const obj = {
       id: 'test2',
       reference: ['test1'] as [string],
@@ -37,21 +37,21 @@ describe('Object Storage', () => {
   });
   test('snapshots can be written and persisted', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
     const obj = { id: 'test3', property: { k: 'v' } };
     await storage.slowlyMergeObject(obj).commitImmediately();
     expect(await storage.getObject(obj.id)).toEqual(obj);
   });
   test('snapshots can be written and persisted', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
     const obj = { id: 'test4', property: ['a', 'b'] };
     await storage.slowlyMergeObject(obj).commitImmediately();
     expect(await storage.getObject(obj.id)).toEqual(obj);
   });
   test('snapshots can be written and persisted', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
     const obj: StorableObject = {
       id: 'test4',
       property: [{ a: 'A' }, { b: 'B' }, { c: 'C' }],
@@ -64,7 +64,7 @@ describe('Object Storage', () => {
   });
   test('snapshots can be written and persisted', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
     const obj: StorableObject = {
       id: 'test5',
       property: [{ a: [{ a: 'A' }, { c: ['C'] }] }, 'B'],
@@ -77,7 +77,7 @@ describe('Object Storage', () => {
   });
   test('snapshots can be written and persisted', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
     const obj: StorableObject = {
       id: 'test6',
       property: [],
@@ -96,7 +96,7 @@ describe('Object Storage', () => {
 
   test('snapshots are automatically merged', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
 
     const obj1 = { id: 'test', a: 'A', b: 'b' };
     await storage.slowlyMergeObject(obj1).commitImmediately();
@@ -138,7 +138,7 @@ describe('Object Storage', () => {
 
     // run write at same state (is a conflict)
     let state = initialState;
-    let storage = new Storage(new MemoryAdapter(), () => state);
+    let storage = new ObjectStorage(new MemoryAdapter(), () => state);
 
     storage.slowlyMergeObject(obj1);
     storage.slowlyMergeObject(obj2);
@@ -150,7 +150,7 @@ describe('Object Storage', () => {
     expect(await storage.getObject(obj1.id)).toEqual(expectedResultAtSameState);
 
     // start again and increment the state between writes
-    storage = new Storage(new MemoryAdapter(), () => state);
+    storage = new ObjectStorage(new MemoryAdapter(), () => state);
 
     await storage.slowlyMergeObject(obj1).commitImmediately();
     state = nextState;
@@ -160,7 +160,7 @@ describe('Object Storage', () => {
   });
 
   test('patches can be written', async () => {
-    const storage = new Storage(new MemoryAdapter());
+    const storage = new ObjectStorage(new MemoryAdapter());
 
     const Model = types
       .model({
@@ -221,7 +221,7 @@ describe('Object Storage', () => {
 
   test('patches can replace objects', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
 
     const Model = types
       .model({
@@ -264,7 +264,7 @@ describe('Object Storage', () => {
 
   test('inverse relations are exposed', async () => {
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
 
     const obj1 = { id: 'obj1', key: 'value' };
     const inv1 = { id: 'inv1', ref1: [obj1.id] };
@@ -292,7 +292,7 @@ describe('Object Storage', () => {
   test('written patches are emitted', async () => {
     // TODO should be emitting patch objects
     const mem = new MemoryAdapter();
-    const storage = new Storage(mem);
+    const storage = new ObjectStorage(mem);
 
     const tuples: StampedPatch[] = [];
     const unsubscribe = storage.subscribe(written => {

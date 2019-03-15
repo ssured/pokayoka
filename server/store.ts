@@ -2,16 +2,18 @@ import { Express } from 'express';
 import fs from 'fs-extra';
 import mime from 'mime';
 
-import { Storage, StampedPatch } from '../src/storage';
+import { ObjectStorage, StampedPatch } from '../src/storage/object';
 import { ServerAdapter } from '../src/storage/adapters/server';
 import { pathForStorage, pathForCdn } from './config';
 
-const cache: { [key: string]: Storage } = {};
+const cache: { [key: string]: ObjectStorage } = {};
 
 function getStorage(name: string) {
   return name in cache
     ? cache[name]
-    : (cache[name] = new Storage(new ServerAdapter(pathForStorage(name))));
+    : (cache[name] = new ObjectStorage(
+        new ServerAdapter(pathForStorage(name))
+      ));
 }
 
 export function storeRoutes(app: Express) {

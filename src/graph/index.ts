@@ -13,7 +13,7 @@ import {
 } from 'mobx-state-tree';
 import { observable, runInAction, when } from 'mobx';
 import {
-  ObjectStorage as Storage,
+  ObjectStorage,
   Patch,
   queryResult,
   query,
@@ -37,7 +37,7 @@ export interface GraphEnv {
     Type: T,
     id: string
   ): Promise<Instance<T>>;
-  query: Storage['query'];
+  query: ObjectStorage['query'];
 }
 
 abstract class BaseStore implements GraphEnv {
@@ -104,7 +104,7 @@ abstract class BaseStore implements GraphEnv {
 }
 
 export class Store extends BaseStore {
-  constructor(public storage: Storage) {
+  constructor(public storage: ObjectStorage) {
     super();
 
     this.query = storage.query.bind(storage);
@@ -165,7 +165,7 @@ class RecordingStore extends BaseStore {
   }>([], { deep: false });
 
   constructor(
-    public storage: Storage,
+    public storage: ObjectStorage,
     private parentCreateInstance: <T extends IAnyModelType>(
       Type: T,
       snapshot: SnapshotIn<T>
