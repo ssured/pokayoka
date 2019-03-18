@@ -14,7 +14,7 @@ import PQueue from 'p-queue';
 import fs from 'fs-extra';
 import path from 'path';
 import mime from 'mime';
-import { Storage } from '../src/storage';
+import { ObjectStorage } from '../src/storage/object';
 import { ServerAdapter } from '../src/storage/adapters/server';
 import { pathForCdn, pathForStorage } from '../server/config';
 
@@ -86,7 +86,7 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
     //   await server.db.destroy(toDbName);
     // } catch (e) {}
     // await server.db.create(toDbName);
-    const toDb = new Storage(new ServerAdapter(pathForStorage(toDbName)));
+    const toDb = new ObjectStorage(new ServerAdapter(pathForStorage(toDbName)));
 
     const allRows = (await fromDb.list({ include_docs: true })).rows;
 
@@ -160,7 +160,7 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
           globalId: sheetId,
           name: storey.title,
           tiles: attachmentsToMap(storey._attachments),
-          forObject: storeyId,
+          spacialStructure: storeyId,
         });
         newObjects.set(newSheet, storey._id);
         idMap[storey._id] = sheetId;

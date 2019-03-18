@@ -10,21 +10,23 @@ import { ISite } from '../../models/Site';
 import { IBuilding } from '../../models/Building';
 import { IBuildingStorey } from '../../models/BuildingStorey';
 import { ISpace } from '../../models/Space';
-import { IFact } from '../../models/Fact';
-import { Fact } from './Fact';
+import { IObservation } from '../../models/Observation';
+import { Observation } from './Observation';
 
 const LoadingIndicator = () => <p>Loading...</p>;
 const ErrorMessage = (error: Error) => (
   <h3>Uh oh, something happened {error.message}</h3>
 );
 
-const FactsList: React.SFC<{ facts: IFact[] }> = ({ facts }) =>
+const ObservationsList: React.SFC<{ observations: IObservation[] }> = ({
+  observations,
+}) =>
   useObserver(() => (
     <>
-      <p>{facts.length} facts gevonden:</p>
+      <p>{observations.length} facts gevonden:</p>
       <ul>
-        {facts.map(fact => (
-          <Fact key={fact.id} fact={fact} />
+        {observations.map(observation => (
+          <Observation key={observation.id} observation={observation} />
         ))}
       </ul>
     </>
@@ -34,9 +36,9 @@ const Space: React.SFC<{ space: ISpace }> = ({ space }) =>
   useObserver(() => (
     <>
       <Heading level="4">Space: {space.name}</Heading>
-      {space.facts.fold(
+      {space.observations.fold(
         LoadingIndicator,
-        facts => FactsList({ facts }),
+        observations => ObservationsList({ observations }),
         ErrorMessage
       )}
     </>

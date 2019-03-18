@@ -13,9 +13,9 @@ import { base } from './base';
 import { Space } from './Space';
 import { isNothing } from '../graph/maybe';
 
-const type: 'fact' = 'fact';
+const type: 'observation' = 'observation';
 
-export const Fact = singleton(() =>
+export const Observation = singleton(() =>
   types
     .compose(
       type,
@@ -39,14 +39,14 @@ export const Fact = singleton(() =>
             })
             .views(self => ({
               get src() {
-                const fact = getParent<IFact>(self, 2);
+                const observation = getParent<IObservation>(self, 2);
 
                 const projectId =
-                  fact.parent.maybe.buildingStorey.maybe.building.maybe.site
-                    .maybe.project.id;
+                  observation.parent.maybe.buildingStorey.maybe.building.maybe
+                    .site.maybe.project.id;
                 if (isNothing(projectId)) return '';
 
-                const files = [...fact.files.values()];
+                const files = [...observation.files.values()];
                 const file = files.find(file => file.name === self.prefix);
                 return `/cdn/${projectId}/${file && file.sha256}`;
               },
@@ -66,11 +66,13 @@ export const Fact = singleton(() =>
     .actions(self => ({}))
 );
 
-export const isFact = (obj: IStateTreeNode): obj is TFactInstance =>
+export const isObservation = (
+  obj: IStateTreeNode
+): obj is TObservationInstance =>
   isStateTreeNode(obj) && (obj as any).type === type;
 
-export type TFact = ReturnType<typeof Fact>;
-export type TFactInstance = Instance<TFact>;
-export type TFactSnapshotIn = SnapshotIn<TFact>;
-export type TFactSnapshotOut = SnapshotOut<TFact>;
-export interface IFact extends TFactInstance {}
+export type TObservation = ReturnType<typeof Observation>;
+export type TObservationInstance = Instance<TObservation>;
+export type TObservationSnapshotIn = SnapshotIn<TObservation>;
+export type TObservationSnapshotOut = SnapshotOut<TObservation>;
+export interface IObservation extends TObservationInstance {}

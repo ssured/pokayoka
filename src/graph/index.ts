@@ -26,7 +26,10 @@ import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
 import { asyncReference, asPlaceholder } from './asyncReference';
 import { Omit } from '../utils/typescript';
 import dset from 'dset';
-import { observableAsyncPlaceholder } from './asyncPlaceholder';
+import {
+  observableAsyncPlaceholder,
+  ObservableAsyncPlaceholder,
+} from './asyncPlaceholder';
 
 export interface GraphEnv {
   // observable view which triggers loading the instance from the storage as a side effect
@@ -335,34 +338,29 @@ export function lookupInverse<
       const inverseObjects: Promise<Instance<IT>>[] = [];
       for await (const result of env.query([
         {
-          s: variable('siteId'),
+          s: variable('subjectId'),
           p: inverseProp as string,
           o: object,
         },
         {
-          s: variable('siteId'),
+          s: variable('subjectId'),
           p: 'type',
           o: Type.name,
         },
       ])) {
         inverseObjects.push(
-          env.getInstance(Type, (result.variables as any).siteId[0])
+          env.getInstance(Type, (result.variables as any).subjectId[0])
         );
       }
 
-      let result;
       try {
-        result = await Promise.all(inverseObjects);
-        if (Type.name === 'sheet' || Type.name === 'building') {
-          console.log('lookupInverse', [result, Type.name]);
-        }
+        const result = await Promise.all(inverseObjects);
+        return result;
       } catch (e) {
         debugger;
+        throw e;
       }
-      return result;
     })(),
-    {
-      type: Type.name,
-    }
+    {}
   );
 }

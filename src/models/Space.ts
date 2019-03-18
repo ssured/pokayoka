@@ -13,7 +13,7 @@ import { IFCSpatialStructureElement } from './IFC';
 import { internalOrExternalEnum } from './types';
 import { singleton } from './utils';
 import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
-import { IFact, Fact } from './Fact';
+import { IObservation, Observation } from './Observation';
 
 const type: 'space' = 'space';
 
@@ -44,10 +44,10 @@ export const Space = singleton(() =>
     )
     .views(self => ({
       /**
-       * Facts in this space
+       * Observations in this space
        */
-      get facts(): ObservableAsyncPlaceholder<IFact[]> {
-        return lookupInverse(getEnv(self), self.id, Fact(), 'parent');
+      get observations(): ObservableAsyncPlaceholder<IObservation[]> {
+        return lookupInverse(getEnv(self), self.id, Observation(), 'parent');
       },
     }))
     .actions(self => ({}))

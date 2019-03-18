@@ -11,22 +11,10 @@ type FULFILLED = typeof FULFILLED;
 export const REJECTED = 3;
 type REJECTED = typeof REJECTED;
 
-export type ObservableAsyncPlaceholder<T> = (
-  | {
-      state: INITIAL | PENDING;
-      value: undefined;
-      error: undefined;
-    }
-  | {
-      state: FULFILLED;
-      value: T;
-      error: undefined;
-    }
-  | {
-      state: REJECTED;
-      value: undefined;
-      error: Error;
-    }) & {
+export type ObservableAsyncPlaceholder<T> = {
+  state: INITIAL | PENDING | FULFILLED | REJECTED;
+  value: undefined | T;
+  error: undefined | Error;
   settled: boolean;
   maybe: Maybe<T>;
   fold(
@@ -35,13 +23,15 @@ export type ObservableAsyncPlaceholder<T> = (
     ErrorComponent: (error: Error) => ReactElement<any> | null,
     InitialComponent?: () => ReactElement<any> | null
   ): ReactElement<any> | null;
-} & IObservableObject;
+};
 
 export function observableAsyncPlaceholder<T, U>(
   promise: Promise<T>,
   extraProps?: U
-): (U extends undefined ? {} : U) & ObservableAsyncPlaceholder<T> {
-  const placeholder = observable({
+): (U extends undefined ? {} : U) &
+  ObservableAsyncPlaceholder<T> &
+  IObservableObject {
+  const placeholder = observable<ObservableAsyncPlaceholder<T>>({
     ...(extraProps || {}),
     state: INITIAL as INITIAL,
     value: undefined,
@@ -52,7 +42,7 @@ export function observableAsyncPlaceholder<T, U>(
     },
     get maybe() {
       // @ts-ignore
-      return this.state === FULFILLED ? this.value : nothing;
+      return this.state === FULFILLED ? this.value! : nothing;
     },
     fold(
       LoadingComponent: () => ReactElement<any> | null,
@@ -60,15 +50,12 @@ export function observableAsyncPlaceholder<T, U>(
       ErrorComponent: (error: Error) => ReactElement<any> | null,
       InitialComponent?: () => ReactElement<any> | null
     ): ReactElement<any> | null {
-      // @ts-ignore
       if (this.state === FULFILLED) {
         return ValueComponent(this.value!);
       }
-      // @ts-ignore
       if (this.state === PENDING) {
         return LoadingComponent();
       }
-      // @ts-ignore
       if (this.state === REJECTED) {
         return ErrorComponent(this.error!);
       }
@@ -79,16 +66,13 @@ export function observableAsyncPlaceholder<T, U>(
   promise
     .then(value =>
       update(() => {
-        // @ts-ignore
         placeholder.state = FULFILLED;
-        // @ts-ignore
         placeholder.value = value;
         placeholder.error = undefined;
       })
     )
     .catch(e =>
       update(() => {
-        // @ts-ignore
         placeholder.state = REJECTED;
         placeholder.value = undefined;
         placeholder.error = e;
