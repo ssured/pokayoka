@@ -60,7 +60,12 @@ const BuildingStorey: React.SFC<{ buildingStorey: IBuildingStorey }> = ({
   useObserver(() => (
     <>
       <Heading level="3">BuildingStorey: {buildingStorey.name}</Heading>
-
+      <p>
+        sheets:
+        {buildingStorey.sheets.value == null
+          ? '?'
+          : buildingStorey.sheets.value.length}{' '}
+      </p>
       {buildingStorey.spaces.fold(
         LoadingIndicator,
         spaces => SpacesList({ spaces }),
@@ -89,7 +94,15 @@ const BuildingStoreysList: React.SFC<{
 const Building: React.SFC<{ building: IBuilding }> = ({ building }) =>
   useObserver(() => (
     <>
-      <Heading>Building: {building.name}</Heading>
+      <Heading>
+        Building: {building.name} {building.id}
+      </Heading>
+      <p>
+        sheets:
+        {building.sheets.value == null
+          ? '?'
+          : building.sheets.value.length}{' '}
+      </p>
 
       {building.storeys.fold(
         LoadingIndicator,
@@ -115,6 +128,10 @@ const Site: React.SFC<{ site: ISite }> = ({ site }) =>
   useObserver(() => (
     <>
       <Heading>Site: {site.name}</Heading>
+      <p>
+        sheets:
+        {site.sheets.value == null ? '?' : site.sheets.value.length}{' '}
+      </p>
 
       {site.buildings.fold(
         LoadingIndicator,

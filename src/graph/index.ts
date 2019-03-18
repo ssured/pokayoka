@@ -349,8 +349,20 @@ export function lookupInverse<
           env.getInstance(Type, (result.variables as any).siteId[0])
         );
       }
-      return Promise.all(inverseObjects);
+
+      let result;
+      try {
+        result = await Promise.all(inverseObjects);
+        if (Type.name === 'sheet' || Type.name === 'building') {
+          console.log('lookupInverse', [result, Type.name]);
+        }
+      } catch (e) {
+        debugger;
+      }
+      return result;
     })(),
-    {}
+    {
+      type: Type.name,
+    }
   );
 }

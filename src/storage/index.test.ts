@@ -1,12 +1,21 @@
 import { Storage } from './index';
 import { MemoryAdapter } from './adapters/memory';
 
-describe.skip('Storage', () => {
+describe('Storage', () => {
   test('it loads', () => {
     expect(Storage).toBeDefined();
     expect(MemoryAdapter).toBeDefined();
     const storage = new Storage(new MemoryAdapter());
     expect(storage).toBeDefined();
+  });
+
+  test('empty query', async () => {
+    const storage = new Storage(new MemoryAdapter());
+    const results: any[] = [];
+    for await (const data of storage.query([])) {
+      results.push(data);
+    }
+    expect(results.length).toBe(0);
   });
 });
 

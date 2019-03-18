@@ -1,6 +1,5 @@
 import React from 'react';
 import { IFact } from '../../models/Fact';
-import { useProjectId } from './index';
 import { useObserver } from 'mobx-react-lite';
 import { Heading } from 'grommet';
 
