@@ -13,6 +13,11 @@ function createStore(name: string): Store {
   const adapter = new WebAdapter(name);
   const storage = new ObjectStorage(adapter);
 
+  // @ts-ignore
+  window.storage = storage;
+  // @ts-ignore
+  window.variable = variable;
+
   (async function() {
     const { id: remoteId } = (await fetch(`/data/${name}/info`).then(res =>
       res.json()

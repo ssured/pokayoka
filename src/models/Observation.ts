@@ -6,8 +6,9 @@ import {
   SnapshotOut,
   types,
   getParent,
+  getEnv,
 } from 'mobx-state-tree';
-import { referenceTo } from '../graph/index';
+import { referenceTo, lookupInverse } from '../graph/index';
 import { singleton } from './utils';
 import { base } from './base';
 import {
@@ -15,6 +16,8 @@ import {
   projectIdFromSpatialStructure,
 } from './union';
 import { Sheet } from './Sheet';
+import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
+import { ITask, Task } from './Task';
 
 export const observationType: 'observation' = 'observation';
 
@@ -69,7 +72,14 @@ export const Observation = singleton(() =>
         ),
       })
     )
-    .views(self => ({}))
+    .views(self => ({
+      /**
+       * Tasks for this Observation
+       */
+      get tasks(): ObservableAsyncPlaceholder<ITask[]> {
+        return lookupInverse(getEnv(self), self.id, Task(), 'basedOn');
+      },
+    }))
     .actions(self => ({}))
 );
 

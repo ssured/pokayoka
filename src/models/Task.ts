@@ -25,6 +25,15 @@ export const taskType: 'task' = 'task';
 //   {}
 // >;
 
+const Assignment = types.model({
+  person: types.string, // TODO referenceTo(Person()),
+  progress: types.optional(types.number, 0),
+  delegatedFrom: types.maybe(types.string), // TODO referenceTo(Person()),
+});
+
+type TAssignment = Instance<typeof Assignment>;
+interface IAssignment extends TAssignment {}
+
 export const Task = singleton(() =>
   types
     .compose(
@@ -58,18 +67,33 @@ export const Task = singleton(() =>
         /**
          * Who is assigned?
          */
-        assignment: types.map(
-          types.model({
-            person: types.string, // TODO referenceTo(Person()),
-            progress: types.optional(types.number, 0),
-            delegatedFrom: types.maybe(types.string), // TODO referenceTo(Person()),
-          })
-        ),
+        assignment: types.map(Assignment),
 
         labels: types.map(types.string),
       })
     )
-    .views(self => ({}))
+    .views(self => ({
+      get chainOfCommand(): (IAssignment & { key: string })[] {
+        const assignments = [...self.assignment.entries()];
+        const chain: (IAssignment & { key: string })[] = [];
+        let currentPerson: string | undefined = undefined;
+        let entry: [string, TAssignment] | undefined;
+        const seenPersons = new Set<string>();
+        while (
+          (entry = assignments.find(
+            ([, a]) => a.delegatedFrom === currentPerson
+          ))
+        ) {
+          const [key, delegated] = entry;
+          chain.push({ ...delegated, key });
+          currentPerson = delegated.person;
+          // detect cycles
+          if (seenPersons.has(currentPerson)) break;
+          seenPersons.add(currentPerson);
+        }
+        return chain;
+      },
+    }))
     .actions(self => ({}))
 );
 
