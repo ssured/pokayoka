@@ -14,17 +14,16 @@ import { postalAddress } from './types';
 import { singleton } from './utils';
 import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
 import { IBuildingStorey, BuildingStorey } from './BuildingStorey';
-import { ISheet, Sheet } from './Sheet';
 
-const type: 'building' = 'building';
+export const buildingType: 'building' = 'building';
 
 export const Building = singleton(() =>
   types
     .compose(
-      type,
+      buildingType,
       IFCSpatialStructureElement(),
       types.model({
-        type,
+        type: buildingType,
         typeVersion: 1,
         elevationOfRefHeight: types.maybe(types.number),
         elevationOfTerrain: types.maybe(types.number),
@@ -44,19 +43,12 @@ export const Building = singleton(() =>
           'building'
         );
       },
-
-      /**
-       * Sheets for this building
-       */
-      get sheets(): ObservableAsyncPlaceholder<ISheet[]> {
-        return lookupInverse(getEnv(self), self.id, Sheet(), 'forObject');
-      },
     }))
     .actions(self => ({}))
 );
 
 export const isBuilding = (obj: IStateTreeNode): obj is TBuildingInstance =>
-  isStateTreeNode(obj) && (obj as any).type === type;
+  isStateTreeNode(obj) && (obj as any).type === buildingType;
 
 export type TBuilding = ReturnType<typeof Building>;
 export type TBuildingInstance = Instance<TBuilding>;

@@ -5,27 +5,33 @@ import {
   SnapshotIn,
   SnapshotOut,
   types,
-  getParent,
 } from 'mobx-state-tree';
 import { referenceTo } from '../graph/index';
 import { singleton } from './utils';
 import { base } from './base';
-import { Space } from './Space';
-import { isNothing } from '../graph/maybe';
 import { Observation } from './Observation';
 import { SpatialStructureElement } from './union';
 
-const type: 'task' = 'task';
+export const taskType: 'task' = 'task';
 
-const Asssignment = types.model({});
+// recursive type does not work
+// // type explicitly to allow for recursion
+// type AssignmentType = IModelType<
+//   ModelPropertiesDeclarationToProperties<{
+//     person: ISimpleType<string>; // IAsyncReferenceType<ReturnType<typeof Person>>;
+//     progress: IOptionalIType<ISimpleType<number>>;
+//     delegatedTo: IMaybe<IAsyncReferenceType<AssignmentType>>;
+//   }>,
+//   {}
+// >;
 
 export const Task = singleton(() =>
   types
     .compose(
-      type,
+      taskType,
       base(),
       types.model({
-        type,
+        type: taskType,
         typeVersion: 1,
 
         /**
@@ -50,45 +56,17 @@ export const Task = singleton(() =>
         spatialStructure: referenceTo(SpatialStructureElement()),
 
         /**
-         * The accountable person can close
+         * Who is assigned?
          */
-
-        labels: types.map(types.string),
-
-        execution: types.array(
-          types.model({ u: types.string, p: types.maybeNull(types.number) })
-        ),
-        images: types.array(
-          types
-            .model({
-              geojson: types.frozen(),
-              height: types.number,
-              width: types.number,
-              prefix: types.string,
-            })
-            .views(self => ({
-              get src() {
-                const task = getParent<ITask>(self, 2);
-
-                const projectId =
-                  task.parent.maybe.buildingStorey.maybe.building.maybe.site
-                    .maybe.project.id;
-                if (isNothing(projectId)) return '';
-
-                const files = [...task.files.values()];
-                const file = files.find(file => file.name === self.prefix);
-                return `/cdn/${projectId}/${file && file.sha256}`;
-              },
-            }))
-        ),
-        parent: referenceTo(Space()),
-        position: types.maybe(
+        assignment: types.map(
           types.model({
-            lat: types.number,
-            lng: types.number,
-            zoom: types.maybeNull(types.number),
+            person: types.string, // TODO referenceTo(Person()),
+            progress: types.optional(types.number, 0),
+            delegatedFrom: types.maybe(types.string), // TODO referenceTo(Person()),
           })
         ),
+
+        labels: types.map(types.string),
       })
     )
     .views(self => ({}))
@@ -96,7 +74,7 @@ export const Task = singleton(() =>
 );
 
 export const isTask = (obj: IStateTreeNode): obj is TTaskInstance =>
-  isStateTreeNode(obj) && (obj as any).type === type;
+  isStateTreeNode(obj) && (obj as any).type === taskType;
 
 export type TTask = ReturnType<typeof Task>;
 export type TTaskInstance = Instance<TTask>;

@@ -2,7 +2,7 @@
 // just helps prevent unneccesary runtime undefined checking
 // and makes you totally reliant on the Typescript typings.
 
-type Nothing = { [key: string]: Nothing };
+export type Nothing = { [key: string]: Nothing };
 export type Maybe<T> = Nothing | T;
 export const nothing: Nothing = new Proxy<Nothing>(
   {},

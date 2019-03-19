@@ -5,6 +5,9 @@ import { Building, IBuilding } from '../src/models/Building';
 import { BuildingStorey, IBuildingStorey } from '../src/models/BuildingStorey';
 import { Sheet, ISheet } from '../src/models/Sheet';
 import { Space, ISpace } from '../src/models/Space';
+import { Observation, IObservation } from '../src/models/Observation';
+import { Person, IPerson } from '../src/models/Person';
+import { Task, ITask } from '../src/models/Task';
 import debug from 'debug';
 import nano from 'nano';
 import { generateId } from '../src/utils/id';
@@ -61,7 +64,7 @@ function sha256OfStream(
   });
 }
 
-function attachmentsToMap(attachments: { [key: string]: string }) {
+function attachmentsToMap(attachments: { [key: string]: any }) {
   return Object.keys(attachments || {}).reduce(
     (map, name) => {
       map[name] = { sha256: `$${name}`, name };
@@ -81,6 +84,7 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
 
     // old to new
     const idMap: { [key: string]: string } = {};
+    const sheetIdMap: { [key: string]: string } = {};
 
     // try {
     //   await server.db.destroy(toDbName);
@@ -101,7 +105,15 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
       .map(row => row.doc!);
 
     const newObjects = new Map<
-      IProject | ISite | IBuilding | IBuildingStorey | ISpace | ISheet,
+      | IProject
+      | ISite
+      | IBuilding
+      | IBuildingStorey
+      | ISpace
+      | ISheet
+      | IObservation
+      | ITask
+      | IPerson,
       string
     >();
 
@@ -153,17 +165,16 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
           building: buildingId,
         });
         newObjects.set(newStorey, storey._id);
+        idMap[storey._id] = storeyId;
 
         const sheetId = generateId();
         const newSheet = Sheet().create({
           id: sheetId,
-          globalId: sheetId,
-          name: storey.title,
           tiles: attachmentsToMap(storey._attachments),
-          spacialStructure: storeyId,
+          spatialStructure: storeyId,
         });
         newObjects.set(newSheet, storey._id);
-        idMap[storey._id] = sheetId;
+        sheetIdMap[storey._id] = sheetId;
 
         const spaces = nonLeafRows
           .filter(
@@ -241,7 +252,7 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
 
       log(
         `Write ${newSnapshot.id} ${newSnapshot.type} result: %j`,
-        await toDb.slowlyMergeObject(newSnapshot)
+        await toDb.slowlyMergeObject(newSnapshot).commitImmediately()
       );
     }
 
@@ -251,13 +262,46 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
       .filter(id => id[0] !== '_')
       .filter(id => id.indexOf('task$') > -1);
 
-    snagIds.forEach(async id => {
-      const row = allRows.find(row => row.id === id);
+    snagIds.forEach(async snagId => {
+      const row = allRows.find(row => row.id === snagId);
       if (row == null) {
         throw new Error('row not found');
       }
 
-      const { _id, _rev, _attachments, ...doc } = row.doc as any;
+      const { _id, _rev, _attachments, ...doc } = (row.doc as unknown) as {
+        _id: string;
+        _rev: string;
+        _attachments: {
+          [key: string]: {
+            content_type: string;
+            revpos: number;
+            digest: string;
+            length: number;
+            stub: boolean;
+          };
+        };
+        title: string | null;
+        description?: string;
+        position?: {
+          lat: number;
+          lng: number;
+          zoom?: number;
+        };
+        images?: {
+          geojson?: any;
+          fileInfo?: {
+            name: string;
+            type: string;
+            size: number;
+            lastModified: number;
+          };
+          prefix: string;
+          width: number;
+          height: number;
+        }[];
+        execution?: { u: string; p?: number }[];
+        labels?: string[];
+      };
 
       const fileHashes = await Promise.all(
         Object.entries(_attachments || {}).reduce(
@@ -268,7 +312,7 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
                   () =>
                     sha256OfStream(
                       (() =>
-                        fromDb.attachment.getAsStream(id, filename)) as any,
+                        fromDb.attachment.getAsStream(snagId, filename)) as any,
                       {
                         ...fileinfo,
                         name: filename,
@@ -283,35 +327,100 @@ function attachmentsToMap(attachments: { [key: string]: string }) {
         )
       );
 
-      let snapshotString = JSON.stringify({
-        id: parts(id)
-          .pop()!
-          .split('$')[1],
-        type: 'fact',
-        typeVersion: 1,
-        parent:
+      const observationId = generateId();
+      const newObservation = Observation().create({
+        id: observationId,
+        title: doc.title || '-- left blank --',
+        description: doc.description,
+        labels: (doc.labels || []).reduce(
+          (labels, label) => {
+            labels[generateId()] = label;
+            return labels;
+          },
+          {} as { [key: string]: string }
+        ),
+        images:
+          (doc.images || []).reduce(
+            (images, image) => {
+              images[generateId()] = image;
+              return images;
+            },
+            {} as { [key: string]: any }
+          ) || {},
+        files: attachmentsToMap(_attachments),
+        spatialStructure:
           idMap[
-            parts(id)
+            parts(snagId)
               .slice(0, -1)
               .join('_')
           ],
-        ...doc,
-        files: attachmentsToMap(_attachments),
+        position: doc.position && {
+          sheet:
+            sheetIdMap[ // the sheet is usually what is stored at the second level
+              parts(snagId) // TODO can be improved by really resolving the sheet belonging to the snag
+                .slice(0, 2) // this code will fail for projects with sheets at level 3 or deeper
+                .join('_')
+            ],
+          ...doc.position,
+        },
       });
-      for (const [filename, sha] of fileHashes) {
-        let newString = snapshotString.replace(`$${filename}`, sha);
-        while (newString !== snapshotString) {
-          snapshotString = newString;
-          newString = snapshotString.replace(`$${filename}`, sha);
+
+      const taskId = generateId();
+      const newTask = Task().create({
+        id: taskId,
+        name: doc.title || '-- left blank --',
+        deliverable: doc.description,
+        basedOn: observationId,
+        spatialStructure:
+          idMap[
+            parts(snagId)
+              .slice(0, -1)
+              .join('_')
+          ],
+        assignment: (doc.execution || []).reduce(
+          (assignment, { u, p }, i, execution) => {
+            assignment[generateId()] = {
+              person: u,
+              progress: p || 0,
+              delegatedFrom: i > 0 ? execution[i - 1].u : undefined,
+            };
+            return assignment;
+          },
+          {} as {
+            [key: string]: {
+              person: string;
+              progress?: number;
+              delegatedFrom?: string;
+            };
+          }
+        ),
+        labels: (doc.labels || []).reduce(
+          (labels, label) => {
+            labels[generateId()] = label;
+            return labels;
+          },
+          {} as { [key: string]: string }
+        ),
+      });
+
+      for (const object of [newObservation, newTask]) {
+        let snapshotString = JSON.stringify(getSnapshot(object));
+        for (const [filename, sha] of fileHashes) {
+          let newString = snapshotString.replace(`$${filename}`, sha);
+          while (newString !== snapshotString) {
+            snapshotString = newString;
+            newString = snapshotString.replace(`$${filename}`, sha);
+          }
         }
+        const newSnapshot = JSON.parse(snapshotString);
+        log(
+          `Write ${newSnapshot.id} result: %j`,
+          await toDb.slowlyMergeObject(newSnapshot).commitImmediately()
+        );
       }
-      const newSnapshot = JSON.parse(snapshotString);
-      log(
-        `Write ${newSnapshot.id} result: %j`,
-        await toDb.slowlyMergeObject(newSnapshot)
-      );
     });
   } catch (e) {
+    debugger;
     log('Uncaught error %O', e);
   }
 })();

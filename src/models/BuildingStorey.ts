@@ -13,17 +13,16 @@ import { IFCSpatialStructureElement } from './IFC';
 import { singleton } from './utils';
 import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
 import { ISpace, Space } from './Space';
-import { ISheet, Sheet } from './Sheet';
 
-const type: 'buildingStorey' = 'buildingStorey';
+export const buildingStoreyType: 'buildingStorey' = 'buildingStorey';
 
 export const BuildingStorey = singleton(() =>
   types
     .compose(
-      type,
+      buildingStoreyType,
       IFCSpatialStructureElement(),
       types.model({
-        type,
+        type: buildingStoreyType,
         typeVersion: 1,
         elevation: types.maybe(types.number),
         building: referenceTo(Building()),
@@ -36,13 +35,6 @@ export const BuildingStorey = singleton(() =>
       get spaces(): ObservableAsyncPlaceholder<ISpace[]> {
         return lookupInverse(getEnv(self), self.id, Space(), 'buildingStorey');
       },
-
-      /**
-       * Sheets for this buildingStorey
-       */
-      get sheets(): ObservableAsyncPlaceholder<ISheet[]> {
-        return lookupInverse(getEnv(self), self.id, Sheet(), 'forObject');
-      },
     }))
     .actions(self => ({}))
 );
@@ -50,7 +42,7 @@ export const BuildingStorey = singleton(() =>
 export const isBuildingStorey = (
   obj: IStateTreeNode
 ): obj is TBuildingStoreyInstance =>
-  isStateTreeNode(obj) && (obj as any).type === type;
+  isStateTreeNode(obj) && (obj as any).type === buildingStoreyType;
 
 export type TBuildingStorey = ReturnType<typeof BuildingStorey>;
 export type TBuildingStoreyInstance = Instance<TBuildingStorey>;

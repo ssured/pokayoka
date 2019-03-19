@@ -14,15 +14,15 @@ import { ISite, Site } from './Site';
 import { label } from './types';
 import { singleton } from './utils';
 
-const type: 'project' = 'project';
+export const projectType: 'project' = 'project';
 
 export const Project = singleton(() =>
   types
     .compose(
-      type,
+      projectType,
       IFCObject(),
       types.model({
-        type,
+        type: projectType,
         typeVersion: 1,
 
         /**
@@ -48,7 +48,7 @@ export const Project = singleton(() =>
 );
 
 export const isProject = (obj: IStateTreeNode): obj is TProjectInstance =>
-  isStateTreeNode(obj) && (obj as any).type === type;
+  isStateTreeNode(obj) && (obj as any).type === projectType;
 
 export type TProject = ReturnType<typeof Project>;
 export type TProjectInstance = Instance<TProject>;

@@ -201,7 +201,7 @@ describe('Object Storage', () => {
     });
 
     instance.setName('Pokayoka BV');
-    await delay(10);
+    await delay(50);
 
     expect(await storage.getObject(id)).toEqual({
       id,
@@ -210,7 +210,7 @@ describe('Object Storage', () => {
     });
 
     instance.setStreet('A2');
-    await delay(10);
+    await delay(50);
 
     expect(await storage.getObject(id)).toEqual({
       id,

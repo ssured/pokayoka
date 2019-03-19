@@ -14,17 +14,16 @@ import { compoundPlaneAngleMeasure, label, postalAddress } from './types';
 import { singleton } from './utils';
 import { ObservableAsyncPlaceholder } from '../graph/asyncPlaceholder';
 import { IBuilding, Building } from './Building';
-import { ISheet, Sheet } from './Sheet';
 
-const type: 'site' = 'site';
+export const siteType: 'site' = 'site';
 
 export const Site = singleton(() =>
   types
     .compose(
-      type,
+      siteType,
       IFCSpatialStructureElement(),
       types.model({
-        type,
+        type: siteType,
         typeVersion: 1,
 
         /**
@@ -67,19 +66,12 @@ export const Site = singleton(() =>
       get buildings(): ObservableAsyncPlaceholder<IBuilding[]> {
         return lookupInverse(getEnv(self), self.id, Building(), 'site');
       },
-
-      /**
-       * Sheets for this site
-       */
-      get sheets(): ObservableAsyncPlaceholder<ISheet[]> {
-        return lookupInverse(getEnv(self), self.id, Sheet(), 'forObject');
-      },
     }))
     .actions(self => ({}))
 );
 
 export const isSite = (obj: IStateTreeNode): obj is TSiteInstance =>
-  isStateTreeNode(obj) && (obj as any).type === type;
+  isStateTreeNode(obj) && (obj as any).type === siteType;
 
 export type TSite = ReturnType<typeof Site>;
 export type TSiteInstance = Instance<TSite>;

@@ -8,38 +8,34 @@ import {
 } from 'mobx-state-tree';
 import { referenceTo } from '../graph/index';
 import { File } from './base';
-import { IFCObject } from './IFC';
 import { singleton } from './utils';
 import { SpatialStructureElement } from './union';
 
-const type: 'sheet' = 'sheet';
+export const sheetType: 'sheet' = 'sheet';
 
 export const Sheet = singleton(() => {
   return types
-    .compose(
-      type,
-      IFCObject(),
-      types.model({
-        type,
-        typeVersion: 1,
+    .model(sheetType, {
+      id: types.identifier,
+      type: sheetType,
+      typeVersion: 1,
 
-        /**
-         * Map of files, where the key encodes the position of the
-         */
-        tiles: types.map(File()),
+      /**
+       * Map of files, where the key encodes the position of the
+       */
+      tiles: types.map(File()),
 
-        /**
-         * The object for which this is a sheet
-         * Can be a Site, Building or BuildingStorey
-         */
-        spacialStructure: referenceTo(SpatialStructureElement()),
-      })
-    )
+      /**
+       * The object for which this is a sheet
+       * Can be a Site, Building or BuildingStorey
+       */
+      spatialStructure: referenceTo(SpatialStructureElement()),
+    })
     .actions(self => ({}));
 });
 
 export const isSheet = (obj: IStateTreeNode): obj is TSheetInstance =>
-  isStateTreeNode(obj) && (obj as any).type === type;
+  isStateTreeNode(obj) && (obj as any).type === sheetType;
 
 export type TSheet = ReturnType<typeof Sheet>;
 export type TSheetInstance = Instance<TSheet>;

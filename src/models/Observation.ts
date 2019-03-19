@@ -10,29 +10,30 @@ import {
 import { referenceTo } from '../graph/index';
 import { singleton } from './utils';
 import { base } from './base';
-import { Space } from './Space';
-import { isNothing } from '../graph/maybe';
+import {
+  SpatialStructureElement,
+  projectIdFromSpatialStructure,
+} from './union';
+import { Sheet } from './Sheet';
 
-const type: 'observation' = 'observation';
+export const observationType: 'observation' = 'observation';
 
 export const Observation = singleton(() =>
   types
     .compose(
-      type,
+      observationType,
       base(),
       types.model({
-        type,
+        type: observationType,
         typeVersion: 1,
-        title: types.maybe(types.string),
+        title: types.string,
         description: types.maybe(types.string),
-        execution: types.array(
-          types.model({ u: types.string, p: types.maybeNull(types.number) })
-        ),
-        labels: types.array(types.string),
-        images: types.array(
+        labels: types.map(types.string),
+        images: types.map(
           types
             .model({
               geojson: types.frozen(),
+              fileInfo: types.frozen(),
               height: types.number,
               width: types.number,
               prefix: types.string,
@@ -41,10 +42,10 @@ export const Observation = singleton(() =>
               get src() {
                 const observation = getParent<IObservation>(self, 2);
 
-                const projectId =
-                  observation.parent.maybe.buildingStorey.maybe.building.maybe
-                    .site.maybe.project.id;
-                if (isNothing(projectId)) return '';
+                const projectId = projectIdFromSpatialStructure(
+                  observation.spatialStructure.maybe
+                );
+                if (projectId == null) return '';
 
                 const files = [...observation.files.values()];
                 const file = files.find(file => file.name === self.prefix);
@@ -52,9 +53,15 @@ export const Observation = singleton(() =>
               },
             }))
         ),
-        parent: referenceTo(Space()),
+        /**
+         * The object for which this is a sheet
+         * Can be a Site, Building or BuildingStorey
+         */
+        spatialStructure: referenceTo(SpatialStructureElement()),
+
         position: types.maybe(
           types.model({
+            sheet: referenceTo(Sheet()),
             lat: types.number,
             lng: types.number,
             zoom: types.maybeNull(types.number),
@@ -69,7 +76,7 @@ export const Observation = singleton(() =>
 export const isObservation = (
   obj: IStateTreeNode
 ): obj is TObservationInstance =>
-  isStateTreeNode(obj) && (obj as any).type === type;
+  isStateTreeNode(obj) && (obj as any).type === observationType;
 
 export type TObservation = ReturnType<typeof Observation>;
 export type TObservationInstance = Instance<TObservation>;
