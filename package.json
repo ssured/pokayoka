@@ -170,7 +170,7 @@
     "mobx-react": "^5.4.3",
     "mobx-react-lite": "^0.3.7",
     "mobx-state-tree": "^3.10.2",
-    "mobx-utils": "^5.1.0",
+    "mobx-utils": "^5.2.0",
     "monotonic-lexicographic-timestamp": "^1.0.0",
     "mstform": "^1.6.4",
     "multilevel": "^7.2.3",
