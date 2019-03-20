@@ -37,7 +37,11 @@ const StyledWrapper = styled(Wrapper)`
     grid-gap: 10px;
 
     > * {
+      @import url('https://fonts.googleapis.com/css?family=Roboto:100,400');
       border: 1px solid lightgrey;
+      overflow: hidden;
+      color: rgb(66, 66, 66);
+      font-family: 'Roboto', sans-serif;
     }
 
     @media only screen and (min-width: 768px) {
@@ -88,7 +92,8 @@ const Header: React.FunctionComponent<{
   const isSidebarOpen = useContext(SidebarContext);
   return (
     <header className={className}>
-      Pokayoka
+      <h1>Pokayoka</h1>
+      <div className="center" />
       <ToggleSidebarButton toggleSidebar={toggleSidebar} />
     </header>
   );
@@ -99,6 +104,12 @@ const StyledHeader = styled(Header)`
   display: flex;
   flex-direction: row;
   .toggle-sidebar {
+  h1 {
+    font-size: 48px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 100;
+    text-transform: capitalize;
+  }
     display: inline-block;
   }
   .center {
@@ -172,7 +183,7 @@ const StyledSidebar = styled(Sidebar)`
     transition: width 0.1s;
     display: flex;
     flex-direction: column;
-    width: ${props => (props.isSidebarOpen ? '15em' : '3em')};
+    width: ${props => (props.isSidebarOpen ? '15em' : '4em')};
     padding: 0.5em;
 
     .buttons {
