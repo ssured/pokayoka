@@ -418,9 +418,9 @@ export async function copyDbFromSnagtracker(
         toDb.slowlyMergeObject(newSnapshot);
         log(`Write snag ${newSnapshot.id}`);
       }
+      await toDb.commit();
+      log('Writing snag objects done');
     });
-    await toDb.commit();
-    log('Writing snag objects done');
   } catch (e) {
     debugger;
     log('Uncaught error copy from snagtracker %O', e);
