@@ -73,6 +73,11 @@ const BuildingStorey: React.SFC<{ buildingStorey: IBuildingStorey }> = ({
         spaces => SpacesList({ spaces }),
         ErrorMessage
       )}
+      {buildingStorey.observations.fold(
+        LoadingIndicator,
+        observations => ObservationsList({ observations }),
+        ErrorMessage
+      )}
     </>
   ));
 

@@ -39,8 +39,10 @@ export class SharedAdapter {
     }
     return result;
   }
+
+  close() {
+    return this.level.close();
+  }
 }
 
-type SharedAdapterType = InstanceType<typeof SharedAdapter>;
-
-export interface StorageAdapter extends SharedAdapterType {}
+export interface StorageAdapter extends SharedAdapter {}

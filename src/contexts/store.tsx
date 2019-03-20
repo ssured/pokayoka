@@ -28,6 +28,8 @@ function createStore(name: string): Store {
 
     const timestamp = await storage.timestampForStorage(remoteId);
 
+    console.log({ remoteId, timestamp });
+
     fetch(`/data/${name}/patches?since=${timestamp}`)
       .then(res => res.json())
       .then(async ({ patches, until }) => {

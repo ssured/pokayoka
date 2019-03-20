@@ -191,6 +191,10 @@ export class Storage {
     public getMachineState = numberToState()
   ) {}
 
+  public close() {
+    return this.adapter.close();
+  }
+
   /**
    * Unique id of this storage
    */
@@ -286,9 +290,10 @@ export class Storage {
     }
 
     // repeat until we get an empty result
-    if (latest != null) {
-      yield* this.tuplesSince(latest, { ...options, skipFirst: true });
-    }
+    // this code is a little instable, fix first
+    // if (latest != null) {
+    //   yield* this.tuplesSince(latest, { ...options, skipFirst: true });
+    // }
   }
 
   /**

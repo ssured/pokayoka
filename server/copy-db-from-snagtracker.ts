@@ -18,70 +18,73 @@ import fs from 'fs-extra';
 import path from 'path';
 import mime from 'mime';
 import { ObjectStorage } from '../src/storage/object';
-import { ServerAdapter } from '../src/storage/adapters/server';
-import { pathForCdn, pathForStorage } from '../server/config';
 
-const log = debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
+const log = /*debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
+log.log = */ console.log.bind(
+  console
+);
 
-const fromDbName = 'bk0wb0a7sz';
-const toDbName = fromDbName;
-const server = nano('http://admin:admin@localhost:5984');
+export async function copyDbFromSnagtracker(
+  fromDb: nano.DocumentScope<{
+    title: string;
+    description: string;
+    _attachments: any;
+  }>,
+  toDb: ObjectStorage,
+  toCdnPath: string // pathForCdn(toDbName)
+) {
+  // const fromDbName = 'bk0wb0a7sz';
+  // const toDbName = fromDbName;
+  // const server = nano('http://admin:admin@localhost:5984');
 
-type AttachmentInfo = {
-  name: string;
-  content_type: string;
-  revpos: number;
-  digest: string;
-  length: number;
-  stub: boolean;
-};
+  type AttachmentInfo = {
+    name: string;
+    content_type: string;
+    revpos: number;
+    digest: string;
+    length: number;
+    stub: boolean;
+  };
 
-function sha256OfStream(
-  streamThunk: () => NodeJS.ReadStream,
-  fileInfo: AttachmentInfo
-): Promise<string> {
-  return new Promise<string>(async res => {
-    const sha256 = await new Promise<string>((resolve, reject) =>
-      streamThunk()
-        .on('error', reject)
-        .pipe(crypto.createHash('sha256').setEncoding('hex'))
-        .once('finish', function(this: any) {
-          resolve(this.read());
-        })
+  function sha256OfStream(
+    streamThunk: () => NodeJS.ReadStream,
+    fileInfo: AttachmentInfo
+  ): Promise<string> {
+    return new Promise<string>(async res => {
+      const sha256 = await new Promise<string>((resolve, reject) =>
+        streamThunk()
+          .on('error', reject)
+          .pipe(crypto.createHash('sha256').setEncoding('hex'))
+          .once('finish', function(this: any) {
+            resolve(this.read());
+          })
+      );
+
+      const filename = `${sha256}.${mime.getExtension(fileInfo.content_type)}`;
+      const target = path.join(toCdnPath, filename);
+
+      try {
+        await fs.stat(target);
+        res(filename);
+      } catch (e) {
+        streamThunk()
+          .pipe(fs.createWriteStream(target))
+          .on('close', () => res(filename));
+      }
+    });
+  }
+
+  function attachmentsToMap(attachments: { [key: string]: any }) {
+    return Object.keys(attachments || {}).reduce(
+      (map, name) => {
+        map[name] = { sha256: `$${name}`, name };
+        return map;
+      },
+      {} as { [key: string]: SnapshotIn<ReturnType<typeof File>> }
     );
+  }
 
-    const filename = `${sha256}.${mime.getExtension(fileInfo.content_type)}`;
-    const target = path.join(pathForCdn(toDbName), filename);
-
-    try {
-      await fs.stat(target);
-      res(filename);
-    } catch (e) {
-      streamThunk()
-        .pipe(fs.createWriteStream(target))
-        .on('close', () => res(filename));
-    }
-  });
-}
-
-function attachmentsToMap(attachments: { [key: string]: any }) {
-  return Object.keys(attachments || {}).reduce(
-    (map, name) => {
-      map[name] = { sha256: `$${name}`, name };
-      return map;
-    },
-    {} as { [key: string]: SnapshotIn<ReturnType<typeof File>> }
-  );
-}
-
-(async function main() {
   try {
-    const fromDb = server.use<{
-      title: string;
-      description: string;
-      _attachments: any;
-    }>(fromDbName);
-
     // old to new
     const idMap: { [key: string]: string } = {};
     const sheetIdMap: { [key: string]: string } = {};
@@ -90,7 +93,6 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
     //   await server.db.destroy(toDbName);
     // } catch (e) {}
     // await server.db.create(toDbName);
-    const toDb = new ObjectStorage(new ServerAdapter(pathForStorage(toDbName)));
 
     const allRows = (await fromDb.list({ include_docs: true })).rows;
 
@@ -101,7 +103,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
     const nonLeafRows = allRows.filter(row => nonLeafIds.includes(row.id));
 
     const projects = nonLeafRows
-      .filter(row => row.id === fromDbName)
+      .filter(row => parts(row.id).length === 1)
       .map(row => row.doc!);
 
     const newObjects = new Map<
@@ -118,7 +120,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
     >();
 
     projects.forEach(project => {
-      const projectId = project._id; // generateId();
+      const projectId = newIdFromOldId(project._id); // generateId();
       const newProject = Project().create({
         id: projectId,
         globalId: projectId,
@@ -127,7 +129,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
       });
       newObjects.set(newProject, project._id);
 
-      const siteId = generateId();
+      const siteId = newIdFromOldId(project._id, 'site');
       const newSite = Site().create({
         id: siteId,
         globalId: siteId,
@@ -136,7 +138,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
       });
       newObjects.set(newSite, project._id);
 
-      const buildingId = generateId();
+      const buildingId = newIdFromOldId(project._id, 'building');
       const newBuilding = Building().create({
         id: buildingId,
         globalId: buildingId,
@@ -155,7 +157,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
         .map(row => row.doc!);
 
       storeys.forEach(storey => {
-        const storeyId = generateId();
+        const storeyId = newIdFromOldId(storey._id, 'storey');
         const newStorey = BuildingStorey().create({
           id: storeyId,
           globalId: storeyId,
@@ -167,7 +169,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
         newObjects.set(newStorey, storey._id);
         idMap[storey._id] = storeyId;
 
-        const sheetId = generateId();
+        const sheetId = newIdFromOldId(storey._id, 'sheet');
         const newSheet = Sheet().create({
           id: sheetId,
           tiles: attachmentsToMap(storey._attachments),
@@ -186,7 +188,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
           .map(row => row.doc!);
 
         spaces.forEach(space => {
-          const id = generateId();
+          const id = newIdFromOldId(space._id, 'space');
           const newSpace = Space().create({
             id,
             globalId: id,
@@ -250,17 +252,17 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
 
       const newSnapshot = JSON.parse(snapshotString);
 
-      log(
-        `Write ${newSnapshot.id} ${newSnapshot.type} result: %j`,
-        await toDb.slowlyMergeObject(newSnapshot).commitImmediately()
-      );
+      toDb.slowlyMergeObject(newSnapshot);
+      log(`Write ${newSnapshot.id} ${newSnapshot.type}`);
     }
+    await toDb.commit();
+    log('Writing tree objects done');
 
     const foundIds = [...newObjects.values()];
     const snagIds = ids
       .filter(id => !foundIds.find(fid => fid === id))
-      .filter(id => id[0] !== '_')
-      .filter(id => id.indexOf('task$') > -1);
+      .filter(id => id[0] !== '_');
+    // .filter(id => id.indexOf('task$') > -1);
 
     snagIds.forEach(async snagId => {
       const row = allRows.find(row => row.id === snagId);
@@ -327,7 +329,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
         )
       );
 
-      const observationId = generateId();
+      const observationId = newIdFromOldId(_id, 'observation');
       const newObservation = Observation().create({
         id: observationId,
         title: doc.title || '-- left blank --',
@@ -365,7 +367,7 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
         },
       });
 
-      const taskId = generateId();
+      const taskId = newIdFromOldId(_id, 'task');
       const newTask = Task().create({
         id: taskId,
         name: doc.title || '-- left blank --',
@@ -413,18 +415,22 @@ function attachmentsToMap(attachments: { [key: string]: any }) {
           }
         }
         const newSnapshot = JSON.parse(snapshotString);
-        log(
-          `Write ${newSnapshot.id} result: %j`,
-          await toDb.slowlyMergeObject(newSnapshot).commitImmediately()
-        );
+        toDb.slowlyMergeObject(newSnapshot);
+        log(`Write snag ${newSnapshot.id}`);
       }
     });
+    await toDb.commit();
+    log('Writing snag objects done');
   } catch (e) {
     debugger;
-    log('Uncaught error %O', e);
+    log('Uncaught error copy from snagtracker %O', e);
   }
-})();
+}
 
 function parts(id: string) {
   return id.split('_');
+}
+
+function newIdFromOldId(id: string, postfix: string = '') {
+  return parts(id).pop() + postfix;
 }

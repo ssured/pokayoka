@@ -6,15 +6,39 @@ import path from 'path';
 import { ObjectStorage, StampedPatch } from '../src/storage/object';
 import { ServerAdapter } from '../src/storage/adapters/server';
 import { pathForStorage, pathForCdn } from './config';
+import pify from 'pify';
+import rimraf from 'rimraf';
+import nano from 'nano';
+import { copyDbFromSnagtracker } from './copy-db-from-snagtracker';
+import console = require('console');
 
-const cache: { [key: string]: ObjectStorage } = {};
+const cache = new Map<string, ObjectStorage>();
 
 function getStorage(name: string) {
-  return name in cache
-    ? cache[name]
-    : (cache[name] = new ObjectStorage(
-        new ServerAdapter(pathForStorage(name))
-      ));
+  if (!cache.has(name)) {
+    cache.set(name, new ObjectStorage(new ServerAdapter(pathForStorage(name))));
+  }
+  return cache.get(name)!;
+}
+async function resetStorage(name: string) {
+  if (cache.has(name)) {
+    await cache.get(name)!.close();
+    cache.delete(name);
+  }
+  try {
+    await pify(rimraf)(pathForStorage(name));
+  } catch (e) {
+    console.log('rimraf failed', e);
+  }
+  const storage = getStorage(name);
+  const fromDb = nano(
+    'https://copyclient:6MYm9Tm&t3Uc@bgdd.snagtracker.com:6984'
+  ).use<any>(name);
+  const cdnPath = pathForCdn(name);
+
+  await copyDbFromSnagtracker(fromDb, storage, cdnPath);
+
+  console.log('copy from snagtracker done');
 }
 
 export function storeRoutes(app: Express) {
@@ -32,6 +56,34 @@ export function storeRoutes(app: Express) {
 
     const id = await storage.getStorageId();
 
+    res.json({ id });
+  });
+
+  app.get('/data/:project/reset', async (req, res) => {
+    const { project } = req.params;
+    console.log(`reset project ${project}`);
+
+    // auto add this db to all known users
+    const users = nano('http://admin:admin@localhost:5984').use<{
+      name: string;
+      type: string;
+      roles: string[];
+    }>('_users');
+    const allUsers = (await users.list({ include_docs: true })).rows
+      .map(row => row.doc!)
+      .filter(doc => Array.isArray(doc.roles));
+    const role = `member-${project}`;
+    for (const user of allUsers) {
+      if (user.roles.indexOf(role) === -1) {
+        user.roles.push(role);
+        console.log(`add ${role} to ${user.name}`);
+        await users.insert(user);
+      }
+    }
+
+    await resetStorage(project);
+    const storage = getStorage(project);
+    const id = await storage.getStorageId();
     res.json({ id });
   });
 

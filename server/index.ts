@@ -188,6 +188,35 @@ import { storeRoutes } from './store';
 
   console.log('started listening');
   console.log('YOYOYOYOYO');
+
+  // make sure some default users exist
+  const users = nano('http://admin:admin@localhost:5984').use<{
+    name: string;
+    password?: string;
+    type: string;
+    roles: string[];
+  }>('_users');
+  const allUsers = (await users.list({ include_docs: true })).rows
+    .map(row => row.doc!)
+    .filter(doc => Array.isArray(doc.roles));
+  const createUsers = {
+    'sjoerd@weett.nl': 'sjoerd',
+    'sander@pokayoka.com': 'sander',
+  };
+  for (const [name, password] of Object.entries(createUsers)) {
+    if (allUsers.find(user => user.name === name) == null) {
+      // insert the new user
+      await users.insert({
+        _id: `org.couchdb.user:${name}`,
+        name,
+        password,
+        roles: [],
+        type: 'user',
+      });
+      console.log(`Added ${name} to the users db`);
+    }
+  }
+
   for await (const change of changes(nanoServer.use('bk0wb0a7sz'))) {
     console.log(JSON.stringify(change, null, 2));
     break;
