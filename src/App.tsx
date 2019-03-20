@@ -48,28 +48,25 @@ const StyledWrapper = styled(Wrapper)`
       /* tablets and desktop */
       grid-template-columns: repeat(9, 1fr);
       grid-template-areas:
-        'header  header  header  header  header  header  header  header  sidebar '
-        'nav     nav     nav     nav     nav     nav     nav     nav     sidebar'
-        'content content content content content content content content sidebar'
-        'footer  footer  footer  footer  footer  footer  footer  footer  footer ';
-      grid-template-rows: 60px 40px 1fr 40px;
+        'ctx     ctx     ctx     ctx     ctx     ctx     ctx     ctx     nav'
+        'content content content content content content content content nav'
+        'footer  footer  footer  footer  footer  footer  footer  footer  footer';
+      grid-template-rows: 40px 1fr 40px;
       grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
     }
 
     @media only screen and (max-width: 767px) {
       /* phones */
       grid-template-areas:
-        'header'
-        'sidebar'
-        'nav'
+        'ctx'
         'content'
-        'footer';
+        'nav';
       grid-template-rows: 60px auto 40px 1fr 40px;
     }
   }
 `;
 
-const ToggleSidebarButton: React.FunctionComponent<{
+const ToggleNavButton: React.FunctionComponent<{
   className?: string;
   toggleSidebar: () => void;
 }> = ({ className = '', toggleSidebar }) => {
@@ -77,58 +74,20 @@ const ToggleSidebarButton: React.FunctionComponent<{
 
   return (
     <Button
-      className={`toggle-sidebar ${className}`}
+      plain
+      hoverIndicator={true}
+      className={`toggle-nav ${className}`}
       onClick={() => toggleSidebar()}
     >
-      {isSidebarOpen ? <Close size="large" /> : <Menu size="large" />}
+      <ButtonLiner>
+        {isSidebarOpen ? <Close size="medium" /> : <Menu size="medium" />}
+      </ButtonLiner>
     </Button>
   );
 };
 
-const Header: React.FunctionComponent<{
-  className?: string;
-  toggleSidebar: () => void;
-}> = ({ className = '', toggleSidebar }) => {
-  const isSidebarOpen = useContext(SidebarContext);
-  return (
-    <header className={className}>
-      <h1>Pokayoka</h1>
-      <div className="center" />
-      <ToggleSidebarButton toggleSidebar={toggleSidebar} />
-    </header>
-  );
-};
-
-const StyledHeader = styled(Header)`
-  grid-area: header;
-  display: flex;
-  flex-direction: row;
-  .toggle-sidebar {
-  h1 {
-    font-size: 48px;
-    font-family: 'Roboto', sans-serif;
-    font-weight: 100;
-    text-transform: capitalize;
-  }
-    display: inline-block;
-  }
-  .center {
-    flex: 1;
-  }
-  img {
-    height: 100%;
-  }
-  @media only screen and (min-width: 768px) {
-    /* tablets and desktop */
-    /* hide menu button */
-    .toggle-sidebar {
-      display: none;
-    }
-  }
-`;
-
-const Nav = styled.nav`
-  grid-area: nav;
+const ContextNav = styled.nav`
+  grid-area: ctx;
 
   ul {
     display: flex;
@@ -139,27 +98,33 @@ const Content = styled.main`
   grid-area: content;
 `;
 
-const Sidebar: React.FunctionComponent<{
+const MainNav: React.FunctionComponent<{
   className?: string;
   toggleSidebar: () => void;
   isSidebarOpen: boolean; // because we style this component, we
 }> = ({ className = '', children, toggleSidebar, isSidebarOpen }) => {
   return (
     <aside className={`${className} ${isSidebarOpen ? 'open' : 'closed'}`}>
-      <div className="buttons">
-        <span className="spacer" />
-        <ToggleSidebarButton toggleSidebar={toggleSidebar} />
+      <div className="fixed">
+        <div className="buttons">
+          <span className="spacer" />
+          <ToggleNavButton toggleSidebar={toggleSidebar} />
+        </div>
+        <Box fill direction="row">
+          <Box fill>{children}</Box>
+        </Box>
       </div>
-      <Box fill direction="row">
-        <Box fill>{children}</Box>
-      </Box>
     </aside>
   );
 };
 
-const StyledSidebar = styled(Sidebar)`
-  grid-area: sidebar;
+const StyledMainNav = styled(MainNav)`
+  grid-area: nav;
   overflow: hidden;
+
+  .fixed {
+    position: fixed;
+  }
 
   ul.menu {
     display: flex;
@@ -188,18 +153,20 @@ const StyledSidebar = styled(Sidebar)`
 
     .buttons {
       display: flex;
-      align-items: flex-end;
+      align-items: center;
+      justify-content: center;
+
       margin-bottom: 10px;
 
       .spacer {
-        flex: 1;
+        width: 0;
       }
     }
   }
 
   /* MEDIA=PHONES */
   @media only screen and (max-width: 767px) {
-    /* hide sidebar when not open */
+    /* hide nav when not open */
     display: ${props => (props.isSidebarOpen ? 'block' : 'none')};
     /* hide menu button */
     .buttons {
@@ -225,25 +192,31 @@ const MenuItemButton: React.FunctionComponent<{
       title={label}
       a11yTitle={label}
     >
-      <div className="button-inner">
+      <ButtonLiner>
         <Icon size="medium" />
         <div className="spacer" />
         <Text>{label}</Text>
-      </div>
+      </ButtonLiner>
     </Button>
   );
 };
 
-const StyledMenuItemButton = styled(MenuItemButton)`
-  .button-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 12px;
-    outline: none;
-  }
+const ButtonLiner_: React.FunctionComponent<{
+  className?: string;
+}> = ({ className = '', children }) => (
+  <div className={className}>{children}</div>
+);
 
+const ButtonLiner = styled(ButtonLiner_)`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px;
+  outline: none;
+`;
+
+const StyledMenuItemButton = styled(MenuItemButton)`
   .spacer {
     flex: 0 0 auto;
     width: 24px;
@@ -257,8 +230,25 @@ const StyledMenuItemButton = styled(MenuItemButton)`
   }
 `;
 
-const Footer = styled.footer`
+const Footer: React.FunctionComponent<{
+  className?: string;
+}> = ({ className = '', children }) => (
+  <footer className={className}>
+    <h1>Pokayoka</h1>
+    {children}
+  </footer>
+);
+
+const StyledFooter = styled(Footer)`
   grid-area: footer;
+  display: flex;
+  flex-direction: row;
+  h1 {
+    font-size: 48px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 100;
+    text-transform: capitalize;
+  }
 `;
 
 export const App: React.FunctionComponent<{}> = () => {
@@ -280,8 +270,7 @@ export const App: React.FunctionComponent<{}> = () => {
       ) : (
         <StyledWrapper>
           <SidebarContext.Provider value={isSidebarOpen}>
-            <StyledHeader toggleSidebar={toggleSidebar} />
-            <Nav>
+            <ContextNav>
               <ul>
                 <li>
                   <a href="">Navf 1</a>
@@ -293,7 +282,7 @@ export const App: React.FunctionComponent<{}> = () => {
                   <a href="">Nav 3</a>
                 </li>
               </ul>
-            </Nav>
+            </ContextNav>
             <Content>
               <Router>
                 <Home path="/" />
@@ -306,7 +295,7 @@ export const App: React.FunctionComponent<{}> = () => {
                 </User> */}
               </Router>
             </Content>
-            <StyledSidebar
+            <StyledMainNav
               toggleSidebar={toggleSidebar}
               isSidebarOpen={isSidebarOpen}
             >
@@ -367,8 +356,8 @@ export const App: React.FunctionComponent<{}> = () => {
                   label="Uitloggen"
                 />
               )}
-            </StyledSidebar>
-            <Footer>Footer</Footer>
+            </StyledMainNav>
+            <StyledFooter />
           </SidebarContext.Provider>
         </StyledWrapper>
       )}
