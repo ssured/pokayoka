@@ -217,8 +217,8 @@ import { storeRoutes } from './store';
     }
   }
 
-  for await (const change of changes(nanoServer.use('bk0wb0a7sz'))) {
-    console.log(JSON.stringify(change, null, 2));
-    break;
-  }
+  // for await (const change of changes(nanoServer.use('bk0wb0a7sz'))) {
+  //   console.log(JSON.stringify(change, null, 2));
+  //   break;
+  // }
 })();
