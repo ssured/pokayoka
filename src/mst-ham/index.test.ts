@@ -1,4 +1,4 @@
-import { HamModel, HAM_PATH } from './index';
+import { HamModel, HAM_PATH, maxStateFromHam } from './index';
 
 import {
   types,
@@ -35,6 +35,48 @@ describe('integrates with mst', () => {
         name: 1,
       },
     ]);
+  });
+
+  it('works with composed models', () => {
+    const Author = types.compose(
+      'Author',
+      HamModel,
+      types
+        .model({
+          name: types.string,
+        })
+        .actions(self => ({
+          setName(name: string) {
+            self.name = name;
+          },
+        }))
+    );
+
+    state = 1;
+
+    let currentSnapshot: undefined | SnapshotOut<typeof Author> = undefined;
+
+    const author = Author.create(
+      { name: 'Rowling' },
+      {
+        waitUntilState: (state: number, cb: () => void) =>
+          setTimeout(cb, state - Date.now() + 1),
+        machineState: () => state,
+        onSnapshot: (snapshot: SnapshotOut<typeof Author>) =>
+          (currentSnapshot = snapshot),
+      }
+    );
+    author.setName('JK Rowling');
+
+    expect(currentSnapshot && currentSnapshot[HAM_PATH]).toEqual([
+      1,
+      {
+        name: 1,
+      },
+    ]);
+    expect(currentSnapshot && maxStateFromHam(currentSnapshot[HAM_PATH])).toBe(
+      1
+    );
   });
 
   it('works with nested models', () => {
@@ -164,6 +206,8 @@ describe('integrates with mst', () => {
       ],
       name: { first: 'J', last: 'Rowlings' },
     });
+
+    expect(maxStateFromHam((getSnapshot(author2) as any)[HAM_PATH])).toBe(3);
   });
 
   it('notifies on changes', () => {

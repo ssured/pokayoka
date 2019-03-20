@@ -13,8 +13,10 @@ import {
   getType,
   typecheck,
 } from 'mobx-state-tree';
-import { get, set, entries } from 'mobx';
-import { merge, HamValue, isObject } from './merge';
+import { get, set } from 'mobx';
+import { merge, HamValue, isObject, THam } from './merge';
+import isEqualWith from 'lodash.isequalwith';
+import { safeEntries } from '../utils/mobx';
 
 const hamType: IAnyComplexType = types.map(
   types.union(
@@ -23,9 +25,24 @@ const hamType: IAnyComplexType = types.map(
   )
 );
 
-type THam = { [key: string]: number | [number, THam] };
-
 export const HAM_PATH = '#';
+
+export type HamObject = {
+  [HAM_PATH]: [number, THam];
+};
+
+export const objectHasHam = (obj: {}): obj is HamObject => HAM_PATH in obj;
+
+export const getHamFromObject = (obj: HamObject): HamValue => obj[HAM_PATH];
+
+export const maxStateFromHam = (ham: HamValue): number => {
+  if (typeof ham === 'number') return ham;
+  const [max, subHams] = ham;
+  return Math.max(
+    max,
+    ...Array.from(Object.values(subHams)).map(maxStateFromHam)
+  );
+};
 
 const hamDlv = (_ham: THam, state: number, path: string[]): THam => {
   let ham = _ham;
@@ -46,7 +63,7 @@ const hamDlv = (_ham: THam, state: number, path: string[]): THam => {
 function initHam(state: number, obj: any): HamValue {
   if (isObject(obj)) {
     const ham: HamValue = [state, {}];
-    for (const [key, value] of entries(obj)) {
+    for (const [key, value] of safeEntries(obj)) {
       if (key === HAM_PATH) continue;
       ham[1][key] = initHam(state, value);
     }
@@ -65,6 +82,10 @@ const notifyChange = (self: Instance<typeof _HamModel>) => {
   const root = getRoot<any>(self);
   if (typeof root.notifyHamChange === 'function') {
     root.notifyHamChange(self);
+  }
+  const env = getEnv(root);
+  if (typeof env.onSnapshot === 'function') {
+    env.onSnapshot(getSnapshot(self));
   }
 };
 
@@ -95,7 +116,7 @@ export const hamActions = (self: Instance<typeof _HamModel>) => {
         onPatch(self, patch => {
           const path = splitJsonPath(patch.path);
 
-          if (isMerging > 0 || path[0] === HAM_PATH) {
+          if (isMerging > 0 || path[0] === HAM_PATH || path[0][0] === '_') {
             return;
           }
 
@@ -113,10 +134,14 @@ export const hamActions = (self: Instance<typeof _HamModel>) => {
     merge(incoming: any) {
       try {
         isMerging += 1;
-        const { [HAM_PATH]: inHam, ...inValue } = isStateTreeNode(incoming)
+        const { [HAM_PATH]: inHam, _rev: inRev, ...inValue } = isStateTreeNode(
+          incoming
+        )
           ? getSnapshot(incoming)
           : incoming;
-        const { [HAM_PATH]: curHam, ...curValue } = getSnapshot(self);
+        const { [HAM_PATH]: curHam, _rev: curRev, ...curValue } = getSnapshot(
+          self
+        ) as any;
 
         const result = merge(
           machineState(),
@@ -126,11 +151,15 @@ export const hamActions = (self: Instance<typeof _HamModel>) => {
           curValue
         );
 
-        if (result.currentChanged) {
+        if (
+          !isEqualWith(curHam, result.resultHam) ||
+          !isEqualWith(curValue, result.resultValue)
+        ) {
           try {
             const newSnapshot = {
               ...result.resultValue,
               [HAM_PATH]: result.resultHam,
+              // _rev: winningRev(inRev, curRev),
             };
             if (getType(self).is(newSnapshot)) {
               applySnapshot(self, newSnapshot);

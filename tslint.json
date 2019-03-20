@@ -6,8 +6,11 @@
   "rules": {
     "variable-name": false,
     "import-name": false,
+    "function-name": false,
     "no-default-export": true,
-    "jsx-no-lambda": false
+    "jsx-no-lambda": false,
+    "jsx-boolean-value": false,
+    "object-shorthand-properties-first": false
   },
   "rulesDirectory": [],
   "linterOptions": {
