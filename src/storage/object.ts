@@ -1,10 +1,21 @@
 import { JsonMap, JsonEntry } from '../utils/json';
 import { hash } from './hash';
-import { Storage, subj, timestamp, pred, Tuple, StampedTuple } from './index';
+import {
+  Storage,
+  subj,
+  timestamp,
+  pred,
+  Tuple,
+  StampedTuple,
+  objt,
+  queryResult as importQueryResult,
+  query as importQuery,
+  variable as importVariable,
+} from './index';
 
-import { queryResult, query, variable, objt } from '../storage/index';
-
-export { queryResult, query, variable, objt };
+export type queryResult = importQueryResult;
+export type query = importQuery;
+export const variable = importVariable;
 
 function isObject(x: any): x is object {
   return (typeof x === 'object' && x !== null) || typeof x === 'function';
