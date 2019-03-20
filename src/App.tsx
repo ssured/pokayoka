@@ -72,7 +72,10 @@ const ToggleSidebarButton: React.FunctionComponent<{
   const isSidebarOpen = useContext(SidebarContext);
 
   return (
-    <Button className={`toggle-sidebar ${className}`} onClick={toggleSidebar}>
+    <Button
+      className={`toggle-sidebar ${className}`}
+      onClick={() => toggleSidebar()}
+    >
       {isSidebarOpen ? <Close size="large" /> : <Menu size="large" />}
     </Button>
   );
