@@ -114,7 +114,7 @@
     "@types/pify": "^3.0.2",
     "@types/pouchdb": "^6.3.2",
     "@types/reach__router": "^1.2.2",
-    "@types/react": "^16.7.18",
+    "@types/react": "^16.8.8",
     "@types/react-beautiful-dnd": "^10.0.1",
     "@types/react-dom": "^16.0.11",
     "@types/rebass__grid": "^6.0.2",
