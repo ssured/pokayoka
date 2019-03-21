@@ -1,11 +1,11 @@
-import React, { useState, useContext } from 'react';
+import React, { useContext } from 'react';
 // import logo from "./logo.svg";
 // import "./App.css";
-import { Grommet, Grid, Heading, Button, Box, Text } from 'grommet';
+import { Button, Box, Text } from 'grommet';
 import styled from 'styled-components';
 import * as Icons from 'grommet-icons';
 
-import { Router, navigate } from '@reach/router';
+import { Router, navigate, RouteComponentProps } from '@reach/router';
 
 import { Home } from './routes/Home';
 import { Project } from './routes/Project';
@@ -15,7 +15,11 @@ import { LoginForm } from './components/LoginForm/index';
 import { useAuthentication } from './contexts/authentication';
 import { useToggle } from 'react-use';
 
-const { Menu, Close, Home: HomeIcon, Sync } = Icons;
+const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
+  return <p>Not Found</p>;
+};
+
+const { Menu, Close } = Icons;
 
 const SidebarContext = React.createContext<boolean>(false);
 
@@ -288,8 +292,8 @@ export const App: React.FunctionComponent<{}> = () => {
                 <Home path="/" />
                 {/* <Debug path="debug" /> */}
                 {/* <SyncStatus path="sync" /> */}
-                <Project path=":projectId" />
-
+                <Project path="/:projectId/*" />
+                <NotFound default />
                 {/* <User path=":userId">
                   <Project path=":projectId" />
                 </User> */}
@@ -320,9 +324,7 @@ export const App: React.FunctionComponent<{}> = () => {
               />
               <StyledMenuItemButton
                 icon={Icons.Bug}
-                actionFn={() => {
-                  alert('Bevindingen');
-                }}
+                actionFn={() => navigate('/bk0wb0a7sz/observations')}
                 label="Bevindingen"
               />
               <StyledMenuItemButton

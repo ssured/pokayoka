@@ -2,6 +2,7 @@ import { Router, RouteComponentProps } from '@reach/router';
 import React, { useContext } from 'react';
 
 import { Overview } from './Overview';
+import { Observations } from './Observations';
 import { ProvideStore } from '../../contexts/store';
 
 interface ProjectParams {
@@ -14,6 +15,7 @@ export const useProjectId = () => useContext(ProjectIdContext);
 export const Project: React.FunctionComponent<
   RouteComponentProps<ProjectParams>
 > = ({ projectId }) => {
+  console.log({ projectId });
   return (
     <ProjectIdContext.Provider value={projectId!}>
       <ProvideStore name={projectId!}>
@@ -21,6 +23,7 @@ export const Project: React.FunctionComponent<
         {/* <ProvideProject> */}
         <Router>
           <Overview path="/" />
+          <Observations path="/observations" />
         </Router>
         {/* </ProvideProject> */}
       </ProvideStore>

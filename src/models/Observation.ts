@@ -57,7 +57,7 @@ export const Observation = singleton(() =>
             }))
         ),
         /**
-         * The object for which this is a sheet
+         * The object for which this is an observation
          * Can be a Site, Building or BuildingStorey
          */
         spatialStructure: referenceTo(SpatialStructureElement()),
@@ -78,6 +78,9 @@ export const Observation = singleton(() =>
        */
       get tasks(): ObservableAsyncPlaceholder<ITask[]> {
         return lookupInverse(getEnv(self), self.id, Task(), 'basedOn');
+      },
+      get labelsSet(): Set<string> {
+        return new Set<string>(self.labels.values());
       },
     }))
     .actions(self => ({}))

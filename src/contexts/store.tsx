@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { ObjectStorage, variable } from '../storage/object';
+import { ObjectStorage, variable, query } from '../storage/object';
 import { WebAdapter } from '../storage/adapters/web';
 import { Store } from '../graph/index';
 import { IAnyModelType } from 'mobx-state-tree';
 import { observableAsyncPlaceholder } from '../graph/asyncPlaceholder';
+import { queryVariable, objt } from '../storage';
 
 const stores: { [key: string]: Store } = {};
 
@@ -81,6 +82,38 @@ export const useModel = <T extends IAnyModelType>(
       id,
     });
   }, [store, model, id]);
+};
+
+function asyncIterableToPromise<T>(iterable: AsyncIterable<T>) {
+  return new Promise<T[]>(async (resolve, reject) => {
+    const result: T[] = [];
+    try {
+      for await (const data of iterable) {
+        result.push(data);
+      }
+      resolve(result);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+export const useQuery = <T extends { [key: string]: objt } = {}>(
+  query: (
+    v: (name?: keyof T, mapper?: (arg: objt) => objt) => queryVariable
+  ) => query[],
+  deps: ReadonlyArray<any>
+) => {
+  const store = useContext(StoreContext);
+
+  return useMemo(() => {
+    const promise = asyncIterableToPromise(
+      store.query(query(variable as any))
+    ).then(result => {
+      return result.map(item => item.variables);
+    });
+    return observableAsyncPlaceholder(promise as Promise<T[]>, {});
+  }, deps.concat(store));
 };
 
 export const ProvideStore: React.SFC<{ name: string }> = ({

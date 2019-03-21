@@ -23,7 +23,7 @@ export interface Tuple {
   o: objt;
 }
 
-type queryVariable = {
+export type queryVariable = {
   '#': string;
   $: (val: subj | pred | objt) => subj | pred | objt;
 };

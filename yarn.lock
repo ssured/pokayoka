@@ -2285,6 +2285,13 @@
     "@types/prop-types" "*"
     "@types/react" "*"
 
+"@types/react-window@^1.7.0":
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@types/react-window/-/react-window-1.7.0.tgz#8dd99822c54380c9c05df213b7b4400c24c9877e"
+  integrity sha512-HyxhB3TFL/2WKRi69paA1Ch7kowomhR2eSZe7sJz8OtKuNhzRrlYSteSID7GIUpV95k246iVOlxEXmG2bjZQFA==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react@*", "@types/react@^16.7.13":
   version "16.7.18"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.7.18.tgz#f4ce0d539a893dd61e36cd11ae3a5e54f5a48337"
@@ -9524,6 +9531,11 @@ memdown@^3.0.0:
     ltgt "~2.2.0"
     safe-buffer "~5.1.1"
 
+"memoize-one@>=3.1.1 <6":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/memoize-one/-/memoize-one-5.0.0.tgz#d55007dffefb8de7546659a1722a5d42e128286e"
+  integrity sha512-7g0+ejkOaI9w5x6LvQwmj68kUj6rxROywPSCqmclG/HBacmFnZqhVscQ8kovkn9FBCNJmOz6SY42+jnvZzDWdw==
+
 memoize-one@^4.0.0, memoize-one@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/memoize-one/-/memoize-one-4.1.0.tgz#a2387c58c03fff27ca390c31b764a79addf3f906"
@@ -10834,21 +10846,12 @@ pn@^1.1.0:
   resolved "https://registry.yarnpkg.com/pn/-/pn-1.1.0.tgz#e2f4cef0e219f463c179ab37463e4e1ecdccbafb"
   integrity sha512-2qHaIQr2VLRFoxe2nASzsV6ef4yOOH+Fi9FBOVH6cqeSgUnoyySPZkxzLuzd+RYOQTRpROA0ztTMqxROKSb/nA==
 
-<<<<<<< HEAD
-polished@^2.3.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/polished/-/polished-2.3.1.tgz#557ea07e5bcb1b9c7d71935a01d0315831234d48"
-  integrity sha512-0mGyvVrHVRN92wfohriBWmMF4JLEnGgpZbpwPrNDhpB8NrX6lYI8GGWXEfrmrF+ZXg52Jkwd+D0rxViOvXM9RQ==
-  dependencies:
-    "@babel/runtime" "^7.0.0"
-=======
 polished@^2.2.0, polished@^2.3.3:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/polished/-/polished-2.3.3.tgz#bdbaba962ba8271b0e11aa287f2befd4c87be99a"
   integrity sha512-59V4fDbdxtH4I1m9TWxFsoGJbC8nnOpUYo5uFmvMfKp9Qh+6suo4VMUle1TGIIUZIGxfkW+Rs485zPk0wcwR2Q==
   dependencies:
     "@babel/runtime" "^7.2.0"
->>>>>>> master
 
 popper.js@^1.14.4:
   version "1.14.6"
@@ -11914,10 +11917,23 @@ react-use@^5.2.1:
     use-callbag "^0.1.2"
     use-onclickoutside "^0.1.0"
 
+react-virtualized-auto-sizer@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.2.tgz#a61dd4f756458bbf63bd895a92379f9b70f803bd"
+  integrity sha512-MYXhTY1BZpdJFjUovvYHVBmkq79szK/k7V3MO+36gJkWGkrXKtyr4vCPtpphaTLRAdDNoYEYFZWE8LjN+PIHNg==
+
 react-wait@^0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/react-wait/-/react-wait-0.3.0.tgz#0cdd4d919012451a5bc3ab0a16d00c6fd9a8c10b"
   integrity sha512-kB5x/kMKWcn0uVr9gBdNz21/oGbQwEQnF3P9p6E9yLfJ9DRcKS0fagbgYMFI0YFOoyKDj+2q6Rwax0kTYJF37g==
+
+react-window@^1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.7.1.tgz#c1db640415b97b85bc0a1c66eb82dadabca39b86"
+  integrity sha512-y4/Qc98agCtHulpeI5b6K2Hh8J7TeZIfvccBVesfqOFx4CS+TSUpnJl1/ipeXzhfvzPwvVEmaU/VosQ6O5VhTg==
+  dependencies:
+    "@babel/runtime" "^7.0.0"
+    memoize-one ">=3.1.1 <6"
 
 react@16.7.0-alpha.2:
   version "16.7.0-alpha.2"
