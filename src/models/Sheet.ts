@@ -47,13 +47,13 @@ export const Sheet = singleton(() => {
       },
     }))
     .views(self => ({
-      urlFor(z: number, x: number, y: number) {
-        const key = [self.prefix, z, x, y + POSTFIX].join('/');
+      urlForXYZ(x: number, y: number, z: number) {
+        const key = [self.prefix, z, y, x + POSTFIX].join('/');
         const file = self.tiles.get(key);
         if (file && self.projectId) {
           return file.src(self.projectId);
         }
-        return undefined;
+        return null;
       },
     }))
     .actions(self => ({}));

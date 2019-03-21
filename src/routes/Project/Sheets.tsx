@@ -6,26 +6,10 @@ import { useProjectId } from '.';
 import { useModel, useQuery } from '../../contexts/store';
 import { Project } from '../../models/Project';
 import { Sheet as SheetModel } from '../../models/Sheet';
-import { FixedSizeList } from 'react-window';
 import styled from 'styled-components';
 
-import XYZ from 'ol/source/xyz';
-import Projection from 'ol/proj/projection';
-import TileGrid from 'ol/tilegrid/tilegrid';
-
-import {
-  interaction,
-  layer,
-  custom,
-  control, // name spaces
-  Interactions,
-  Overlays,
-  Controls, // group
-  Map,
-  Layers,
-  Overlay,
-  Util, // objects
-} from '@sirmcpotato/react-openlayers';
+import PDFMap from '../../components/map/leaflet/image-map';
+import TileImage from '../../components/map/leaflet/tile-image';
 
 const LoadingIndicator = () => <p>Loading...</p>;
 const ErrorMessage = (error: Error) => (
@@ -56,6 +40,12 @@ const Header = styled(Heading)`
 `;
 const Body = styled.div`
   grid-area: body;
+  min-height: 300px;
+  background: yellow;
+
+  > .pdfmap {
+    height: 500px;
+  }
 `;
 const Footer = styled.ul`
   grid-area: footer;
@@ -103,52 +93,27 @@ const Sheet: React.FunctionComponent<{
       sheet => (
         <Grid>
           <Header level="3">{sheet.type}</Header>
-          <Body>
-            <Map
-              view={{
-                center: [0, 0],
-                zoom: 3,
-              }}
-            >
-              <Layers>
-                <layer.Tile
-                  source={
-                    new XYZ({
-                      tileSize: [1024, 1024],
-                      tileUrlFunction: (coords, pixelRatio, proj) => {
-                        const [z, x, y] = coords;
-                        console.log({ coords, pixelRatio, proj });
-                        const url = sheet.urlFor(z + 1, x, -y) || '';
-                        console.log(url, z + 1, x, -y);
-                        return url;
-                      },
-                    })
-                  }
+          {sheet.projectId /* projectId needs to be available for sheet.urlForXYZ to work sync */ && (
+            <Body>
+              <PDFMap
+                center={
+                  sheet.width > sheet.height
+                    ? [-(sheet.height / sheet.width) * 256, 256]
+                    : [-256, (sheet.width / sheet.height) * 256]
+                }
+                zoom={1}
+                className="pdfmap"
+              >
+                <TileImage
+                  url={null}
+                  width={sheet.width}
+                  height={sheet.height}
+                  availableZoomLevels={JSON.parse(sheet.availableZoomLevels)}
+                  urlForXYZ={sheet.urlForXYZ}
                 />
-                {/* <layer.Vector source={markers} style={markers.style} zIndex="1" /> */}
-              </Layers>
-              {/* <Overlays>
-              <Overlay
-                ref={comp => (this.overlayComp = comp)}
-                element="#popup"
-              />
-            </Overlays> */}
-              <Controls attribution={false} zoom={true}>
-                {/* <control.Rotate /> */}
-                <control.ScaleLine />
-                {/* <control.FullScreen /> */}
-                <control.OverviewMap />
-                {/* <control.ZoomSlider /> */}
-                {/* <control.ZoomToExtent /> */}
-                <control.Zoom />
-              </Controls>
-              {/* <Interactions>
-              <interaction.Select style={selectedMarkerStyle} />
-              <interaction.Draw source={markers} type="Point" />
-              <interaction.Modify features={markers.features} />
-            </Interactions> */}
-            </Map>
-          </Body>
+              </PDFMap>
+            </Body>
+          )}
 
           {/* <custom.Popup ref={comp => (this.popupComp = comp)} /> */}
           <Footer>
@@ -156,17 +121,17 @@ const Sheet: React.FunctionComponent<{
               Prefix: {sheet.prefix} {sheet.width} {sheet.height}{' '}
               {sheet.availableZoomLevels}
             </li>
-            <li>src: {sheet.urlFor(1, 0, 0)}</li>
-            {sheet.urlFor(1, 0, 0) && (
+            <li>src: {sheet.urlForXYZ(0, 0, 1)}</li>
+            {/* {sheet.urlForXYZ(0, 0, 1) && (
               <li>
-                <GImage fit="contain" src={sheet.urlFor(1, 0, 0)!} />
+                <GImage fit="contain" src={sheet.urlForXYZ(0, 0, 1)!} />
               </li>
             )}
             {[...sheet.tiles.entries()].map(([key, value]) => (
               <li key={key}>
                 {key} {JSON.stringify(value)}
               </li>
-            ))}
+            ))} */}
           </Footer>
         </Grid>
       ),

@@ -19,8 +19,8 @@ import {
   queryResult,
   query,
   variable,
-  objt,
 } from '../storage/object';
+import { objt } from '../storage/index';
 import { generateId } from '../utils/id';
 import { produce, applyPatches, Patch as ImmerPatch } from 'immer';
 import { asyncReference, asPlaceholder } from './asyncReference';
