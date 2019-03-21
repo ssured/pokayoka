@@ -98,6 +98,7 @@
     "@expo/mux": "^1.0.7",
     "@reach/router": "^1.2.1",
     "@rebass/grid": "^6.0.0-7",
+    "@sirmcpotato/react-openlayers": "^0.3.11",
     "@types/codemirror": "^0.0.71",
     "@types/encoding-down": "^5.0.0",
     "@types/express-http-proxy": "^1.5.1",

@@ -18,17 +18,55 @@ import fs from 'fs-extra';
 import path from 'path';
 import mime from 'mime';
 import { ObjectStorage } from '../src/storage/object';
+import { Omit } from '../src/utils/typescript';
 
 const log = /*debug(__filename.replace(`${__dirname}/`, '').replace('.ts', ''));
 log.log = */ console.log.bind(
   console
 );
 
+type Image = {
+  geojson?: any;
+  fileInfo?: {
+    name: string;
+    type: string;
+    size: number;
+    lastModified: number;
+  };
+  pdfInfo?: any;
+  availableZoomLevels?: number[];
+  prefix: string;
+  width: number;
+  height: number;
+};
+
+type AttachmentInfo = {
+  name: string;
+  content_type: string;
+  revpos: number;
+  digest: string;
+  length: number;
+  stub: boolean;
+};
+
 export async function copyDbFromSnagtracker(
   fromDb: nano.DocumentScope<{
-    title: string;
-    description: string;
-    _attachments: any;
+    _id: string;
+    _rev: string;
+    _attachments: {
+      [key: string]: Omit<AttachmentInfo, 'name'>;
+    };
+    title?: string;
+    description?: string;
+    position?: {
+      lat: number;
+      lng: number;
+      zoom?: number;
+    };
+    image?: Image;
+    images?: Image[];
+    execution?: { u: string; p?: number }[];
+    labels?: string[];
   }>,
   toDb: ObjectStorage,
   toCdnPath: string // pathForCdn(toDbName)
@@ -36,15 +74,6 @@ export async function copyDbFromSnagtracker(
   // const fromDbName = 'bk0wb0a7sz';
   // const toDbName = fromDbName;
   // const server = nano('http://admin:admin@localhost:5984');
-
-  type AttachmentInfo = {
-    name: string;
-    content_type: string;
-    revpos: number;
-    digest: string;
-    length: number;
-    stub: boolean;
-  };
 
   function sha256OfStream(
     streamThunk: () => NodeJS.ReadStream,
@@ -163,20 +192,29 @@ export async function copyDbFromSnagtracker(
           globalId: storeyId,
           name: storey.title || '-- left blank --',
           description: storey.description,
-          files: attachmentsToMap(storey._attachments),
+          // files: attachmentsToMap(storey._attachments),
           building: buildingId,
         });
         newObjects.set(newStorey, storey._id);
         idMap[storey._id] = storeyId;
 
-        const sheetId = newIdFromOldId(storey._id, 'sheet');
-        const newSheet = Sheet().create({
-          id: sheetId,
-          tiles: attachmentsToMap(storey._attachments),
-          spatialStructure: storeyId,
-        });
-        newObjects.set(newSheet, storey._id);
-        sheetIdMap[storey._id] = sheetId;
+        const image = (storey.images && storey.images[0]) || storey.image;
+        if (image != null) {
+          const sheetId = newIdFromOldId(storey._id, 'sheet');
+          const newSheet = Sheet().create({
+            id: sheetId,
+            width: image.width || 0,
+            height: image.height || 0,
+            availableZoomLevels: JSON.stringify(
+              image.availableZoomLevels || []
+            ),
+            prefix: image.prefix || '',
+            tiles: attachmentsToMap(storey._attachments),
+            spatialStructure: storeyId,
+          });
+          newObjects.set(newSheet, storey._id);
+          sheetIdMap[storey._id] = sheetId;
+        }
 
         const spaces = nonLeafRows
           .filter(
@@ -270,40 +308,7 @@ export async function copyDbFromSnagtracker(
         throw new Error('row not found');
       }
 
-      const { _id, _rev, _attachments, ...doc } = (row.doc as unknown) as {
-        _id: string;
-        _rev: string;
-        _attachments: {
-          [key: string]: {
-            content_type: string;
-            revpos: number;
-            digest: string;
-            length: number;
-            stub: boolean;
-          };
-        };
-        title: string | null;
-        description?: string;
-        position?: {
-          lat: number;
-          lng: number;
-          zoom?: number;
-        };
-        images?: {
-          geojson?: any;
-          fileInfo?: {
-            name: string;
-            type: string;
-            size: number;
-            lastModified: number;
-          };
-          prefix: string;
-          width: number;
-          height: number;
-        }[];
-        execution?: { u: string; p?: number }[];
-        labels?: string[];
-      };
+      const { _id, _rev, _attachments, ...doc } = row.doc!;
 
       const fileHashes = await Promise.all(
         Object.entries(_attachments || {}).reduce(
@@ -342,7 +347,7 @@ export async function copyDbFromSnagtracker(
           {} as { [key: string]: string }
         ),
         images:
-          (doc.images || []).reduce(
+          (doc.images || (doc.image && [doc.image]) || []).reduce(
             (images, image) => {
               images[generateId()] = image;
               return images;

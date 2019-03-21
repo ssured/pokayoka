@@ -4,6 +4,7 @@ import React, { useContext } from 'react';
 import { Overview } from './Overview';
 import { Observations } from './Observations';
 import { ProvideStore } from '../../contexts/store';
+import { Sheets } from './Sheets';
 
 interface ProjectParams {
   projectId: string;
@@ -24,6 +25,7 @@ export const Project: React.FunctionComponent<
         <Router>
           <Overview path="/" />
           <Observations path="/observations" />
+          <Sheets path="/sheets" />
         </Router>
         {/* </ProvideProject> */}
       </ProvideStore>

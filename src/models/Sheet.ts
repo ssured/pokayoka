@@ -9,9 +9,14 @@ import {
 import { referenceTo } from '../graph/index';
 import { File } from './base';
 import { singleton } from './utils';
-import { SpatialStructureElement } from './union';
+import {
+  SpatialStructureElement,
+  projectIdFromSpatialStructure,
+} from './union';
 
 export const sheetType: 'sheet' = 'sheet';
+
+const POSTFIX = '|png';
 
 export const Sheet = singleton(() => {
   return types
@@ -19,6 +24,11 @@ export const Sheet = singleton(() => {
       id: types.identifier,
       type: sheetType,
       typeVersion: 1,
+
+      width: types.number,
+      height: types.number,
+      availableZoomLevels: types.string, // JSON string of array of numbers
+      prefix: types.string,
 
       /**
        * Map of files, where the key encodes the position of the
@@ -31,6 +41,21 @@ export const Sheet = singleton(() => {
        */
       spatialStructure: referenceTo(SpatialStructureElement()),
     })
+    .views(self => ({
+      get projectId() {
+        return projectIdFromSpatialStructure(self.spatialStructure.maybe);
+      },
+    }))
+    .views(self => ({
+      urlFor(z: number, x: number, y: number) {
+        const key = [self.prefix, z, x, y + POSTFIX].join('/');
+        const file = self.tiles.get(key);
+        if (file && self.projectId) {
+          return file.src(self.projectId);
+        }
+        return undefined;
+      },
+    }))
     .actions(self => ({}));
 });
 

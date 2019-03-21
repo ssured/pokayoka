@@ -56,7 +56,7 @@ export function projectIdFromSpatialStructure(
     elt = (elt as IBuilding).site.maybe;
   }
   if (elt.type === siteType) {
-    return (elt as ISite).project.id;
+    return (elt as ISite).project.id as string;
   }
   return null;
 }

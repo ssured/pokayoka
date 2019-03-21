@@ -329,9 +329,7 @@ export const App: React.FunctionComponent<{}> = () => {
               />
               <StyledMenuItemButton
                 icon={Icons.MapLocation}
-                actionFn={() => {
-                  alert('Bouwlagen');
-                }}
+                actionFn={() => navigate('/bk0wb0a7sz/sheets')}
                 label="Bouwlagen"
               />
               <StyledMenuItemButton

@@ -32,7 +32,8 @@ async function resetStorage(name: string) {
   }
   const storage = getStorage(name);
   const fromDb = nano(
-    'https://copyclient:6MYm9Tm&t3Uc@bgdd.snagtracker.com:6984'
+    // 'https://copyclient:6MYm9Tm&t3Uc@bgdd.snagtracker.com:6984'
+    'http://admin:admin@localhost:5984'
   ).use<any>(name);
   const cdnPath = pathForCdn(name);
 
