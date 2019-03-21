@@ -50,7 +50,7 @@ const StyledWrapper = styled(Wrapper)`
       grid-template-areas:
         'ctx     ctx     ctx     ctx     ctx     ctx     ctx     ctx     nav'
         'content content content content content content content content nav'
-        'footer  footer  footer  footer  footer  footer  footer  footer  footer';
+        'footer  footer  footer  footer  footer  footer  footer  footer  nav';
       grid-template-rows: 40px 1fr 40px;
       grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
     }
@@ -107,7 +107,6 @@ const MainNav: React.FunctionComponent<{
     <aside className={`${className} ${isSidebarOpen ? 'open' : 'closed'}`}>
       <div className="fixed">
         <div className="buttons">
-          <span className="spacer" />
           <ToggleNavButton toggleSidebar={toggleSidebar} />
         </div>
         <Box fill direction="row">
@@ -121,11 +120,11 @@ const MainNav: React.FunctionComponent<{
 const StyledMainNav = styled(MainNav)`
   grid-area: nav;
   overflow: hidden;
-
+  position: relative;
   .fixed {
     position: fixed;
+    width: inherit;
   }
-
   ul.menu {
     display: flex;
     flex-direction: column;
@@ -154,7 +153,7 @@ const StyledMainNav = styled(MainNav)`
     .buttons {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
 
       margin-bottom: 10px;
 
