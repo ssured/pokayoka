@@ -161,14 +161,16 @@ const StyledMainNav = styled(MainNav)`
       .menu-item {
         display: flex;
         flex-direction: row;
-      .icon {
-        width: 48px;
-      }
+        .icon {
+          width: 48px;
+        }
 
-      .label {
-        flex: 1;
-      }
-
+        .label {
+          flex: 1;
+        }
+        &:hover {
+          background-color: rgba(221,221,221,0.4);
+        }
       }
     }
   }
@@ -230,7 +232,6 @@ const MenuItemButton: React.FunctionComponent<{
     <div className={`${className} menu-item`}>
       <Button
         plain
-        hoverIndicator={true}
         className={`${className} icon`}
         onClick={actionFn}
         title={label}
@@ -242,7 +243,6 @@ const MenuItemButton: React.FunctionComponent<{
       </Button>
       <Button
         plain
-        hoverIndicator={true}
         className={`${className} label`}
         onClick={actionFn}
         title={label}
