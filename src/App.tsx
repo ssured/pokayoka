@@ -29,7 +29,7 @@ const Wrapper: React.FunctionComponent<{
 
 const StyledWrapper = styled(Wrapper)`
   height: 100vh;
-  overflow-y: scroll;
+  overflow-y: auto;
 
   .grid-contrainer {
     min-height: 100%;
@@ -46,7 +46,6 @@ const StyledWrapper = styled(Wrapper)`
 
     @media only screen and (min-width: 768px) {
       /* tablets and desktop */
-      grid-template-columns: repeat(9, 1fr);
       grid-template-areas:
         'ctx     ctx     ctx     ctx     ctx     ctx     ctx     ctx     nav'
         'content content content content content content content content nav'
@@ -106,12 +105,14 @@ const MainNav: React.FunctionComponent<{
   return (
     <aside className={`${className} ${isSidebarOpen ? 'open' : 'closed'}`}>
       <div className="fixed">
-        <div className="buttons">
-          <ToggleNavButton toggleSidebar={toggleSidebar} />
+        <div className="toggle-nav">
+          <div className="spacer" />
+          <ToggleNavButton
+            className="toggle-button"
+            toggleSidebar={toggleSidebar}
+          />
         </div>
-        <Box fill direction="row">
-          <Box fill>{children}</Box>
-        </Box>
+        <div className="menu-items">{children}</div>
       </div>
     </aside>
   );
@@ -121,11 +122,50 @@ const StyledMainNav = styled(MainNav)`
   grid-area: nav;
   overflow: hidden;
   position: relative;
+
   .fixed {
     position: fixed;
     width: inherit;
+    padding: 0.5em;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .toggle-nav {
+      display: flex;
+      flex-direction: row;
+      height: 48px;
+      margin-bottom: 10px;
+
+      .spacer {
+        flex: 1;
+      }
+
+      .toggle-button {
+        width: 48px;
+      }
+    }
+
+    .menu-items {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      .menu-item {
+        display: flex;
+        flex-direction: row;
+      .icon {
+        width: 48px;
+      }
+
+      .label {
+        flex: 1;
+      }
+
+      }
+    }
   }
-  ul.menu {
+  /* ul.menu {
     display: flex;
     flex-direction: column;
     list-style: none;
@@ -140,17 +180,14 @@ const StyledMainNav = styled(MainNav)`
         text-align: right;
       }
     }
-  }
+  } */
 
   /* MEDIA=tablets and desktop */
   @media only screen and (min-width: 768px) {
     transition: width 0.1s;
-    display: flex;
-    flex-direction: column;
     width: ${props => (props.isSidebarOpen ? '15em' : '4em')};
-    padding: 0.5em;
 
-    .buttons {
+    /* .buttons {
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -160,18 +197,18 @@ const StyledMainNav = styled(MainNav)`
       .spacer {
         width: 0;
       }
-    }
+    } */
   }
 
   /* MEDIA=PHONES */
-  @media only screen and (max-width: 767px) {
+  /* @media only screen and (max-width: 767px) { */
     /* hide nav when not open */
-    display: ${props => (props.isSidebarOpen ? 'block' : 'none')};
+    /* display: ${props => (props.isSidebarOpen ? 'block' : 'none')}; */
     /* hide menu button */
-    .buttons {
+    /* .buttons {
       display: none;
     }
-  }
+  } */
 `;
 
 const MenuItemButton: React.FunctionComponent<{
@@ -183,20 +220,32 @@ const MenuItemButton: React.FunctionComponent<{
 }> = ({ className = '', icon, label, actionFn }) => {
   const Icon = icon;
   return (
-    <Button
-      plain
-      hoverIndicator={true}
-      className={className}
-      onClick={actionFn}
-      title={label}
-      a11yTitle={label}
-    >
-      <ButtonLiner>
-        <Icon size="medium" />
-        <div className="spacer" />
-        <Text>{label}</Text>
-      </ButtonLiner>
-    </Button>
+    <div className={`${className} menu-item`}>
+      <Button
+        plain
+        hoverIndicator={true}
+        className={`${className} icon`}
+        onClick={actionFn}
+        title={label}
+        a11yTitle={label}
+      >
+        <ButtonLiner>
+          <Icon size="medium" />
+        </ButtonLiner>
+      </Button>
+      <Button
+        plain
+        hoverIndicator={true}
+        className={`${className} label`}
+        onClick={actionFn}
+        title={label}
+        a11yTitle={label}
+      >
+        <ButtonLiner>
+          <Text>{label}</Text>
+        </ButtonLiner>
+      </Button>
+    </div>
   );
 };
 
@@ -216,11 +265,6 @@ const ButtonLiner = styled(ButtonLiner_)`
 `;
 
 const StyledMenuItemButton = styled(MenuItemButton)`
-  .spacer {
-    flex: 0 0 auto;
-    width: 24px;
-  }
-
   /* MEDIA=PHONES */
   @media only screen and (max-width: 767px) {
     .button-inner {
@@ -242,8 +286,10 @@ const StyledFooter = styled(Footer)`
   grid-area: footer;
   display: flex;
   flex-direction: row;
+  justify-content: center;
+
   h1 {
-    font-size: 48px;
+    font-size: 32px;
     font-family: 'Roboto', sans-serif;
     font-weight: 100;
     text-transform: capitalize;
