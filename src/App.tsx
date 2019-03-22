@@ -50,7 +50,7 @@ const StyledWrapper = styled(Wrapper)`
         'ctx     ctx     ctx     ctx     ctx     ctx     ctx     ctx     nav'
         'content content content content content content content content nav'
         'footer  footer  footer  footer  footer  footer  footer  footer  nav';
-      grid-template-rows: 40px 1fr 40px;
+      grid-template-rows: auto 1fr 40px;
       grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
     }
 
@@ -60,7 +60,7 @@ const StyledWrapper = styled(Wrapper)`
         'ctx'
         'content'
         'nav';
-      grid-template-rows: 60px auto 40px 1fr 40px;
+      grid-template-rows: 60px 1fr 60px;
     }
   }
 `;
@@ -87,6 +87,9 @@ const ToggleNavButton: React.FunctionComponent<{
 
 const ContextNav = styled.nav`
   grid-area: ctx;
+  height: calc(48px + 0.5em);
+  padding: 0.5em;
+  padding-top: calc(0.5em + 12px);
 
   ul {
     display: flex;
@@ -120,104 +123,106 @@ const MainNav: React.FunctionComponent<{
 
 const StyledMainNav = styled(MainNav)`
   grid-area: nav;
-  overflow: hidden;
-  position: relative;
+  display: flex;
 
-  .fixed {
+  /* MEDIA=PHONES */
+  @media only screen and (max-width: 767px) {
     position: fixed;
-    width: inherit;
-    padding: 0.5em;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    flex-direction: row;
 
+    /* hide menu button */
     .toggle-nav {
-      display: flex;
-      flex-direction: row;
-      height: 48px;
-      margin-bottom: 10px;
-
-      .spacer {
-        flex: 1;
-      }
-
-      .toggle-button {
-        width: 48px;
-      }
+      display: none;
     }
 
-    .menu-items {
+    .fixed {
       flex: 1;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
 
-      .context-menu-items {
+      .menu-items {
         flex: 1;
         display: flex;
-        flex-direction: column;
-        margin-top: 2em;
-      }
-
-      .menu-item {
-        display: flex;
         flex-direction: row;
-        .icon {
-          width: 48px;
+        justify-content: space-around;
+
+        .context-menu-items {
+          display: none;
         }
 
         .label {
-          flex: 1;
-        }
-        &:hover {
-          background-color: rgba(221,221,221,0.4);
+          display: none;
         }
       }
     }
   }
-  /* ul.menu {
-    display: flex;
-    flex-direction: column;
-    list-style: none;
-    padding: 0;
-
-    li {
-      display: flex;
-
-      a {
-        width: 100vw;
-        padding: 0.5em;
-        text-align: right;
-      }
-    }
-  } */
 
   /* MEDIA=tablets and desktop */
   @media only screen and (min-width: 768px) {
+    position: relative;
     transition: width 0.1s;
     width: ${props => (props.isSidebarOpen ? '15em' : '4em')};
 
-    /* .buttons {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
+    .fixed {
+      position: fixed;
+      width: inherit;
+      padding: 0.5em;
+      flex-direction: column;
+      height: 100%;
 
-      margin-bottom: 10px;
+      .toggle-nav {
+        display: flex;
+        flex-direction: row;
+        height: 48px;
+        margin-bottom: 10px;
 
-      .spacer {
-        width: 0;
+        .spacer {
+          flex: 1;
+        }
+
+        .toggle-button {
+          width: 48px;
+        }
       }
-    } */
-  }
 
-  /* MEDIA=PHONES */
-  /* @media only screen and (max-width: 767px) { */
-    /* hide nav when not open */
-    /* display: ${props => (props.isSidebarOpen ? 'block' : 'none')}; */
-    /* hide menu button */
-    /* .buttons {
-      display: none;
+      .menu-items {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .context-menu-items {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          margin-top: 2em;
+        }
+
+        .menu-item {
+          display: flex;
+          flex-direction: row;
+          .icon {
+            width: 48px;
+          }
+
+          .label {
+            flex: 1;
+
+            span {
+              /* dont wrap label to next line */
+              white-space: pre;
+            }
+          }
+          &:hover {
+            background-color: rgba(221, 221, 221, 0.4);
+          }
+        }
+      }
     }
-  } */
+  }
 `;
 
 const MenuItemButton: React.FunctionComponent<{
@@ -291,6 +296,10 @@ const Footer: React.FunctionComponent<{
 
 const StyledFooter = styled(Footer)`
   grid-area: footer;
+  /* MEDIA=PHONES */
+  @media only screen and (max-width: 767px) {
+    display: none;
+  }
   display: flex;
   flex-direction: row;
   justify-content: center;
