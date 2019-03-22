@@ -151,6 +151,13 @@ const StyledMainNav = styled(MainNav)`
       display: flex;
       flex-direction: column;
 
+      .context-menu-items {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin-top: 2em;
+      }
+
       .menu-item {
         display: flex;
         flex-direction: row;
@@ -350,57 +357,56 @@ export const App: React.FunctionComponent<{}> = () => {
                 label="Beginscherm"
               />
               <StyledMenuItemButton
-                icon={Icons.Overview}
+                icon={Icons.Projects}
                 actionFn={() => {
-                  alert('Overzicht');
+                  alert('Projecten');
                 }}
-                label="Overzicht"
+                label="Projecten"
               />
               <StyledMenuItemButton
-                icon={Icons.Calendar}
+                icon={Icons.Book}
                 actionFn={() => {
-                  alert('Planning');
+                  alert('Verwerkingsinstructies');
                 }}
-                label="Planning"
+                label="Verwerkingsinstructies"
               />
-              <StyledMenuItemButton
-                icon={Icons.Bug}
-                actionFn={() => {
-                  alert('Bevindingen');
-                }}
-                label="Bevindingen"
-              />
-              <StyledMenuItemButton
-                icon={Icons.MapLocation}
-                actionFn={() => {
-                  alert('Bouwlagen');
-                }}
-                label="Bouwlagen"
-              />
-              <StyledMenuItemButton
-                icon={Icons.Cubes}
-                actionFn={() => {
-                  alert('BIM modellen');
-                }}
-                label="BIM modellen"
-              />
-              <StyledMenuItemButton
-                icon={Icons.User}
-                actionFn={() => {
-                  alert('Profiel');
-                }}
-                label={authentication.ok ? authentication.name : 'Anonymous'}
-              />
-              {authentication.ok && (
+              <div className="context-menu-items">
                 <StyledMenuItemButton
-                  icon={Icons.Logout}
+                  icon={Icons.Overview}
                   actionFn={() => {
-                    logout();
-                    navigate('/');
+                    alert('Overzicht');
                   }}
-                  label="Uitloggen"
+                  label="Overzicht"
                 />
-              )}
+                <StyledMenuItemButton
+                  icon={Icons.Calendar}
+                  actionFn={() => {
+                    alert('Planning');
+                  }}
+                  label="Planning"
+                />
+                <StyledMenuItemButton
+                  icon={Icons.Bug}
+                  actionFn={() => {
+                    alert('Bevindingen');
+                  }}
+                  label="Bevindingen"
+                />
+                <StyledMenuItemButton
+                  icon={Icons.MapLocation}
+                  actionFn={() => {
+                    alert('Bouwlagen');
+                  }}
+                  label="Bouwlagen"
+                />
+                <StyledMenuItemButton
+                  icon={Icons.Cubes}
+                  actionFn={() => {
+                    alert('BIM modellen');
+                  }}
+                  label="BIM modellen"
+                />
+              </div>
             </StyledMainNav>
             <StyledFooter />
           </SidebarContext.Provider>
