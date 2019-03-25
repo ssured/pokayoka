@@ -33,7 +33,7 @@ const Wrapper: React.FunctionComponent<{
 
 const StyledWrapper = styled(Wrapper)`
   height: 100vh;
-  overflow-y: scroll;
+  overflow-y: auto;
 
   .grid-contrainer {
     min-height: 100%;
@@ -41,35 +41,35 @@ const StyledWrapper = styled(Wrapper)`
     grid-gap: 10px;
 
     > * {
+      @import url('https://fonts.googleapis.com/css?family=Roboto:100,400');
       border: 1px solid lightgrey;
+      overflow: hidden;
+      color: rgb(66, 66, 66);
+      font-family: 'Roboto', sans-serif;
     }
 
     @media only screen and (min-width: 768px) {
       /* tablets and desktop */
-      grid-template-columns: repeat(9, 1fr);
       grid-template-areas:
-        'header  header  header  header  header  header  header  header  sidebar '
-        'nav     nav     nav     nav     nav     nav     nav     nav     sidebar'
-        'content content content content content content content content sidebar'
-        'footer  footer  footer  footer  footer  footer  footer  footer  footer ';
-      grid-template-rows: 60px 40px 1fr 40px;
+        'ctx     ctx     ctx     ctx     ctx     ctx     ctx     ctx     nav'
+        'content content content content content content content content nav'
+        'footer  footer  footer  footer  footer  footer  footer  footer  nav';
+      grid-template-rows: auto 1fr 40px;
       grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
     }
 
     @media only screen and (max-width: 767px) {
       /* phones */
       grid-template-areas:
-        'header'
-        'sidebar'
-        'nav'
+        'ctx'
         'content'
-        'footer';
-      grid-template-rows: 60px auto 40px 1fr 40px;
+        'nav';
+      grid-template-rows: 60px 1fr 60px;
     }
   }
 `;
 
-const ToggleSidebarButton: React.FunctionComponent<{
+const ToggleNavButton: React.FunctionComponent<{
   className?: string;
   toggleSidebar: () => void;
 }> = ({ className = '', toggleSidebar }) => {
@@ -77,51 +77,23 @@ const ToggleSidebarButton: React.FunctionComponent<{
 
   return (
     <Button
-      className={`toggle-sidebar ${className}`}
+      plain
+      hoverIndicator={true}
+      className={`toggle-nav ${className}`}
       onClick={() => toggleSidebar()}
     >
-      {isSidebarOpen ? <Close size="large" /> : <Menu size="large" />}
+      <ButtonLiner>
+        {isSidebarOpen ? <Close size="medium" /> : <Menu size="medium" />}
+      </ButtonLiner>
     </Button>
   );
 };
 
-const Header: React.FunctionComponent<{
-  className?: string;
-  toggleSidebar: () => void;
-}> = ({ className = '', toggleSidebar }) => {
-  const isSidebarOpen = useContext(SidebarContext);
-  return (
-    <header className={className}>
-      Pokayoka
-      <ToggleSidebarButton toggleSidebar={toggleSidebar} />
-    </header>
-  );
-};
-
-const StyledHeader = styled(Header)`
-  grid-area: header;
-  display: flex;
-  flex-direction: row;
-  .toggle-sidebar {
-    display: inline-block;
-  }
-  .center {
-    flex: 1;
-  }
-  img {
-    height: 100%;
-  }
-  @media only screen and (min-width: 768px) {
-    /* tablets and desktop */
-    /* hide menu button */
-    .toggle-sidebar {
-      display: none;
-    }
-  }
-`;
-
-const Nav = styled.nav`
-  grid-area: nav;
+const ContextNav = styled.nav`
+  grid-area: ctx;
+  height: calc(48px + 0.5em);
+  padding: 0.5em;
+  padding-top: calc(0.5em + 12px);
 
   ul {
     display: flex;
@@ -132,71 +104,127 @@ const Content = styled.main`
   grid-area: content;
 `;
 
-const Sidebar: React.FunctionComponent<{
+const MainNav: React.FunctionComponent<{
   className?: string;
   toggleSidebar: () => void;
   isSidebarOpen: boolean; // because we style this component, we
 }> = ({ className = '', children, toggleSidebar, isSidebarOpen }) => {
   return (
     <aside className={`${className} ${isSidebarOpen ? 'open' : 'closed'}`}>
-      <div className="buttons">
-        <span className="spacer" />
-        <ToggleSidebarButton toggleSidebar={toggleSidebar} />
+      <div className="fixed">
+        <div className="toggle-nav">
+          <div className="spacer" />
+          <ToggleNavButton
+            className="toggle-button"
+            toggleSidebar={toggleSidebar}
+          />
+        </div>
+        <div className="menu-items">{children}</div>
       </div>
-      <Box fill direction="row">
-        <Box fill>{children}</Box>
-      </Box>
     </aside>
   );
 };
 
-const StyledSidebar = styled(Sidebar)`
-  grid-area: sidebar;
-  overflow: hidden;
+const StyledMainNav = styled(MainNav)`
+  grid-area: nav;
+  display: flex;
 
-  ul.menu {
-    display: flex;
-    flex-direction: column;
-    list-style: none;
-    padding: 0;
+  /* MEDIA=PHONES */
+  @media only screen and (max-width: 767px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    flex-direction: row;
 
-    li {
+    /* hide menu button */
+    .toggle-nav {
+      display: none;
+    }
+
+    .fixed {
+      flex: 1;
       display: flex;
+      flex-direction: row;
 
-      a {
-        width: 100vw;
-        padding: 0.5em;
-        text-align: right;
+      .menu-items {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+
+        .context-menu-items {
+          display: none;
+        }
+
+        .label {
+          display: none;
+        }
       }
     }
   }
 
   /* MEDIA=tablets and desktop */
   @media only screen and (min-width: 768px) {
+    position: relative;
     transition: width 0.1s;
-    display: flex;
-    flex-direction: column;
-    width: ${props => (props.isSidebarOpen ? '15em' : '3em')};
-    padding: 0.5em;
+    width: ${props => (props.isSidebarOpen ? '15em' : '4em')};
 
-    .buttons {
-      display: flex;
-      align-items: flex-end;
-      margin-bottom: 10px;
+    .fixed {
+      position: fixed;
+      width: inherit;
+      padding: 0.5em;
+      flex-direction: column;
+      height: 100%;
 
-      .spacer {
-        flex: 1;
+      .toggle-nav {
+        display: flex;
+        flex-direction: row;
+        height: 48px;
+        margin-bottom: 10px;
+
+        .spacer {
+          flex: 1;
+        }
+
+        .toggle-button {
+          width: 48px;
+        }
       }
-    }
-  }
 
-  /* MEDIA=PHONES */
-  @media only screen and (max-width: 767px) {
-    /* hide sidebar when not open */
-    display: ${props => (props.isSidebarOpen ? 'block' : 'none')};
-    /* hide menu button */
-    .buttons {
-      display: none;
+      .menu-items {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .context-menu-items {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          margin-top: 2em;
+        }
+
+        .menu-item {
+          display: flex;
+          flex-direction: row;
+          .icon {
+            width: 48px;
+          }
+
+          .label {
+            flex: 1;
+
+            span {
+              /* dont wrap label to next line */
+              white-space: pre;
+            }
+          }
+          &:hover {
+            background-color: rgba(221, 221, 221, 0.4);
+          }
+        }
+      }
     }
   }
 `;
@@ -210,38 +238,49 @@ const MenuItemButton: React.FunctionComponent<{
 }> = ({ className = '', icon, label, actionFn }) => {
   const Icon = icon;
   return (
-    <Button
-      plain
-      hoverIndicator={true}
-      className={className}
-      onClick={actionFn}
-      title={label}
-      a11yTitle={label}
-    >
-      <div className="button-inner">
-        <Icon size="medium" />
-        <div className="spacer" />
-        <Text>{label}</Text>
-      </div>
-    </Button>
+    <div className={`${className} menu-item`}>
+      <Button
+        plain
+        className={`${className} icon`}
+        onClick={actionFn}
+        title={label}
+        a11yTitle={label}
+      >
+        <ButtonLiner>
+          <Icon size="medium" />
+        </ButtonLiner>
+      </Button>
+      <Button
+        plain
+        className={`${className} label`}
+        onClick={actionFn}
+        title={label}
+        a11yTitle={label}
+      >
+        <ButtonLiner>
+          <Text>{label}</Text>
+        </ButtonLiner>
+      </Button>
+    </div>
   );
 };
 
+const ButtonLiner_: React.FunctionComponent<{
+  className?: string;
+}> = ({ className = '', children }) => (
+  <div className={className}>{children}</div>
+);
+
+const ButtonLiner = styled(ButtonLiner_)`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px;
+  outline: none;
+`;
+
 const StyledMenuItemButton = styled(MenuItemButton)`
-  .button-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 12px;
-    outline: none;
-  }
-
-  .spacer {
-    flex: 0 0 auto;
-    width: 24px;
-  }
-
   /* MEDIA=PHONES */
   @media only screen and (max-width: 767px) {
     .button-inner {
@@ -250,8 +289,31 @@ const StyledMenuItemButton = styled(MenuItemButton)`
   }
 `;
 
-const Footer = styled.footer`
+const Footer: React.FunctionComponent<{
+  className?: string;
+}> = ({ className = '', children }) => (
+  <footer className={className}>
+    <h1>Pokayoka</h1>
+    {children}
+  </footer>
+);
+
+const StyledFooter = styled(Footer)`
   grid-area: footer;
+  /* MEDIA=PHONES */
+  @media only screen and (max-width: 767px) {
+    display: none;
+  }
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+
+  h1 {
+    font-size: 32px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 100;
+    text-transform: capitalize;
+  }
 `;
 
 export const App: React.FunctionComponent<{}> = () => {
@@ -273,8 +335,7 @@ export const App: React.FunctionComponent<{}> = () => {
       ) : (
         <StyledWrapper>
           <SidebarContext.Provider value={isSidebarOpen}>
-            <StyledHeader toggleSidebar={toggleSidebar} />
-            <Nav>
+            <ContextNav>
               <ul>
                 <li>
                   <a href="">Navf 1</a>
@@ -286,7 +347,7 @@ export const App: React.FunctionComponent<{}> = () => {
                   <a href="">Nav 3</a>
                 </li>
               </ul>
-            </Nav>
+            </ContextNav>
             <Content>
               <Router>
                 <Home path="/" />
@@ -299,7 +360,7 @@ export const App: React.FunctionComponent<{}> = () => {
                 </User> */}
               </Router>
             </Content>
-            <StyledSidebar
+            <StyledMainNav
               toggleSidebar={toggleSidebar}
               isSidebarOpen={isSidebarOpen}
             >
@@ -309,55 +370,54 @@ export const App: React.FunctionComponent<{}> = () => {
                 label="Beginscherm"
               />
               <StyledMenuItemButton
-                icon={Icons.Overview}
+                icon={Icons.Projects}
                 actionFn={() => {
-                  alert('Overzicht');
+                  alert('Projecten');
                 }}
-                label="Overzicht"
+                label="Projecten"
               />
               <StyledMenuItemButton
-                icon={Icons.Calendar}
+                icon={Icons.Book}
                 actionFn={() => {
-                  alert('Planning');
+                  alert('Verwerkingsinstructies');
                 }}
-                label="Planning"
+                label="Verwerkingsinstructies"
               />
-              <StyledMenuItemButton
-                icon={Icons.Bug}
-                actionFn={() => navigate('/bk0wb0a7sz/observations')}
-                label="Bevindingen"
-              />
-              <StyledMenuItemButton
-                icon={Icons.MapLocation}
-                actionFn={() => navigate('/bk0wb0a7sz/sheets')}
-                label="Bouwlagen"
-              />
-              <StyledMenuItemButton
-                icon={Icons.Cubes}
-                actionFn={() => {
-                  alert('BIM modellen');
-                }}
-                label="BIM modellen"
-              />
-              <StyledMenuItemButton
-                icon={Icons.User}
-                actionFn={() => {
-                  alert('Profiel');
-                }}
-                label={authentication.ok ? authentication.name : 'Anonymous'}
-              />
-              {authentication.ok && (
+              <div className="context-menu-items">
                 <StyledMenuItemButton
-                  icon={Icons.Logout}
+                  icon={Icons.Overview}
                   actionFn={() => {
-                    logout();
-                    navigate('/');
+                    alert('Overzicht');
                   }}
-                  label="Uitloggen"
+                  label="Overzicht"
                 />
-              )}
-            </StyledSidebar>
-            <Footer>Footer</Footer>
+                <StyledMenuItemButton
+                  icon={Icons.Calendar}
+                  actionFn={() => {
+                    alert('Planning');
+                  }}
+                  label="Planning"
+                />
+                <StyledMenuItemButton
+                  icon={Icons.Bug}
+                  actionFn={() => navigate('/bk0wb0a7sz/observations')}
+                  label="Bevindingen"
+                />
+                <StyledMenuItemButton
+                  icon={Icons.MapLocation}
+                  actionFn={() => navigate('/bk0wb0a7sz/sheets')}
+                  label="Bouwlagen"
+                />
+                <StyledMenuItemButton
+                  icon={Icons.Cubes}
+                  actionFn={() => {
+                    alert('BIM modellen');
+                  }}
+                  label="BIM modellen"
+                />
+              </div>
+            </StyledMainNav>
+            <StyledFooter />
           </SidebarContext.Provider>
         </StyledWrapper>
       )}
