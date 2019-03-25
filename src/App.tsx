@@ -1,5 +1,8 @@
 import React, { useContext } from 'react';
 import { Button } from 'grommet';
+import { Grommet, Button, Text } from 'grommet';
+import { grommet } from 'grommet/themes';
+
 import styled from 'styled-components';
 import * as Icons from 'grommet-icons';
 
@@ -104,6 +107,8 @@ const ContextNav = styled.nav`
 `;
 const Content = styled.main`
   grid-area: content;
+  display: flex;
+  flex-direction: column;
 `;
 
 const MainNav: React.FunctionComponent<{
@@ -258,6 +263,12 @@ const StyledFooter = styled(Footer)`
   }
 `;
 
+const StyledRouter = styled(Router)`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
 export const App: React.FunctionComponent<{}> = () => {
   const {
     isAuthenticated,
@@ -271,19 +282,20 @@ export const App: React.FunctionComponent<{}> = () => {
   const UI = useUIContext();
 
   return (
-    <CapabilitiesCheck>
-      {!isAuthenticated ? (
-        <LoginForm
-          onAuthentication={(name, roles) => login({ ok: true, name, roles })}
-        />
-      ) : (
-        <StyledWrapper>
-          <SidebarContext.Provider value={isSidebarOpen}>
-            <ContextNav>
-              <ul>
-                <li>
+    <Grommet theme={grommet}>
+      <CapabilitiesCheck>
+        {!isAuthenticated ? (
+          <LoginForm
+            onAuthentication={(name, roles) => login({ ok: true, name, roles })}
+          />
+        ) : (
+          <StyledWrapper>
+            <SidebarContext.Provider value={isSidebarOpen}>
+              <ContextNav>
+                <ul>
+                  <li>
                   <UI.Title />
-                </li>
+                  </li>
                 <Observer>
                   {() => (
                     <>
@@ -303,51 +315,52 @@ export const App: React.FunctionComponent<{}> = () => {
                     </>
                   )}
                 </Observer>
-              </ul>
-            </ContextNav>
-            <Content>
-              <Router>
-                <Home path="/" />
-                {/* <Debug path="debug" /> */}
-                {/* <SyncStatus path="sync" /> */}
-                <Project path="/:projectId/*" />
-                <NotFound default />
-                {/* <User path=":userId">
+                </ul>
+              </ContextNav>
+              <Content>
+                <StyledRouter>
+                  <Home path="/" />
+                  {/* <Debug path="debug" /> */}
+                  {/* <SyncStatus path="sync" /> */}
+                  <Project path="/:projectId/*" />
+                  <NotFound default />
+                  {/* <User path=":userId">
                   <Project path=":projectId" />
                 </User> */}
-              </Router>
-            </Content>
-            <StyledMainNav
-              toggleSidebar={toggleSidebar}
-              isSidebarOpen={isSidebarOpen}
-            >
+                </StyledRouter>
+              </Content>
+              <StyledMainNav
+                toggleSidebar={toggleSidebar}
+                isSidebarOpen={isSidebarOpen}
+              >
               <MenuItemButton
-                icon={Icons.Home}
-                actionFn={() => navigate('/')}
-                label="Beginscherm"
-              />
+                  icon={Icons.Home}
+                  actionFn={() => navigate('/')}
+                  label="Beginscherm"
+                />
               <MenuItemButton
-                icon={Icons.Projects}
-                actionFn={() => {
-                  alert('Projecten');
-                }}
-                label="Projecten"
-              />
+                  icon={Icons.Projects}
+                  actionFn={() => {
+                    alert('Projecten');
+                  }}
+                  label="Projecten"
+                />
               <MenuItemButton
-                icon={Icons.Book}
-                actionFn={() => {
-                  alert('Verwerkingsinstructies');
-                }}
-                label="Verwerkingsinstructies"
-              />
-              <div className="context-menu-items">
+                  icon={Icons.Book}
+                  actionFn={() => {
+                    alert('Verwerkingsinstructies');
+                  }}
+                  label="Verwerkingsinstructies"
+                />
+                <div className="context-menu-items">
                 <UI.ContextMenu />
-              </div>
-            </StyledMainNav>
-            <StyledFooter />
-          </SidebarContext.Provider>
-        </StyledWrapper>
-      )}
-    </CapabilitiesCheck>
+                </div>
+              </StyledMainNav>
+              <StyledFooter />
+            </SidebarContext.Provider>
+          </StyledWrapper>
+        )}
+      </CapabilitiesCheck>
+    </Grommet>
   );
 };
