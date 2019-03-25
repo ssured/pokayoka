@@ -9,6 +9,7 @@ import { Observation as ObservationModel } from '../../models/Observation';
 import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import styled from 'styled-components';
+import { useUITitle } from '../../contexts/ui';
 
 const LoadingIndicator = () => <p>Loading...</p>;
 const ErrorMessage = (error: Error) => (
@@ -121,6 +122,7 @@ export const Observations: React.FunctionComponent<
 > = () => {
   const projectId = useProjectId();
   const project = useModel(Project, projectId);
+  useUITitle((project.value && project.value.name) || '');
 
   const query = useQuery<{ observationId: [string]; title: string }>(
     v => [

@@ -1,7 +1,5 @@
 import React, { useContext } from 'react';
-// import logo from "./logo.svg";
-// import "./App.css";
-import { Button, Box, Text } from 'grommet';
+import { Button } from 'grommet';
 import styled from 'styled-components';
 import * as Icons from 'grommet-icons';
 
@@ -14,6 +12,10 @@ import { CapabilitiesCheck } from './components/CapabilitiesCheck';
 import { LoginForm } from './components/LoginForm/index';
 import { useAuthentication } from './contexts/authentication';
 import { useToggle } from 'react-use';
+
+import { MenuItemButton, ButtonLiner } from './UI/components/context-menu';
+import { useUIContext } from './contexts/ui';
+import { Observer } from 'mobx-react-lite';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -229,66 +231,6 @@ const StyledMainNav = styled(MainNav)`
   }
 `;
 
-const MenuItemButton: React.FunctionComponent<{
-  className?: string;
-  icon: React.ElementType;
-  label: string;
-  actionFn: (...args: any[]) => any;
-  children?: never;
-}> = ({ className = '', icon, label, actionFn }) => {
-  const Icon = icon;
-  return (
-    <div className={`${className} menu-item`}>
-      <Button
-        plain
-        className={`${className} icon`}
-        onClick={actionFn}
-        title={label}
-        a11yTitle={label}
-      >
-        <ButtonLiner>
-          <Icon size="medium" />
-        </ButtonLiner>
-      </Button>
-      <Button
-        plain
-        className={`${className} label`}
-        onClick={actionFn}
-        title={label}
-        a11yTitle={label}
-      >
-        <ButtonLiner>
-          <Text>{label}</Text>
-        </ButtonLiner>
-      </Button>
-    </div>
-  );
-};
-
-const ButtonLiner_: React.FunctionComponent<{
-  className?: string;
-}> = ({ className = '', children }) => (
-  <div className={className}>{children}</div>
-);
-
-const ButtonLiner = styled(ButtonLiner_)`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 12px;
-  outline: none;
-`;
-
-const StyledMenuItemButton = styled(MenuItemButton)`
-  /* MEDIA=PHONES */
-  @media only screen and (max-width: 767px) {
-    .button-inner {
-      padding: 16px 24px;
-    }
-  }
-`;
-
 const Footer: React.FunctionComponent<{
   className?: string;
 }> = ({ className = '', children }) => (
@@ -326,6 +268,8 @@ export const App: React.FunctionComponent<{}> = () => {
 
   const [isSidebarOpen, toggleSidebar] = useToggle(true);
 
+  const UI = useUIContext();
+
   return (
     <CapabilitiesCheck>
       {!isAuthenticated ? (
@@ -338,14 +282,27 @@ export const App: React.FunctionComponent<{}> = () => {
             <ContextNav>
               <ul>
                 <li>
-                  <a href="">Navf 1</a>
+                  <UI.Title />
                 </li>
-                <li>
-                  <a href="">Nav 2</a>
-                </li>
-                <li>
-                  <a href="">Nav 3</a>
-                </li>
+                <Observer>
+                  {() => (
+                    <>
+                      {UI.crumbs.map(crumb => (
+                        <li key={crumb.label}>
+                          <a
+                            href={crumb.path}
+                            onClick={e => {
+                              e.preventDefault();
+                              navigate((e.target as HTMLAnchorElement).href);
+                            }}
+                          >
+                            {crumb.label}
+                          </a>
+                        </li>
+                      ))}
+                    </>
+                  )}
+                </Observer>
               </ul>
             </ContextNav>
             <Content>
@@ -364,19 +321,19 @@ export const App: React.FunctionComponent<{}> = () => {
               toggleSidebar={toggleSidebar}
               isSidebarOpen={isSidebarOpen}
             >
-              <StyledMenuItemButton
+              <MenuItemButton
                 icon={Icons.Home}
                 actionFn={() => navigate('/')}
                 label="Beginscherm"
               />
-              <StyledMenuItemButton
+              <MenuItemButton
                 icon={Icons.Projects}
                 actionFn={() => {
                   alert('Projecten');
                 }}
                 label="Projecten"
               />
-              <StyledMenuItemButton
+              <MenuItemButton
                 icon={Icons.Book}
                 actionFn={() => {
                   alert('Verwerkingsinstructies');
@@ -384,37 +341,7 @@ export const App: React.FunctionComponent<{}> = () => {
                 label="Verwerkingsinstructies"
               />
               <div className="context-menu-items">
-                <StyledMenuItemButton
-                  icon={Icons.Overview}
-                  actionFn={() => {
-                    alert('Overzicht');
-                  }}
-                  label="Overzicht"
-                />
-                <StyledMenuItemButton
-                  icon={Icons.Calendar}
-                  actionFn={() => {
-                    alert('Planning');
-                  }}
-                  label="Planning"
-                />
-                <StyledMenuItemButton
-                  icon={Icons.Bug}
-                  actionFn={() => navigate('/bk0wb0a7sz/observations')}
-                  label="Bevindingen"
-                />
-                <StyledMenuItemButton
-                  icon={Icons.MapLocation}
-                  actionFn={() => navigate('/bk0wb0a7sz/sheets')}
-                  label="Bouwlagen"
-                />
-                <StyledMenuItemButton
-                  icon={Icons.Cubes}
-                  actionFn={() => {
-                    alert('BIM modellen');
-                  }}
-                  label="BIM modellen"
-                />
+                <UI.ContextMenu />
               </div>
             </StyledMainNav>
             <StyledFooter />
