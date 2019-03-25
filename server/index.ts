@@ -20,6 +20,7 @@ import got from 'got';
 import nano from 'nano';
 import { Channel, fromEmitter } from 'queueable';
 import { storeRoutes } from './store';
+import { addTunnel } from './expose-localtunnel';
 
 (async function() {
   await new Promise(res => setTimeout(res, 1000));
@@ -43,6 +44,7 @@ import { storeRoutes } from './store';
   );
 
   storeRoutes(app);
+  addTunnel(app, 3000);
 
   const couchDbUrl = 'http://localhost:5984';
   app.use('/db', proxy(couchDbUrl, {}));

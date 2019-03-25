@@ -15,7 +15,7 @@ const checks: Check[] = [
   },
   {
     check: 'caches' in self,
-    message: 'serviceWorker not supported',
+    message: 'browser cache not supported',
   },
 ];
 
