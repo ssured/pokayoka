@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { observable, autorun, action, computed } from 'mobx';
 import { Icon, Overview, Calendar, Cubes } from 'grommet-icons';
-import { Heading, Anchor } from 'grommet';
+import { Heading } from 'grommet';
 import { observer } from 'mobx-react-lite';
 import { MenuItemButton } from '../UI/components/context-menu';
 import { runInThisContext } from 'vm';
 import styled from '@emotion/styled-base';
+import { RouteLink } from '../components/ui/RouteLink';
 
 interface NavContext {
   label: string;
@@ -110,39 +111,50 @@ class UIState {
 
   @computed
   public get title(): string {
-    return this.navContexts[this.navContexts.length - 1].label;
+    return this.navContexts.length > 0
+      ? this.navContexts[this.navContexts.length - 1].label
+      : '';
   }
 
   public Title: React.FunctionComponent<{}> = observer(() => {
     return <Heading level="3">{this.title}</Heading>;
   });
 
-  private UnstyledNavContext: React.FunctionComponent<{}> = observer(() => (
-    <ul>
-      {this.navContexts.map((navContext, index) => {
-        const active: boolean = index === this.navContexts.length - 1;
-        return (
-          <li className={active ? 'active' : ''}>
-            {active ? (
-              <span>{navContext.label}</span>
-            ) : (
-              <Anchor href={navContext.path} label={navContext.label} />
-            )}
-          </li>
-        );
-      })}
+  private UnstyledNavContext: React.FunctionComponent<{
+    className?: string;
+  }> = observer(({ className }) => (
+    <ul className={className}>
+      {this.navContexts
+        .slice()
+        .reverse()
+        .map((navContext, index) => {
+          const active: boolean = index === this.navContexts.length - 1;
+          return (
+            <li key={navContext.label} className={active ? 'active' : ''}>
+              {active ? (
+                <span>{navContext.label}</span>
+              ) : (
+                <RouteLink href={navContext.path} label={navContext.label} />
+              )}
+            </li>
+          );
+        })}
     </ul>
   ));
 
   public NavContext = styled(this.UnstyledNavContext)`
     list-style: none;
     display: flex;
-    justify-content: space-between;
     padding: 0;
     margin: 0;
 
-    li::after {
-      content: '/';
+    li {
+      display: inline-block;
+    }
+    li + li::before {
+      padding: 0 5px;
+      color: #ccc;
+      content: '/\00a0';
     }
   `;
 

@@ -15,7 +15,7 @@ export const useProjectId = () => useContext(ProjectIdContext);
 export const Projects: React.FunctionComponent<
   RouteComponentProps<ProjectParams>
 > = ({ projectId }) => {
-  useUINavContext(() => ({ label: 'Projecten', path: 'projecten' }));
+  useUINavContext(() => ({ label: 'Projecten', path: 'projects' }));
   // console.log({ projectId });
   return (
     <Router>

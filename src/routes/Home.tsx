@@ -3,12 +3,13 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 import styled from 'styled-components';
 
-import { Box, Grid, Menu, Anchor } from 'grommet';
+import { Box, Grid, Menu } from 'grommet';
 import { SettingsOption, Projects, Book } from 'grommet-icons';
 
 // import { NLSfB } from '../components/NLSfB';
 
 import { useAuthentication } from '../contexts/authentication';
+import { RouteLink } from '../components/ui/RouteLink';
 
 interface HomeParams {}
 export const Home = observer((props: RouteComponentProps<HomeParams>) => {
@@ -35,28 +36,25 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => {
         )}
 
         {/* Settings */}
-        <Anchor icon={<SettingsOption />} href="#" />
+        <RouteLink icon={<SettingsOption />} href="#" />
       </Box>
       <Box fill align="center" justify="center">
         <Box direction="column">
           <Box pad="small">
-            <Anchor
+            <RouteLink
               icon={<Projects size="medium" />}
               href="/projects"
               label="Projecten"
             />
           </Box>
           <Box pad="small">
-            <Anchor
+            <RouteLink
               icon={<Book size="medium" />}
               href="/manuals"
               label="Instructies"
             />
           </Box>
-          <pre>
-            Todo: - override Grommet Anchor onClick to navigate to href. Does
-            postback now
-          </pre>
+          <pre>Todo:</pre>
         </Box>
       </Box>
     </Box>
