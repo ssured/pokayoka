@@ -4,13 +4,13 @@ import { RouteComponentProps } from '@reach/router';
 
 import { Box, Heading } from 'grommet';
 import { useProjectId } from './index';
-import { useModel } from '../../contexts/store';
-import { Project } from '../../models/Project';
-import { ISite } from '../../models/Site';
-import { IBuilding } from '../../models/Building';
-import { IBuildingStorey } from '../../models/BuildingStorey';
-import { ISpace } from '../../models/Space';
-import { IObservation } from '../../models/Observation';
+import { useModel } from '../../../contexts/store';
+import { Project } from '../../../models/Project';
+import { ISite } from '../../../models/Site';
+import { IBuilding } from '../../../models/Building';
+import { IBuildingStorey } from '../../../models/BuildingStorey';
+import { ISpace } from '../../../models/Space';
+import { IObservation } from '../../../models/Observation';
 import { Observation } from './Observation';
 
 const LoadingIndicator = () => <p>Loading...</p>;

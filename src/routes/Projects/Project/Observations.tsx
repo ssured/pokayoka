@@ -2,14 +2,14 @@ import React from 'react';
 import { useObserver } from 'mobx-react-lite';
 import { Heading, Box, Image as GImage } from 'grommet';
 import { RouteComponentProps } from '@reach/router';
-import { useProjectId } from '.';
-import { useModel, useQuery } from '../../contexts/store';
-import { Project } from '../../models/Project';
-import { Observation as ObservationModel } from '../../models/Observation';
+import { useProjectId } from './index';
+import { useModel, useQuery } from '../../../contexts/store';
+import { Project } from '../../../models/Project';
+import { Observation as ObservationModel } from '../../../models/Observation';
 import { FixedSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import styled from 'styled-components';
-import { useUITitle } from '../../contexts/ui';
+import { useUITitle } from '../../../contexts/ui';
 
 const LoadingIndicator = () => <p>Loading...</p>;
 const ErrorMessage = (error: Error) => (

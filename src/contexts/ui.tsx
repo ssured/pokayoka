@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect } from 'react';
-import { observable, autorun, action } from 'mobx';
+import { observable, autorun, action, computed } from 'mobx';
 import { Icon, Overview, Calendar, Cubes } from 'grommet-icons';
-import { Heading } from 'grommet';
+import { Heading, Anchor } from 'grommet';
 import { observer } from 'mobx-react-lite';
 import { MenuItemButton } from '../UI/components/context-menu';
+import { runInThisContext } from 'vm';
+import styled from '@emotion/styled-base';
 
-interface Crumb {
+interface NavContext {
   label: string;
   path: string;
 }
@@ -16,23 +18,20 @@ interface MenuItem {
   actionFn: () => void;
 }
 
-interface ContextMenu {
+interface ContextSubMenu {
   type: 'replace' | 'append';
   items: MenuItem[];
 }
 
 class UIState {
   @observable
-  public crumbs: Crumb[] = [{ label: 'Home', path: '/' }];
-
-  @observable
-  public titles: string[] = ['Pokayoka'];
+  public navContexts: NavContext[] = [];
 
   @observable
   public documentTitles: string[] = [];
 
   @observable
-  public contextMenus: ContextMenu[] = [
+  public contextSubMenus: ContextSubMenu[] = [
     {
       type: 'replace',
       items: [
@@ -63,69 +62,94 @@ class UIState {
 
   constructor() {
     autorun(() => {
-      window.document.title = this.documentTitles[0] || this.titles[0];
+      window.document.title =
+        this.documentTitles.length > 0 ? this.documentTitles[0] : this.title;
     });
   }
 
   @action
-  pushTitle(title: string) {
-    this.titles.unshift(title);
+  pushNavContext(navContext: NavContext) {
+    this.navContexts.push(navContext);
   }
 
   @action
-  popTitle(title: string) {
-    this.titles.shift();
-  }
-
-  @action
-  pushCrumb(crumb: Crumb) {
-    this.crumbs.push(crumb);
-  }
-
-  @action
-  popCrumb(crumb: Crumb) {
-    const topCrumb = this.crumbs.slice(-1)[0];
-    if (!isEqualCrumb(topCrumb, crumb)) {
+  popNavContext(navContext: NavContext) {
+    const topNavContext = this.navContexts.slice(-1)[0];
+    if (!isEqualNavContext(topNavContext, navContext)) {
       throw new Error(
         JSON.stringify({
-          error: 'Cannot pop crumb',
-          crumb,
-          crumbs: this.crumbs,
+          error: 'Cannot pop navContext',
+          navContext: navContext,
+          navContexts: this.navContexts,
         })
       );
     }
-    this.crumbs.pop();
+    this.navContexts.pop();
   }
 
   @action
-  pushContextMenu(contextMenu: ContextMenu) {
+  pushContextSubMenu(contextSubMenu: ContextSubMenu) {
     // we use unshift, as we use the context menu in reverse order for rendering
-    this.contextMenus.unshift(contextMenu);
+    this.contextSubMenus.unshift(contextSubMenu);
   }
 
   @action
-  popContextMenu(contextMenu: ContextMenu) {
-    // const topContextMenu = this.contextMenus.slice(-1)[0];
-    // if (!isEqualContextMenu(topContextMenu, contextMenu)) {
+  popContextSubMenu(contextSubMenu: ContextSubMenu) {
+    // const topContextSubMenu = this.contextSubMenus.slice(-1)[0];
+    // if (!isEqualContextSubMenu(topContextSubMenu, contextSubMenu)) {
     //   throw new Error(
     //     JSON.stringify({
-    //       error: 'Cannot pop contextMenu',
-    //       contextMenu,
-    //       contextMenus: this.contextMenus,
+    //       error: 'Cannot pop contextSubMenu',
+    //       contextSubMenu,
+    //       contextSubMenus: this.contextSubMenus,
     //     })
     //   );
     // }
-    this.contextMenus.shift();
+    this.contextSubMenus.shift();
+  }
+
+  @computed
+  public get title(): string {
+    return this.navContexts[this.navContexts.length - 1].label;
   }
 
   public Title: React.FunctionComponent<{}> = observer(() => {
-    return <Heading level="3">{this.titles[0]}</Heading>;
+    return <Heading level="3">{this.title}</Heading>;
   });
 
-  public ContextMenu: React.FunctionComponent<{}> = observer(() => {
+  private UnstyledNavContext: React.FunctionComponent<{}> = observer(() => (
+    <ul>
+      {this.navContexts.map((navContext, index) => {
+        const active: boolean = index === this.navContexts.length - 1;
+        return (
+          <li className={active ? 'active' : ''}>
+            {active ? (
+              <span>{navContext.label}</span>
+            ) : (
+              <Anchor href={navContext.path} label={navContext.label} />
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  ));
+
+  public NavContext = styled(this.UnstyledNavContext)`
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    margin: 0;
+
+    li::after {
+      content: '/';
+    }
+  `;
+
+  public ContextSubMenu: React.FunctionComponent<{}> = observer(() => {
     const items: MenuItem[] = [];
 
-    for (const menu of this.contextMenus) {
+    for (const menu of this.contextSubMenus) {
       items.push(...menu.items);
       if (menu.type === 'replace') break;
     }
@@ -149,37 +173,32 @@ const UI = createContext(new UIState());
 
 export const useUIContext = () => useContext(UI);
 
-export const useUITitle = (title: string) => {
-  const ui = useUIContext();
-  useEffect(() => {
-    ui.pushTitle(title);
-    return () => ui.popTitle(title);
-  }, [title]);
-};
-
-export const useUICrumb = (crumbThunk: () => Crumb, deps: any[] = []) => {
-  const ui = useUIContext();
-  useEffect(() => {
-    const crumb = crumbThunk();
-    ui.pushCrumb(crumb);
-    return () => ui.popCrumb(crumb);
-  }, deps);
-};
-
-export const useUIContextMenu = (
-  contextMenuThunk: () => ContextMenu,
+export const useUINavContext = (
+  navContextThunk: () => NavContext,
   deps: any[] = []
 ) => {
   const ui = useUIContext();
   useEffect(() => {
-    const menu = contextMenuThunk();
-    ui.pushContextMenu(menu);
-    return () => ui.popContextMenu(menu);
+    const navContext = navContextThunk();
+    ui.pushNavContext(navContext);
+    return () => ui.popNavContext(navContext);
+  }, deps);
+};
+
+export const useUIContextSubMenu = (
+  contextSubMenuThunk: () => ContextSubMenu,
+  deps: any[] = []
+) => {
+  const ui = useUIContext();
+  useEffect(() => {
+    const menu = contextSubMenuThunk();
+    ui.pushContextSubMenu(menu);
+    return () => ui.popContextSubMenu(menu);
   }, deps);
 };
 
 // Helper functions
 
-function isEqualCrumb(a: Crumb, b: Crumb) {
+function isEqualNavContext(a: NavContext, b: NavContext) {
   return a === b || (a.label === b.label && a.path === b.path);
 }

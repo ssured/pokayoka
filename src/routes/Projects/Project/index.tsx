@@ -3,9 +3,9 @@ import React, { useContext } from 'react';
 
 import { Overview } from './Overview';
 import { Observations } from './Observations';
-import { ProvideStore } from '../../contexts/store';
+import { ProvideStore } from '../../../contexts/store';
 import { Sheets } from './Sheets';
-import { useUIContextMenu, useUICrumb } from '../../contexts/ui';
+import { useUIContextSubMenu, useUINavContext } from '../../../contexts/ui';
 import { Bug, MapLocation } from 'grommet-icons';
 
 interface ProjectParams {
@@ -18,7 +18,7 @@ export const useProjectId = () => useContext(ProjectIdContext);
 export const Project: React.FunctionComponent<
   RouteComponentProps<ProjectParams>
 > = ({ projectId }) => {
-  useUIContextMenu(
+  useUIContextSubMenu(
     () => ({
       type: 'append',
       items: [
@@ -36,7 +36,9 @@ export const Project: React.FunctionComponent<
     }),
     [projectId]
   );
-  useUICrumb(() => ({ label: 'Project', path: `/${projectId}` }), [projectId]);
+  useUINavContext(() => ({ label: 'Project', path: `/${projectId}` }), [
+    projectId,
+  ]);
   // console.log({ projectId });
   return (
     <ProjectIdContext.Provider value={projectId!}>

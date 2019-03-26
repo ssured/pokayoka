@@ -2,14 +2,14 @@ import React from 'react';
 import { useObserver } from 'mobx-react-lite';
 import { Heading, Box, Image as GImage } from 'grommet';
 import { RouteComponentProps } from '@reach/router';
-import { useProjectId } from '.';
-import { useModel, useQuery } from '../../contexts/store';
-import { Project } from '../../models/Project';
-import { Sheet as SheetModel } from '../../models/Sheet';
+import { useProjectId } from './index';
+import { useModel, useQuery } from '../../../contexts/store';
+import { Project } from '../../../models/Project';
+import { Sheet as SheetModel } from '../../../models/Sheet';
 import styled from 'styled-components';
 
-import PDFMap from '../../components/map/leaflet/image-map';
-import TileImage from '../../components/map/leaflet/tile-image';
+import PDFMap from '../../../components/map/leaflet/image-map';
+import TileImage from '../../../components/map/leaflet/tile-image';
 
 const LoadingIndicator = () => <p>Loading...</p>;
 const ErrorMessage = (error: Error) => (

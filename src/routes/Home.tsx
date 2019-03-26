@@ -4,22 +4,18 @@ import { observer } from 'mobx-react-lite';
 import styled from 'styled-components';
 
 import { Box, Grid, Menu, Anchor } from 'grommet';
-import * as Icons from 'grommet-icons';
+import { SettingsOption, Projects, Book } from 'grommet-icons';
 
 // import { NLSfB } from '../components/NLSfB';
 
 import { useAuthentication } from '../contexts/authentication';
-import { render } from 'react-dom';
-import { jsx } from '../utils/nano';
-
-const { SettingsOption } = Icons;
 
 interface HomeParams {}
 export const Home = observer((props: RouteComponentProps<HomeParams>) => {
-  const { authentication, dbNames, logout } = useAuthentication();
+  const { authentication, logout } = useAuthentication();
 
   return (
-    <Box direction="column" fill="vertical" pad="small">
+    <Box direction="column" fill="vertical">
       <Box direction="row" fill="horizontal" justify="between">
         {/* User */}
         {authentication.ok && (
@@ -41,15 +37,28 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => {
         {/* Settings */}
         <Anchor icon={<SettingsOption />} href="#" />
       </Box>
-      <Grid>
-        {authentication.ok
-          ? [...dbNames].map(db => (
-              <Link key={db} to={`/${db}`}>
-                <Box>{db}</Box>
-              </Link>
-            ))
-          : 'Please connect to server to see your databases'}
-      </Grid>
+      <Box fill align="center" justify="center">
+        <Box direction="column">
+          <Box pad="small">
+            <Anchor
+              icon={<Projects size="medium" />}
+              href="/projects"
+              label="Projecten"
+            />
+          </Box>
+          <Box pad="small">
+            <Anchor
+              icon={<Book size="medium" />}
+              href="/manuals"
+              label="Instructies"
+            />
+          </Box>
+          <pre>
+            Todo: - override Grommet Anchor onClick to navigate to href. Does
+            postback now
+          </pre>
+        </Box>
+      </Box>
     </Box>
   );
 });

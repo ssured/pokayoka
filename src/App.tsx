@@ -1,5 +1,4 @@
 import React, { useContext } from 'react';
-import { Button } from 'grommet';
 import { Grommet, Button, Text } from 'grommet';
 import { grommet } from 'grommet/themes';
 
@@ -9,7 +8,7 @@ import * as Icons from 'grommet-icons';
 import { Router, navigate, RouteComponentProps } from '@reach/router';
 
 import { Home } from './routes/Home';
-import { Project } from './routes/Project';
+import { Projects } from './routes/Projects';
 
 import { CapabilitiesCheck } from './components/CapabilitiesCheck';
 import { LoginForm } from './components/LoginForm/index';
@@ -17,7 +16,7 @@ import { useAuthentication } from './contexts/authentication';
 import { useToggle } from 'react-use';
 
 import { MenuItemButton, ButtonLiner } from './UI/components/context-menu';
-import { useUIContext } from './contexts/ui';
+import { useUIContext, useUINavContext } from './contexts/ui';
 import { Observer } from 'mobx-react-lite';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
@@ -94,24 +93,24 @@ const ToggleNavButton: React.FunctionComponent<{
   );
 };
 
-const ContextNav = styled.nav`
+const Header = styled.nav`
   grid-area: ctx;
   height: calc(48px + 0.5em);
-  padding: 0.5em;
-  padding-top: calc(0.5em + 12px);
-
-  ul {
-    display: flex;
-    justify-content: space-between;
-  }
+  padding: 12px 0.5em;
+  align-items: center;
 `;
+
 const Content = styled.main`
   grid-area: content;
   display: flex;
   flex-direction: column;
 `;
 
-const MainNav: React.FunctionComponent<{
+/*
+Alternatief: gebruik maken van Grommet sidebar
+https://storybook.grommet.io/?path=/story/collapsible--horizontal
+*/
+const UnstyledMainNav: React.FunctionComponent<{
   className?: string;
   toggleSidebar: () => void;
   isSidebarOpen: boolean; // because we style this component, we
@@ -132,7 +131,7 @@ const MainNav: React.FunctionComponent<{
   );
 };
 
-const StyledMainNav = styled(MainNav)`
+const MainNav = styled(UnstyledMainNav)`
   grid-area: nav;
   display: flex;
 
@@ -181,7 +180,7 @@ const StyledMainNav = styled(MainNav)`
     .fixed {
       position: fixed;
       width: inherit;
-      padding: 0.5em;
+      padding: 0 0.5em;
       flex-direction: column;
       height: 100%;
 
@@ -254,6 +253,7 @@ const StyledFooter = styled(Footer)`
   display: flex;
   flex-direction: row;
   justify-content: center;
+  align-items: center;
 
   h1 {
     font-size: 32px;
@@ -276,9 +276,8 @@ export const App: React.FunctionComponent<{}> = () => {
     authentication,
     logout,
   } = useAuthentication();
-
+  useUINavContext(() => ({ label: 'Home', path: '/' }));
   const [isSidebarOpen, toggleSidebar] = useToggle(true);
-
   const UI = useUIContext();
 
   return (
@@ -291,61 +290,39 @@ export const App: React.FunctionComponent<{}> = () => {
         ) : (
           <StyledWrapper>
             <SidebarContext.Provider value={isSidebarOpen}>
-              <ContextNav>
-                <ul>
-                  <li>
-                  <UI.Title />
-                  </li>
-                <Observer>
-                  {() => (
-                    <>
-                      {UI.crumbs.map(crumb => (
-                        <li key={crumb.label}>
-                          <a
-                            href={crumb.path}
-                            onClick={e => {
-                              e.preventDefault();
-                              navigate((e.target as HTMLAnchorElement).href);
-                            }}
-                          >
-                            {crumb.label}
-                          </a>
-                        </li>
-                      ))}
-                    </>
-                  )}
-                </Observer>
-                </ul>
-              </ContextNav>
+              <Header>
+                <UI.NavContext />
+              </Header>
               <Content>
                 <StyledRouter>
                   <Home path="/" />
                   {/* <Debug path="debug" /> */}
                   {/* <SyncStatus path="sync" /> */}
-                  <Project path="/:projectId/*" />
+                  <Projects path="projects" />
+
                   <NotFound default />
                   {/* <User path=":userId">
                   <Project path=":projectId" />
                 </User> */}
                 </StyledRouter>
               </Content>
-              <StyledMainNav
+              <MainNav
                 toggleSidebar={toggleSidebar}
                 isSidebarOpen={isSidebarOpen}
               >
-              <MenuItemButton
+                <MenuItemButton
                   icon={Icons.Home}
                   actionFn={() => navigate('/')}
                   label="Beginscherm"
                 />
-              <MenuItemButton
+                <MenuItemButton
                   icon={Icons.Projects}
                   actionFn={() => {
-                    alert('Projecten');
+                    navigate('/projects');
                   }}
                   label="Projecten"
                 />
-              <MenuItemButton
+                <MenuItemButton
                   icon={Icons.Book}
                   actionFn={() => {
                     alert('Verwerkingsinstructies');
@@ -353,9 +330,9 @@ export const App: React.FunctionComponent<{}> = () => {
                   label="Verwerkingsinstructies"
                 />
                 <div className="context-menu-items">
-                <UI.ContextMenu />
+                  <UI.ContextSubMenu />
                 </div>
-              </StyledMainNav>
+              </MainNav>
               <StyledFooter />
             </SidebarContext.Provider>
           </StyledWrapper>

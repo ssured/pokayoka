@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useObserver } from 'mobx-react-lite';
 
 import { Box, Heading } from 'grommet';
-import { useMux } from '../../contexts/mux';
-import { useLevel } from '../../contexts/level';
+import { useMux } from '../../../contexts/mux';
+import { useLevel } from '../../../contexts/level';
 import pull, { filter, map, drain } from 'pull-stream';
 import { useProjectId } from './index';
 import tee from 'pull-tee';
@@ -13,13 +13,13 @@ import createAbortable from 'pull-abortable';
 
 import debug from 'debug';
 import base, { filename } from 'paths.macro';
-import { addToServiceWorkerCacheJobs } from '../../jobs/file-caching';
+import { addToServiceWorkerCacheJobs } from '../../../jobs/file-caching';
 import flatMap from 'pull-flatmap';
 import {
   objectHasHam,
   getHamFromObject,
   maxStateFromHam,
-} from '../../mst-ham/index';
+} from '../../../mst-ham/index';
 const log = debug(`${base}${filename}`);
 
 const SYNC_META_PULL_SINCE_KEY = 'pull_since';

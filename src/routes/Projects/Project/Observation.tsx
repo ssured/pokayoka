@@ -1,5 +1,5 @@
 import React from 'react';
-import { IObservation } from '../../models/Observation';
+import { IObservation } from '../../../models/Observation';
 import { useObserver } from 'mobx-react-lite';
 import { Heading } from 'grommet';
 import { Task } from './Task';

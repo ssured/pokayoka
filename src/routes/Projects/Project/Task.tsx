@@ -1,5 +1,5 @@
 import React from 'react';
-import { ITask } from '../../models/Task';
+import { ITask } from '../../../models/Task';
 import { useObserver } from 'mobx-react-lite';
 import { Heading } from 'grommet';
 

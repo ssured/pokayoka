@@ -6984,10 +6984,17 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.15, graceful-fs@^4.1.2, graceful-fs@^4.1.6
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.15.tgz#ffb703e1066e8a0eeaa4c8b80ba9253eeefbfb00"
   integrity sha512-6uHUhOPEBgQ24HM+r6b/QwWfZq+yiFcipKFrOFiBEnWdy5sdzYoi+pJeQaPI5qOLRFqWmAXUPQNsielzdLoecA==
 
-grommet-icons@^4.0.0, grommet-icons@^4.1.0:
+grommet-icons@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/grommet-icons/-/grommet-icons-4.1.0.tgz#4705d2828461348ff38ddd2c42b8cd551e0569a0"
   integrity sha512-S9TqY4R/J/xG6++xNXa5JoQeZ9/jO8b6FgmDOhHAD8Vdx/btPswp2hUliTdQiFZFxne4ILldQoCK0w1xwN9eSA==
+  dependencies:
+    grommet-styles "^0.2.0"
+
+grommet-icons@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/grommet-icons/-/grommet-icons-4.2.0.tgz#7bcf7d4b37f694516ade084e2536c72b224c6a76"
+  integrity sha512-HMPLQa2pgnCZFImUXwfq+79VizL6oyP2/AAfAzQDw57x/6qgWouoqoRrrt+2zodTjTxtKXxliBY1w/o5uC+DpA==
   dependencies:
     grommet-styles "^0.2.0"
 
@@ -6996,19 +7003,18 @@ grommet-styles@^0.2.0:
   resolved "https://registry.yarnpkg.com/grommet-styles/-/grommet-styles-0.2.0.tgz#b2eac2b7e2747cb523434d21728ce5234f8ce4f4"
   integrity sha512-0OMSYuGeyifYKpg4Gv2HzL8rUdd0ddnJ5LbCBKgDuloC71XIwr9g/Fxa6rs737MbPV7OZ4pEm4wvrjH4epzf1A==
 
-grommet@^2.3.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/grommet/-/grommet-2.3.1.tgz#18b00e50ed6ceeecbe133f843ffd52881922bc80"
-  integrity sha512-HgadVH6wNPXe/sw+10jIWSUF2WziMNl4iWm6Kv4sznsxfLNp/WonbxXn5igeJ3d+p8QcfX/8WgLUtpIVKcBC/w==
+grommet@^2.6.5:
+  version "2.6.5"
+  resolved "https://registry.yarnpkg.com/grommet/-/grommet-2.6.5.tgz#0eb995d0eb19552cd2f4a60b43f6e98fdd90a0ca"
+  integrity sha512-YulGw9gtZsODzUfbX/6cRXjw0MjoxkxqNNg/8TH/MKSBD2Ak2zTPBxMh1wMA5gBGLGiTUvfvchSD423Hik/r4Q==
   dependencies:
     css "^2.2.3"
-    grommet-icons "^4.0.0"
+    grommet-icons "^4.2.0"
     grommet-styles "^0.2.0"
     hoist-non-react-statics "^3.2.0"
-    markdown-to-jsx "^6.6.6"
-    mobile-detect "^1.4.3"
+    markdown-to-jsx "^6.9.1"
     polished "^2.2.0"
-    prop-types "^15.5.10"
+    prop-types "^15.7.2"
     react-desc "^4.1.2"
     recompose "^0.30.0"
 
@@ -9513,10 +9519,10 @@ markdown-escapes@^1.0.0:
   resolved "https://registry.yarnpkg.com/markdown-escapes/-/markdown-escapes-1.0.2.tgz#e639cbde7b99c841c0bacc8a07982873b46d2122"
   integrity sha512-lbRZ2mE3Q9RtLjxZBZ9+IMl68DKIXaVAhwvwn9pmjnPLS0h/6kyBMgNhqi1xFJ/2yv6cSyv0jbiZavZv93JkkA==
 
-markdown-to-jsx@^6.6.6:
-  version "6.9.0"
-  resolved "https://registry.yarnpkg.com/markdown-to-jsx/-/markdown-to-jsx-6.9.0.tgz#ab4e60332f56ac8dbc2eeede038800875c1e39b8"
-  integrity sha512-Uj5La0fKQM1d4MD8zY40+E62JNT0OoMuRO4gHECxnLRJt4AOuZ/pqPLFuje4BbamABXwJK0JQbjoUEDQ5l+u9w==
+markdown-to-jsx@^6.9.1:
+  version "6.9.3"
+  resolved "https://registry.yarnpkg.com/markdown-to-jsx/-/markdown-to-jsx-6.9.3.tgz#31719e3c54517ba9805db81d53701b89f5d2ed7e"
+  integrity sha512-iXteiv317VZd1vk/PBH5MWMD4r0XWekoWCHRVVadBcnCtxavhtfV1UaEaQgq9KyckTv31L60ASh5ZVVrOh37Qg==
   dependencies:
     prop-types "^15.6.2"
     unquote "^1.1.0"
@@ -9875,11 +9881,6 @@ mkdirp@0.5.1, mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.0, mkdirp@~0.5.1:
   integrity sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=
   dependencies:
     minimist "0.0.8"
-
-mobile-detect@^1.4.3:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/mobile-detect/-/mobile-detect-1.4.3.tgz#e436a3839f5807dd4d3cd4e081f7d3a51ffda2dd"
-  integrity sha512-UaahPNLllQsstHOEHAmVnTHCMQrAS9eL5Qgdi50QrYz6UgGk+Xziz2udz2GN6NYcyODcPLnasC7a7s6R2DjiaQ==
 
 mobx-react-lite@^0.3.7:
   version "0.3.7"
@@ -11344,6 +11345,15 @@ prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.5.8, prop-types@^15.5.9,
     loose-envify "^1.3.1"
     object-assign "^4.1.1"
 
+prop-types@^15.7.2:
+  version "15.7.2"
+  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
+  integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
+  dependencies:
+    loose-envify "^1.4.0"
+    object-assign "^4.1.1"
+    react-is "^16.8.1"
+
 property-information@^5.0.0, property-information@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/property-information/-/property-information-5.0.1.tgz#c3b09f4f5750b1634c0b24205adbf78f18bdf94f"
@@ -11882,6 +11892,11 @@ react-is@^16.3.2, react-is@^16.6.0, react-is@^16.7.0:
   version "16.7.0"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.7.0.tgz#c1bd21c64f1f1364c6f70695ec02d69392f41bfa"
   integrity sha512-Z0VRQdF4NPDoI0tsXVMLkJLiwEBa+RP66g0xDHxgxysxSoCUccSten4RTF/UFvZF1dZvZ9Zu1sx+MDXwcOR34g==
+
+react-is@^16.8.1:
+  version "16.8.5"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.8.5.tgz#c54ac229dd66b5afe0de5acbe47647c3da692ff8"
+  integrity sha512-sudt2uq5P/2TznPV4Wtdi+Lnq3yaYW8LfvPKLM9BKD8jJNBkxMVyB0C9/GmVhLw7Jbdmndk/73n7XQGeN9A3QQ==
 
 react-leaflet-control@^2.1.1:
   version "2.1.1"
