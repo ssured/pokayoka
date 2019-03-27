@@ -14,6 +14,7 @@ import 'leaflet/dist/leaflet.css';
 import { IconContext } from 'react-icons';
 import { AuthenticationContainer } from './contexts/authentication';
 import { MuxContainer } from './contexts/mux';
+import { SpotDB } from './utils/spotdb';
 
 // fix marker urls
 // https://github.com/PaulLeCam/react-leaflet/issues/255#issuecomment-261904061
@@ -24,6 +25,10 @@ import { MuxContainer } from './contexts/mux';
 //   iconUrl: require('leaflet/images/marker-icon.png'),
 //   shadowUrl: require('leaflet/images/marker-shadow.png'),
 // });
+
+const spotDb = new SpotDB('pokayoka');
+// @ts-ignore
+window.spot = spotDb;
 
 if (
   'serviceWorker' in navigator &&

@@ -2,13 +2,14 @@ import { openDB, IDBPDatabase } from 'idb';
 import charwise from 'charwise';
 import mlts from 'monotonic-lexicographic-timestamp';
 import sha256 from './hash';
+import SubscribableEvent from 'subscribableevent';
 
 type primitive = boolean | string | number | null | undefined;
 type subj = string[];
 type pred = string;
 type objt = primitive | subj;
-type Tuple = [subj, pred, objt];
 type state = string;
+type Tuple = [subj, pred, objt];
 type GraphableObj = { [K in string]: primitive | GraphableObj };
 
 type queryVariable = {
@@ -105,8 +106,13 @@ export class SpotDB {
     });
   }
 
+  public readonly committedTuples = new SubscribableEvent<
+    (tuples: Tuple[]) => void
+  >();
+
   public async commit(data: Map<subj, GraphableObj | [GraphableObj, state]>) {
     const tx = (await this.db).transaction(this.objectStoreName, 'readwrite');
+    const tuples: Tuple[] = [];
 
     for (const [subj, objOrObjWithState] of data.entries()) {
       let obj: GraphableObj;
@@ -118,12 +124,18 @@ export class SpotDB {
         state = this.dbState();
       }
       for (const tuple of spoInObject(subj, obj)) {
+        tuples.push(tuple);
         const object = objectFromTuple(tuple, state, this.dbState());
-        tx.store.add(object);
+        tx.store.put(object);
       }
     }
 
-    return tx.done;
+    await tx.done;
+
+    // expose all written tuples to live listeners
+    this.committedTuples.fire(tuples);
+
+    return;
   }
 
   private async *singleQuery<
@@ -148,7 +160,7 @@ export class SpotDB {
   ): AsyncIterableIterator<Tuple> {
     const lower: (subj | pred | objt)[] = [];
     const upper: (subj | pred | objt | undefined)[] = [];
-    let lowerOpen = true;
+    const lowerOpen = true;
     let upperOpen = true;
 
     if (typeof p1 !== 'undefined') {
@@ -203,10 +215,17 @@ export class SpotDB {
       .store.index(idx)
       .openKeyCursor(range, 'next');
 
+    // collect all results at once
+    // we cannot yield when the cursor is open as it stops the current runloop
+    // and thus closes the connection
+    // future implementation might batch and then continue using a new cursor
+    const results: Tuple[] = [];
     while (cursor) {
-      yield keyToTuple(charwise.decode(cursor.key) as any);
+      results.push(keyToTuple(charwise.decode(cursor.key) as any));
       cursor = await cursor.continue();
     }
+
+    yield* results;
   }
 
   public variable = variable;
@@ -348,7 +367,9 @@ function* spoInObject(
         yield [subj, key, value];
       } else if (isObject(value)) {
         if (Array.isArray(value)) {
-          throw new Error('arrays are not supported');
+          throw new Error(
+            `arrays are not supported ${JSON.stringify([subj, key, value])}`
+          );
         }
         if (paths.has(value)) {
           yield [subj, key, paths.get(value)];
