@@ -26,7 +26,7 @@ interface MenuItem {
 }
 
 interface ContextSubMenu {
-  type: 'replace' | 'append';
+  type: 'append';
   items: MenuItem[];
 }
 
@@ -60,46 +60,27 @@ class UIState {
   }
 
   @observable
-  public contextSubMenu: ContextSubMenu = {
-    type: 'replace',
-    items: [
-      {
-        icon: Overview,
-        actionFn: () => {
-          alert('Overzicht');
-        },
-        label: 'Overzicht',
-      },
-      {
-        icon: Calendar,
-        actionFn: () => {
-          alert('Planning');
-        },
-        label: 'Planning',
-      },
-      {
-        icon: Cubes,
-        actionFn: () => {
-          alert('BIM modellen');
-        },
-        label: 'BIM modellen',
-      },
-    ],
-  };
+  public contextSubMenu: ContextSubMenu | null = null;
 
   @computed
-  get contextSubMenus() {
+  get contextSubMenuItems() {
     const items: ContextSubMenu['items'] = [];
     if (this.contextSubMenu) {
       items.push(...this.contextSubMenu.items);
     }
-    if (this.child) path.push(...this.child.navContexts);
-    return path;
+    if (this.child) items.push(...this.child.contextSubMenuItems);
+    return items;
   }
 
-  constructor(options: { navContext?: NavContext }, parent?: UIState) {
+  constructor(
+    options: { navContext?: NavContext; contextSubMenu?: ContextSubMenu },
+    parent?: UIState
+  ) {
     if (options.navContext) {
       this.navContext = options.navContext;
+    }
+    if (options.contextSubMenu) {
+      this.contextSubMenu = options.contextSubMenu;
     }
 
     if (parent) {
@@ -137,27 +118,6 @@ class UIState {
     }
     this.parent = null;
     this.documentTitleUpdater && this.documentTitleUpdater();
-  }
-
-  @action
-  pushContextSubMenu(contextSubMenu: ContextSubMenu) {
-    // we use unshift, as we use the context menu in reverse order for rendering
-    this.contextSubMenus.unshift(contextSubMenu);
-  }
-
-  @action
-  popContextSubMenu(contextSubMenu: ContextSubMenu) {
-    // const topContextSubMenu = this.contextSubMenus.slice(-1)[0];
-    // if (!isEqualContextSubMenu(topContextSubMenu, contextSubMenu)) {
-    //   throw new Error(
-    //     JSON.stringify({
-    //       error: 'Cannot pop contextSubMenu',
-    //       contextSubMenu,
-    //       contextSubMenus: this.contextSubMenus,
-    //     })
-    //   );
-    // }
-    this.contextSubMenus.shift();
   }
 
   @computed
@@ -207,16 +167,9 @@ class UIState {
   `;
 
   public ContextSubMenu: React.FunctionComponent<{}> = observer(() => {
-    const items: MenuItem[] = [];
-
-    for (const menu of this.contextSubMenus) {
-      items.push(...menu.items);
-      if (menu.type === 'replace') break;
-    }
-
     return (
       <>
-        {items.map(item => (
+        {this.contextSubMenuItems.map(item => (
           <MenuItemButton
             key={item.label}
             icon={item.icon}
@@ -228,7 +181,36 @@ class UIState {
     );
   });
 }
-export const UI = createContext(new UIState({}));
+export const UI = createContext(
+  new UIState({
+    contextSubMenu: {
+      type: 'append',
+      items: [
+        {
+          icon: Overview,
+          actionFn: () => {
+            alert('Overzicht');
+          },
+          label: 'Overzicht',
+        },
+        {
+          icon: Calendar,
+          actionFn: () => {
+            alert('Planning');
+          },
+          label: 'Planning',
+        },
+        {
+          icon: Cubes,
+          actionFn: () => {
+            alert('BIM modellen');
+          },
+          label: 'BIM modellen',
+        },
+      ],
+    },
+  })
+);
 
 export const useUIContext = () => useContext(UI);
 
@@ -243,21 +225,3 @@ export const useNewUIContext = (
   useEffect(() => () => uiState.destroy(), [uiState]);
   return uiState;
 };
-
-export const useUIContextSubMenu = (
-  contextSubMenuThunk: () => ContextSubMenu,
-  deps: any[] = []
-) => {
-  const ui = useUIContext();
-  useLayoutEffect(() => {
-    const menu = contextSubMenuThunk();
-    ui.pushContextSubMenu(menu);
-    return () => ui.popContextSubMenu(menu);
-  }, deps);
-};
-
-// Helper functions
-
-function isEqualNavContext(a: NavContext, b: NavContext) {
-  return a === b || (a.label === b.label && a.path === b.path);
-}

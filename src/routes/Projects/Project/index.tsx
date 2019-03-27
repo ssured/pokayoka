@@ -5,7 +5,7 @@ import { Overview } from './Overview';
 import { Observations } from './Observations';
 import { ProvideStore } from '../../../contexts/store';
 import { Sheets } from './Sheets';
-import { useUIContextSubMenu } from '../../../contexts/ui';
+import { useNewUIContext } from '../../../contexts/ui';
 import { Bug, MapLocation } from 'grommet-icons';
 
 interface ProjectParams {
@@ -18,37 +18,40 @@ export const useProjectId = () => useContext(ProjectIdContext);
 export const Project: React.FunctionComponent<
   RouteComponentProps<ProjectParams>
 > = ({ projectId }) => {
-  useUIContextSubMenu(
-    () => ({
+  const UIContext = useNewUIContext({
+    navContext: { label: 'Project', path: `/projects/${projectId}` },
+    contextSubMenu: {
       type: 'append',
       items: [
         {
           icon: Bug,
-          actionFn: () => navigate(`/${projectId}/observations`),
+          actionFn: () => navigate(`/projects/${projectId}/observations`),
           label: 'Bevindingen',
         },
         {
           icon: MapLocation,
-          actionFn: () => navigate(`/${projectId}/sheets`),
+          actionFn: () => navigate(`/projects/${projectId}/sheets`),
           label: 'Bouwlagen',
         },
       ],
-    }),
-    [projectId]
-  );
+    },
+  });
+
   // console.log({ projectId });
   return (
-    <ProjectIdContext.Provider value={projectId!}>
-      <ProvideStore name={projectId!}>
-        {/* <Sync /> */}
-        {/* <ProvideProject> */}
-        <Router>
-          <Overview path="/" />
-          <Observations path="/observations" />
-          <Sheets path="/sheets" />
-        </Router>
-        {/* </ProvideProject> */}
-      </ProvideStore>
-    </ProjectIdContext.Provider>
+    <UIContext.Provider>
+      <ProjectIdContext.Provider value={projectId!}>
+        <ProvideStore name={projectId!}>
+          {/* <Sync /> */}
+          {/* <ProvideProject> */}
+          <Router>
+            <Overview path="/" />
+            <Observations path="/observations" />
+            <Sheets path="/sheets" />
+          </Router>
+          {/* </ProvideProject> */}
+        </ProvideStore>
+      </ProjectIdContext.Provider>
+    </UIContext.Provider>
   );
 };

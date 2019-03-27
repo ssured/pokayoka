@@ -303,7 +303,7 @@ export const App: React.FunctionComponent<{}> = () => {
                     <Home path="/" />
                     {/* <Debug path="debug" /> */}
                     {/* <SyncStatus path="sync" /> */}
-                    <Projects path="projects" />
+                    <Projects path="projects/*" />
 
                     <NotFound default />
                     {/* <User path=":userId">
