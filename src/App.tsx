@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Grommet, Button, Text } from 'grommet';
+import { Grommet, Button } from 'grommet';
 import { grommet } from 'grommet/themes';
 
 import styled from 'styled-components';
@@ -16,8 +16,7 @@ import { useAuthentication } from './contexts/authentication';
 import { useToggle } from 'react-use';
 
 import { MenuItemButton, ButtonLiner } from './UI/components/context-menu';
-import { useUIContext, useUINavContext } from './contexts/ui';
-import { Observer } from 'mobx-react-lite';
+import { useUIContext, useNewUIContext } from './contexts/ui';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -276,68 +275,75 @@ export const App: React.FunctionComponent<{}> = () => {
     authentication,
     logout,
   } = useAuthentication();
-  useUINavContext(() => ({ label: 'Home', path: '/' }));
+  const newUIContext = useNewUIContext({
+    navContext: { label: 'Home', path: '/' },
+  });
+
   const [isSidebarOpen, toggleSidebar] = useToggle(true);
   const UI = useUIContext();
 
   return (
-    <Grommet theme={grommet}>
-      <CapabilitiesCheck>
-        {!isAuthenticated ? (
-          <LoginForm
-            onAuthentication={(name, roles) => login({ ok: true, name, roles })}
-          />
-        ) : (
-          <StyledWrapper>
-            <SidebarContext.Provider value={isSidebarOpen}>
-              <Header>
-                <UI.NavContext />
-              </Header>
-              <Content>
-                <StyledRouter>
-                  <Home path="/" />
-                  {/* <Debug path="debug" /> */}
-                  {/* <SyncStatus path="sync" /> */}
-                  <Projects path="projects" />
+    <newUIContext.Provider>
+      <Grommet theme={grommet}>
+        <CapabilitiesCheck>
+          {!isAuthenticated ? (
+            <LoginForm
+              onAuthentication={(name, roles) =>
+                login({ ok: true, name, roles })
+              }
+            />
+          ) : (
+            <StyledWrapper>
+              <SidebarContext.Provider value={isSidebarOpen}>
+                <Header>
+                  <UI.NavContext />
+                </Header>
+                <Content>
+                  <StyledRouter>
+                    <Home path="/" />
+                    {/* <Debug path="debug" /> */}
+                    {/* <SyncStatus path="sync" /> */}
+                    <Projects path="projects" />
 
-                  <NotFound default />
-                  {/* <User path=":userId">
+                    <NotFound default />
+                    {/* <User path=":userId">
                   <Project path=":projectId" />
                 </User> */}
-                </StyledRouter>
-              </Content>
-              <MainNav
-                toggleSidebar={toggleSidebar}
-                isSidebarOpen={isSidebarOpen}
-              >
-                <MenuItemButton
-                  icon={Icons.Home}
-                  actionFn={() => navigate('/')}
-                  label="Beginscherm"
-                />
-                <MenuItemButton
-                  icon={Icons.Projects}
-                  actionFn={() => {
-                    navigate('/projects');
-                  }}
-                  label="Projecten"
-                />
-                <MenuItemButton
-                  icon={Icons.Book}
-                  actionFn={() => {
-                    alert('Verwerkingsinstructies');
-                  }}
-                  label="Verwerkingsinstructies"
-                />
-                <div className="context-menu-items">
-                  <UI.ContextSubMenu />
-                </div>
-              </MainNav>
-              <StyledFooter />
-            </SidebarContext.Provider>
-          </StyledWrapper>
-        )}
-      </CapabilitiesCheck>
-    </Grommet>
+                  </StyledRouter>
+                </Content>
+                <MainNav
+                  toggleSidebar={toggleSidebar}
+                  isSidebarOpen={isSidebarOpen}
+                >
+                  <MenuItemButton
+                    icon={Icons.Home}
+                    actionFn={() => navigate('/')}
+                    label="Beginscherm"
+                  />
+                  <MenuItemButton
+                    icon={Icons.Projects}
+                    actionFn={() => {
+                      navigate('/projects');
+                    }}
+                    label="Projecten"
+                  />
+                  <MenuItemButton
+                    icon={Icons.Book}
+                    actionFn={() => {
+                      alert('Verwerkingsinstructies');
+                    }}
+                    label="Verwerkingsinstructies"
+                  />
+                  <div className="context-menu-items">
+                    <UI.ContextSubMenu />
+                  </div>
+                </MainNav>
+                <StyledFooter />
+              </SidebarContext.Provider>
+            </StyledWrapper>
+          )}
+        </CapabilitiesCheck>
+      </Grommet>
+    </newUIContext.Provider>
   );
 };

@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 
 import { List } from './List';
 import { Project } from './Project';
-import { useUIContextSubMenu, useUINavContext } from '../../contexts/ui';
+import { useUIContextSubMenu, UI, useNewUIContext } from '../../contexts/ui';
 
 interface ProjectParams {
   projectId: string;
@@ -15,12 +15,16 @@ export const useProjectId = () => useContext(ProjectIdContext);
 export const Projects: React.FunctionComponent<
   RouteComponentProps<ProjectParams>
 > = ({ projectId }) => {
-  useUINavContext(() => ({ label: 'Projecten', path: 'projects' }));
+  const newUIContext = useNewUIContext({
+    navContext: { label: 'Projecten', path: 'projects' },
+  });
   // console.log({ projectId });
   return (
-    <Router>
-      <List path="/" />
-      <Project path="/:projectId" />
-    </Router>
+    <newUIContext.Provider>
+      <Router>
+        <List path="/" />
+        <Project path="/:projectId" />
+      </Router>
+    </newUIContext.Provider>
   );
 };

@@ -1,5 +1,11 @@
-import React, { createContext, useContext, useEffect } from 'react';
-import { observable, autorun, action, computed } from 'mobx';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+} from 'react';
+import { observable, autorun, action, computed, IReactionDisposer } from 'mobx';
 import { Icon, Overview, Calendar, Cubes } from 'grommet-icons';
 import { Heading } from 'grommet';
 import { observer } from 'mobx-react-lite';
@@ -25,67 +31,112 @@ interface ContextSubMenu {
 }
 
 class UIState {
-  @observable
-  public navContexts: NavContext[] = [];
+  public Provider: React.FunctionComponent<{}> = ({ children }) => (
+    <UI.Provider value={this}>{children}</UI.Provider>
+  );
 
   @observable
-  public documentTitles: string[] = [];
+  public child: UIState | null = null;
+  @observable
+  public parent: UIState | null = null;
 
   @observable
-  public contextSubMenus: ContextSubMenu[] = [
-    {
-      type: 'replace',
-      items: [
-        {
-          icon: Overview,
-          actionFn: () => {
-            alert('Overzicht');
-          },
-          label: 'Overzicht',
-        },
-        {
-          icon: Calendar,
-          actionFn: () => {
-            alert('Planning');
-          },
-          label: 'Planning',
-        },
-        {
-          icon: Cubes,
-          actionFn: () => {
-            alert('BIM modellen');
-          },
-          label: 'BIM modellen',
-        },
-      ],
-    },
-  ];
+  public navContext: NavContext | null = null;
 
-  constructor() {
-    autorun(() => {
-      window.document.title =
-        this.documentTitles.length > 0 ? this.documentTitles[0] : this.title;
-    });
+  @computed
+  get navContexts() {
+    const path: NavContext[] = [];
+    if (this.navContext) path.push(this.navContext);
+    if (this.child) path.push(...this.child.navContexts);
+    return path;
   }
 
-  @action
-  pushNavContext(navContext: NavContext) {
-    this.navContexts.push(navContext);
+  @observable
+  public documentTitle: string | null = null;
+
+  @computed
+  get leafDocumentTitle(): string | null {
+    return (this.child && this.child.leafDocumentTitle) || this.documentTitle;
   }
 
-  @action
-  popNavContext(navContext: NavContext) {
-    const topNavContext = this.navContexts.slice(-1)[0];
-    if (!isEqualNavContext(topNavContext, navContext)) {
-      throw new Error(
-        JSON.stringify({
-          error: 'Cannot pop navContext',
-          navContext: navContext,
-          navContexts: this.navContexts,
-        })
-      );
+  @observable
+  public contextSubMenu: ContextSubMenu = {
+    type: 'replace',
+    items: [
+      {
+        icon: Overview,
+        actionFn: () => {
+          alert('Overzicht');
+        },
+        label: 'Overzicht',
+      },
+      {
+        icon: Calendar,
+        actionFn: () => {
+          alert('Planning');
+        },
+        label: 'Planning',
+      },
+      {
+        icon: Cubes,
+        actionFn: () => {
+          alert('BIM modellen');
+        },
+        label: 'BIM modellen',
+      },
+    ],
+  };
+
+  @computed
+  get contextSubMenus() {
+    const items: ContextSubMenu['items'] = [];
+    if (this.contextSubMenu) {
+      items.push(...this.contextSubMenu.items);
     }
-    this.navContexts.pop();
+    if (this.child) path.push(...this.child.navContexts);
+    return path;
+  }
+
+  constructor(options: { navContext?: NavContext }, parent?: UIState) {
+    if (options.navContext) {
+      this.navContext = options.navContext;
+    }
+
+    if (parent) {
+      parent.attachChild(this);
+      this.parent = parent;
+    }
+
+    if (parent == null) {
+      // only the root node needs to update the document title
+      this.documentTitleUpdater = autorun(() => {
+        if (this.navContexts.length > 0) {
+          window.document.title = this.navContexts[
+            this.navContexts.length - 1
+          ].label;
+        }
+      });
+    }
+  }
+
+  private documentTitleUpdater: IReactionDisposer | null = null;
+
+  @action
+  public attachChild(child: UIState) {
+    this.child = child;
+  }
+  @action
+  public detachChild(child: UIState) {
+    if (this.child === child) this.child = null;
+  }
+
+  @action
+  public destroy() {
+    if (this.parent) {
+      this.parent.detachChild(this);
+    }
+    this.parent = null;
+    this.documentTitleUpdater && this.documentTitleUpdater();
   }
 
   @action
@@ -124,21 +175,18 @@ class UIState {
     className?: string;
   }> = observer(({ className }) => (
     <ul className={className}>
-      {this.navContexts
-        .slice()
-        .reverse()
-        .map((navContext, index) => {
-          const active: boolean = index === this.navContexts.length - 1;
-          return (
-            <li key={navContext.label} className={active ? 'active' : ''}>
-              {active ? (
-                <span>{navContext.label}</span>
-              ) : (
-                <RouteLink href={navContext.path} label={navContext.label} />
-              )}
-            </li>
-          );
-        })}
+      {this.navContexts.slice().map((navContext, index) => {
+        const active: boolean = index === this.navContexts.length - 1;
+        return (
+          <li key={navContext.label} className={active ? 'active' : ''}>
+            {active ? (
+              <span>{navContext.label}</span>
+            ) : (
+              <RouteLink href={navContext.path} label={navContext.label} />
+            )}
+          </li>
+        );
+      })}
     </ul>
   ));
 
@@ -180,21 +228,20 @@ class UIState {
     );
   });
 }
-
-const UI = createContext(new UIState());
+export const UI = createContext(new UIState({}));
 
 export const useUIContext = () => useContext(UI);
 
-export const useUINavContext = (
-  navContextThunk: () => NavContext,
-  deps: any[] = []
+export const useNewUIContext = (
+  options: ConstructorParameters<typeof UIState>[0]
 ) => {
-  const ui = useUIContext();
-  useEffect(() => {
-    const navContext = navContextThunk();
-    ui.pushNavContext(navContext);
-    return () => ui.popNavContext(navContext);
-  }, deps);
+  const parentState = useUIContext();
+  const uiState = useMemo(() => new UIState(options, parentState), [
+    options,
+    parentState,
+  ]);
+  useEffect(() => () => uiState.destroy(), [uiState]);
+  return uiState;
 };
 
 export const useUIContextSubMenu = (
@@ -202,7 +249,7 @@ export const useUIContextSubMenu = (
   deps: any[] = []
 ) => {
   const ui = useUIContext();
-  useEffect(() => {
+  useLayoutEffect(() => {
     const menu = contextSubMenuThunk();
     ui.pushContextSubMenu(menu);
     return () => ui.popContextSubMenu(menu);

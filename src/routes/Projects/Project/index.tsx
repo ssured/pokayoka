@@ -5,7 +5,7 @@ import { Overview } from './Overview';
 import { Observations } from './Observations';
 import { ProvideStore } from '../../../contexts/store';
 import { Sheets } from './Sheets';
-import { useUIContextSubMenu, useUINavContext } from '../../../contexts/ui';
+import { useUIContextSubMenu } from '../../../contexts/ui';
 import { Bug, MapLocation } from 'grommet-icons';
 
 interface ProjectParams {
@@ -36,9 +36,6 @@ export const Project: React.FunctionComponent<
     }),
     [projectId]
   );
-  useUINavContext(() => ({ label: 'Project', path: `/${projectId}` }), [
-    projectId,
-  ]);
   // console.log({ projectId });
   return (
     <ProjectIdContext.Provider value={projectId!}>
