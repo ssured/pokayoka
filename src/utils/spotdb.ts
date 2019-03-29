@@ -4,13 +4,7 @@ import mlts from 'monotonic-lexicographic-timestamp';
 import sha256 from './hash';
 import SubscribableEvent from 'subscribableevent';
 
-type primitive = boolean | string | number | null | undefined;
-type subj = string[];
-type pred = string;
-type objt = primitive | subj;
-type state = string;
-type Tuple = [subj, pred, objt];
-type GraphableObj = { [K in string]: primitive | GraphableObj };
+import { subj, pred, objt, state, Tuple } from './spo';
 
 type queryVariable = {
   '#': string;
@@ -21,7 +15,10 @@ type queryResult = {
   variables: { [key: string]: subj | pred | objt };
 };
 type query = {
-  s?: subj | queryVariable | { gte: subj | []; lt: subj | [undefined] };
+  s?:
+    | subj
+    | queryVariable
+    | { gte: subj | []; lt: subj | (string | undefined)[] };
   p?: pred | queryVariable | { gte: pred | []; lt: pred | [undefined] };
   o?:
     | objt
@@ -110,24 +107,22 @@ export class SpotDB {
     (tuples: Tuple[]) => void
   >();
 
-  public async commit(data: Map<subj, GraphableObj | [GraphableObj, state]>) {
+  public async commit(tuplesOrTuplesWithState: (Tuple | [Tuple, state])[]) {
     const tx = (await this.db).transaction(this.objectStoreName, 'readwrite');
     const tuples: Tuple[] = [];
 
-    for (const [subj, objOrObjWithState] of data.entries()) {
-      let obj: GraphableObj;
+    for (const tupleOrTupleWithState of tuplesOrTuplesWithState) {
+      let tuple: Tuple;
       let state: state;
-      if (Array.isArray(objOrObjWithState)) {
-        [obj, state] = objOrObjWithState;
+      if (tupleOrTupleWithState.length === 2) {
+        [tuple, state] = tupleOrTupleWithState;
       } else {
-        obj = objOrObjWithState;
+        tuple = tupleOrTupleWithState;
         state = this.dbState();
       }
-      for (const tuple of spoInObject(subj, obj)) {
-        tuples.push(tuple);
-        const object = objectFromTuple(tuple, state, this.dbState());
-        tx.store.put(object);
-      }
+      tuples.push(tuple);
+      const object = objectFromTuple(tuple, state, this.dbState());
+      tx.store.put(object);
     }
 
     await tx.done;
@@ -228,9 +223,11 @@ export class SpotDB {
     yield* results;
   }
 
-  public variable = variable;
+  public query(queries: (v: typeof variable) => query[]) {
+    return this._query(queries(variable));
+  }
 
-  public async *query(
+  public async *_query(
     queries: query[],
     result: queryResult = { tuples: [], variables: {} }
   ): AsyncIterableIterator<queryResult> {
@@ -282,36 +279,11 @@ export class SpotDB {
         if (queries.length === 1) {
           yield newResult;
         } else {
-          yield* this.query(queries.slice(1), newResult);
+          yield* this._query(queries.slice(1), newResult);
         }
       }
     }
   }
-}
-
-function isObject(x: unknown): x is object {
-  return (typeof x === 'object' && x !== null) || typeof x === 'function';
-}
-
-function isObjt(v: unknown): v is objt {
-  switch (typeof v) {
-    case 'string':
-    case 'boolean':
-    case 'number':
-      return true;
-    case 'object':
-      return v == null || isLink(v);
-  }
-  return false;
-}
-
-function isLink(x: unknown): x is subj {
-  // TODO in production this check might be too expensive
-  if (!Array.isArray(x) || x.length === 0) return false;
-  for (let i = 0; i < x.length; i += 1) {
-    if (typeof x[i] !== 'string') return false;
-  }
-  return true;
 }
 
 function isVariable(arg: any): arg is queryVariable {
@@ -342,44 +314,6 @@ function isRange(
     'gte' in obj &&
     'lt' in obj
   );
-}
-
-function* spoInObject(
-  subj: subj,
-  obj: GraphableObj,
-  // weakmap to detect cycles
-  paths: WeakMap<GraphableObj, subj> = new WeakMap()
-): Iterable<Tuple> {
-  if (paths.has(obj)) {
-    throw new Error('this did not occur before, check implementation below');
-    // console.log("frompaths", subj, obj, paths.get(obj));
-    // if (subj.length === 0)
-    //   throw new Error("impossible state, root references a known object");
-    // yield {
-    //   subj: subj.slice(0, -1),
-    //   pred: subj.slice(-1)[0],
-    //   objt: { "#": charwise.encode(paths.get(obj)) }
-    // };
-  } else {
-    paths.set(obj, subj);
-    for (const [key, value] of Object.entries(obj)) {
-      if (isObjt(value)) {
-        yield [subj, key, value];
-      } else if (isObject(value)) {
-        if (Array.isArray(value)) {
-          throw new Error(
-            `arrays are not supported ${JSON.stringify([subj, key, value])}`
-          );
-        }
-        if (paths.has(value)) {
-          yield [subj, key, paths.get(value)];
-        } else {
-          yield* spoInObject(subj.concat(key), value, paths);
-          yield [subj, key, subj.concat(key)];
-        }
-      }
-    }
-  }
 }
 
 // (async function doDatabaseStuff() {

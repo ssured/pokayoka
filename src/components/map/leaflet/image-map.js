@@ -26,8 +26,11 @@ import { observer } from 'mobx-react';
 </div>
 */
 
-class PDFMap extends Component {
-  mapRef = createRef();
+class PDFMap extends React.Component {
+  constructor() {
+    super(...arguments);
+    this.mapRef = createRef();
+  }
 
   componentDidMount() {
     const { onRef } = this.props;

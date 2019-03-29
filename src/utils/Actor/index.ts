@@ -43,6 +43,7 @@ declare global {
  */
 export type ValidActorMessageName = keyof ActorMessageType;
 
+// tslint:disable-next-line class-name
 export interface actorMixin<T> {
   actorName?: ValidActorMessageName;
   onMessage(message: T): void;

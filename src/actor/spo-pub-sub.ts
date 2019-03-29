@@ -1,5 +1,7 @@
+import mlts from 'monotonic-lexicographic-timestamp';
 import { Actor, ActorHandle, lookup } from '../utils/Actor';
-import { SPOMessage } from './types';
+
+import { subj, pred, Tuple, state } from '../utils/spo';
 
 declare global {
   interface ActorMessageType {
@@ -7,8 +9,11 @@ declare global {
   }
 }
 
+export const getLocalState = mlts() as () => state;
+
 export enum MessageType {
   SUBSCRIBE,
+  REQUEST,
   PUBLISH,
 }
 
@@ -17,13 +22,32 @@ export interface SubscribeMessage {
   actorName: string;
 }
 
-export interface PublishMessage {
-  type: MessageType.PUBLISH;
-  sourceActorName?: string;
-  payload: SPOMessage;
+export interface RequestMessage {
+  type: MessageType.REQUEST;
+  localState?: state;
+  sourceActorName: string;
+  s: subj;
+  p?: pred;
 }
 
-export type Message = SubscribeMessage | PublishMessage;
+// outbound messages are guaranteed to have a local timestamp
+// but typing might not fit the actor model helpers
+export interface StampedRequestMessage extends RequestMessage {
+  localState: state;
+}
+
+export interface PublishMessage {
+  type: MessageType.PUBLISH;
+  localState?: state;
+  sourceActorName: string;
+  tuple: Tuple;
+  state?: state;
+}
+export interface StampedPublishMessage extends PublishMessage {
+  localState: state;
+}
+
+export type Message = SubscribeMessage | RequestMessage | PublishMessage;
 
 interface Subscriber {
   name: string;
@@ -48,12 +72,30 @@ export class SpoPubSubActor extends Actor<Message> {
   }
 
   // tslint:disable-next-line function-name
-  async [MessageType.PUBLISH](msg: PublishMessage) {
+  async [MessageType.REQUEST](msg: RequestMessage) {
+    const stampedMsg = {
+      ...msg,
+      localState: getLocalState(),
+    } as StampedRequestMessage;
     for (const { name, handle } of this.subscribers) {
       if (name === msg.sourceActorName) {
         continue;
       }
-      handle.send(msg);
+      handle.send(stampedMsg);
+    }
+  }
+
+  // tslint:disable-next-line function-name
+  async [MessageType.PUBLISH](msg: PublishMessage) {
+    const stampedMsg = {
+      ...msg,
+      localState: getLocalState(),
+    } as StampedPublishMessage;
+    for (const { name, handle } of this.subscribers) {
+      if (name === msg.sourceActorName) {
+        continue;
+      }
+      handle.send(stampedMsg);
     }
   }
 }
