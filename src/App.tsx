@@ -304,11 +304,7 @@ export const App: React.FunctionComponent<{}> = () => {
                     {/* <Debug path="debug" /> */}
                     {/* <SyncStatus path="sync" /> */}
                     <Projects path="projects/*" />
-
                     <NotFound default />
-                    {/* <User path=":userId">
-                  <Project path=":projectId" />
-                </User> */}
                   </StyledRouter>
                 </Content>
                 <MainNav
@@ -318,7 +314,7 @@ export const App: React.FunctionComponent<{}> = () => {
                   <MenuItemButton
                     icon={Icons.Home}
                     actionFn={() => navigate('/')}
-                    label="Beginscherm"
+                    label="Home"
                   />
                   <MenuItemButton
                     icon={Icons.Projects}

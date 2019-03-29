@@ -4,12 +4,15 @@ import { observer } from 'mobx-react-lite';
 import styled from 'styled-components';
 
 import { Box, Grid, Menu } from 'grommet';
-import { SettingsOption, Projects, Book } from 'grommet-icons';
+import * as Icons from 'grommet-icons';
 
 // import { NLSfB } from '../components/NLSfB';
 
 import { useAuthentication } from '../contexts/authentication';
 import { RouteLink } from '../components/ui/RouteLink';
+import { OverviewTiles, OverviewTile } from '../UI/components/OverviewTiles';
+
+const { SettingsOption, Projects, Book } = Icons;
 
 interface HomeParams {}
 export const Home = observer((props: RouteComponentProps<HomeParams>) => {
@@ -38,7 +41,16 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => {
         {/* Settings */}
         <RouteLink icon={<SettingsOption />} href="#" />
       </Box>
-      <Box fill align="center" justify="center">
+
+      <OverviewTiles>
+        <OverviewTile
+          icon={Icons.Projects}
+          href="/projects"
+          label="Projecten"
+        />
+        <OverviewTile icon={Icons.Book} href="/manuals" label="Instructies" />
+      </OverviewTiles>
+      {/* <Box fill align="center" justify="center">
         <Box direction="column">
           <Box pad="small">
             <RouteLink
@@ -56,7 +68,7 @@ export const Home = observer((props: RouteComponentProps<HomeParams>) => {
           </Box>
           <pre>Todo:</pre>
         </Box>
-      </Box>
+      </Box> */}
     </Box>
   );
 });

@@ -7,7 +7,6 @@ import { useModel, useQuery } from '../../../contexts/store';
 import { Project } from '../../../models/Project';
 import { Observation as ObservationModel } from '../../../models/Observation';
 import { FixedSizeList } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import styled from 'styled-components';
 
 const LoadingIndicator = () => <p>Loading...</p>;
@@ -130,7 +129,7 @@ export const Observations: React.FunctionComponent<
         s: v('observationId'),
         p: 'title',
         o: v('title'),
-        filter: ({ o }) => String(o).indexOf('--') === -1,
+        filter: ({ o: title }) => String(title).indexOf('--') === -1,
       },
     ],
     []

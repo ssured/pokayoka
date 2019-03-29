@@ -1,0 +1,1 @@
+- add i18n: https://github.com/lingui/js-lingui

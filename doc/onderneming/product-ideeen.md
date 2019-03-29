@@ -1,0 +1,5 @@
+- pull planning live op groot scherm, waarbij ieder de relatie van hun blokje met de andere blokjes aan kan geven.
+- documenten met revisiehistorie koppelen aan fases/elementen. Heel belangrijk om te kunnen concurreren met Snagstream/Docstream van Pro4all
+- Badge op de homepagina van Aannemer X: wij maken niet 2x dezelfde fout.
+- digitaal dossier voor opdrachtgever en eindgebruiker
+- MJOP op basis van digitaal dossier
