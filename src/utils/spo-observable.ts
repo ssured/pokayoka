@@ -12,13 +12,7 @@ import {
   pred,
   objt,
 } from './spo';
-import {
-  observable,
-  onBecomeObserved,
-  runInAction,
-  getAtom,
-  isObservableObject,
-} from 'mobx';
+import { observable, onBecomeObserved, runInAction } from 'mobx';
 import { recursiveDeepObserve, IDisposer } from './mobx-deep-observe';
 import { SPOHub } from './spo-hub';
 

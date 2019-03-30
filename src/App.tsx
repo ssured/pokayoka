@@ -17,6 +17,7 @@ import { useToggle } from 'react-use';
 
 import { MenuItemButton, ButtonLiner } from './UI/components/context-menu';
 import { useUIContext, useNewUIContext } from './contexts/ui';
+import { SPO } from './SPO';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -304,6 +305,7 @@ export const App: React.FunctionComponent<{}> = () => {
                     {/* <Debug path="debug" /> */}
                     {/* <SyncStatus path="sync" /> */}
                     <Projects path="projects/*" />
+                    <SPO path="/spo" />
 
                     <NotFound default />
                     {/* <User path=":userId">
@@ -326,6 +328,13 @@ export const App: React.FunctionComponent<{}> = () => {
                       navigate('/projects');
                     }}
                     label="Projecten"
+                  />
+                  <MenuItemButton
+                    icon={Icons.Projects}
+                    actionFn={() => {
+                      navigate('/spo');
+                    }}
+                    label="SPO"
                   />
                   <MenuItemButton
                     icon={Icons.Book}

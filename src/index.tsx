@@ -3,7 +3,7 @@ import { render } from 'react-dom';
 
 import { App } from './App';
 
-import { configure, autorun } from 'mobx';
+import { configure } from 'mobx';
 import { setLivelynessChecking } from 'mobx-state-tree';
 
 import 'codemirror/lib/codemirror.css';
@@ -14,11 +14,6 @@ import 'leaflet/dist/leaflet.css';
 import { IconContext } from 'react-icons';
 import { AuthenticationContainer } from './contexts/authentication';
 import { MuxContainer } from './contexts/mux';
-import { SpotDB } from './utils/spotdb';
-import { SPOHub } from './utils/spo-hub';
-import { SPOStorage } from './utils/spo-storage';
-import { createObservable } from './utils/spo-observable';
-import { getSubj, isSPOShape } from './utils/spo';
 
 // fix marker urls
 // https://github.com/PaulLeCam/react-leaflet/issues/255#issuecomment-261904061
@@ -29,36 +24,6 @@ import { getSubj, isSPOShape } from './utils/spo';
 //   iconUrl: require('leaflet/images/marker-icon.png'),
 //   shadowUrl: require('leaflet/images/marker-shadow.png'),
 // });
-
-const spotDb = new SpotDB('pokayoka');
-// @ts-ignore
-window.spot = spotDb;
-
-const hub = new SPOHub();
-const storage = new SPOStorage(hub, spotDb);
-const observable = createObservable(hub, ['bk0wl6vr9vstorey']).object;
-
-autorun(() => {
-  console.log('observable.name', observable.name);
-});
-setTimeout(
-  () =>
-    autorun(() => {
-      console.log(
-        'observable.building',
-        getSubj(observable.building as any),
-        isSPOShape(observable.building) && observable.building.name
-      );
-    }),
-  1000
-);
-
-// @ts-ignore
-window.obs = observable;
-console.log({ observable });
-
-// @ts-ignore
-window.autorun = autorun;
 
 if (
   'serviceWorker' in navigator &&
