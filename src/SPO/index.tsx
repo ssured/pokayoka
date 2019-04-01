@@ -7,6 +7,8 @@ import { useObserver } from 'mobx-react-lite';
 import { autorun, runInAction } from 'mobx';
 import { AsyncProject } from './model/Project';
 
+const projectId = 'bk0wb0a7sz';
+
 const spotDb = new SpotDB('pokayoka');
 // // @ts-ignore
 // window.spot = spotDb;
@@ -26,7 +28,7 @@ const storage = new SPOStorage(hub, spotDb);
 
 const project = AsyncProject(
   subj => createObservable(hub, subj).object as any,
-  ['bk0wb0a7sz']
+  [projectId]
 );
 
 // // @ts-ignore
@@ -40,11 +42,7 @@ export const SPO: React.FunctionComponent<{}> = ({}) => {
   return useObserver(() => (
     <div>
       <h1>Partial: {project.partial.name}</h1>
-      <pre>
-        {JSON.stringify(
-          !!console.log('p', project.partial) || Object.keys(project.partial)
-        )}
-      </pre>
+
       <h1>
         Serialized: {typeof project.serialized}{' '}
         {project.serialized && project.serialized.name}

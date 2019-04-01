@@ -11,6 +11,8 @@ import rimraf from 'rimraf';
 import nano from 'nano';
 import { copyDbFromSnagtracker } from './copy-db-from-snagtracker';
 import console = require('console');
+import { spoInObject } from '../src/utils/spo';
+import { getType } from './utils/snag-id';
 
 const cache = new Map<string, ObjectStorage>();
 
@@ -103,5 +105,61 @@ export function storeRoutes(app: Express) {
       }
     }
     res.json({ patches, until });
+  });
+
+  app.get('/data/:project/spo', async (req, res) => {
+    const { project } = req.params;
+    let { since } = req.query;
+    since = typeof since === 'string' ? since : '';
+
+    const db = nano('http://admin:admin@localhost:5984').use<{}>(project);
+    const all = await db.list({ include_docs: true });
+
+    const result: any[] = [];
+
+    for (const { doc: docWithArrays } of all.rows) {
+      if (docWithArrays!._id[0] === '_') continue;
+      delete (docWithArrays as any)['#'];
+
+      // convert all arrays to objects with numbered indexes
+      const doc = JSON.parse(
+        JSON.stringify(
+          docWithArrays,
+          (_, value) =>
+            Array.isArray(value)
+              ? Object.entries(value).reduce((map, [key, value]) => {
+                  (map as any)[key] = value;
+                  return map;
+                }, {})
+              : value,
+          2
+        )
+      );
+
+      for (const tuple of spoInObject(doc._id.split('_'), doc)) {
+        result.push(tuple);
+      }
+
+      result.push([[doc._id], 'type', getType(doc._id)]);
+
+      if (doc._id.split('_').length > 1) {
+        result.push([
+          doc._id.split('_'),
+          'parent',
+          doc._id.split('_').slice(0, -1),
+        ]);
+        result.push([
+          doc._id
+            .split('_')
+            .slice(0, -1)
+            .concat('children'),
+          ,
+          doc._id,
+          doc._id.split('_'),
+        ]);
+      }
+    }
+
+    res.json({ result });
   });
 }

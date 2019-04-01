@@ -23,6 +23,7 @@ export const Project = t.intersection(
        * Name of the project
        */
       name: t.string,
+
       // buildings: t.record(t.string, Building),
       // tasks: t.record(t.string, Task)
     }),
