@@ -91,3 +91,6 @@ assets
 cdn
 db
 server/localtunnel-name.txt
+
+.env
+pokayokadb

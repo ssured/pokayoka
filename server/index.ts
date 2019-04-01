@@ -22,14 +22,32 @@ import { Channel, fromEmitter } from 'queueable';
 import { storeRoutes } from './store';
 import { addTunnel } from './expose-localtunnel';
 
+import session from 'express-session';
+import dotenv from 'dotenv';
+
+import passport from 'passport';
+import { Strategy as Auth0Strategy } from 'passport-auth0';
+import { userInViews } from './middleware/user-in-views';
+import { authRouter } from './routes/auth';
+import { userRouter } from './routes/user';
+import expressWs from 'express-ws';
+import { registerWssServer } from './wss';
+
+dotenv.config();
+
 (async function() {
   await new Promise(res => setTimeout(res, 1000));
 
   const log = debug(__filename.replace(__dirname, '~'));
 
-  const isDevelopment = true;
   const app = express();
+  expressWs(app, undefined, {
+    wsOptions: {},
+  });
   const server = http.createServer(app);
+
+  const isProduction = app.get('env') === 'production';
+  const isDevelopment = !isProduction;
 
   app.use(
     bodyParser.json({
@@ -42,6 +60,48 @@ import { addTunnel } from './expose-localtunnel';
       extended: true,
     })
   );
+  app.use(
+    session({
+      secret: 'K4P744%c!M^K',
+      cookie: { secure: isProduction },
+      resave: false,
+      saveUninitialized: true,
+    })
+  );
+
+  // Configure Passport to use Auth0
+  const strategy = new Auth0Strategy(
+    {
+      domain: process.env.AUTH0_DOMAIN!,
+      clientID: process.env.AUTH0_CLIENT_ID!,
+      clientSecret: process.env.AUTH0_CLIENT_SECRET!,
+      callbackURL:
+        process.env.AUTH0_CALLBACK_URL ||
+        'http://localhost:3000/auth/auth0callback',
+    },
+    (accessToken, refreshToken, extraParams, profile, done) => {
+      // accessToken is the token to call Auth0 API (not needed in the most cases)
+      // extraParams.id_token has the JSON Web Token
+      // profile has all the information from the user
+      return done(null, profile);
+    }
+  );
+  passport.use(strategy);
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  passport.serializeUser((user, done) => {
+    done(null, user);
+  });
+
+  passport.deserializeUser((user, done) => {
+    done(null, user);
+  });
+
+  app.use(userInViews());
+  app.use('/', authRouter);
+  app.use('/', userRouter);
+  registerWssServer(server);
 
   storeRoutes(app);
   addTunnel(app, 3000);
@@ -49,69 +109,69 @@ import { addTunnel } from './expose-localtunnel';
   const couchDbUrl = 'http://localhost:5984';
   app.use('/db', proxy(couchDbUrl, {}));
 
-  const nanoServer = nano(couchDbUrl.replace('://', '://admin:admin@'));
-  const validatedWebSocketProfiles = new WeakMap<
-    http.IncomingMessage,
-    UserProfile
-  >();
+  // const nanoServer = nano(couchDbUrl.replace('://', '://admin:admin@'));
+  // const validatedWebSocketProfiles = new WeakMap<
+  //   http.IncomingMessage,
+  //   UserProfile
+  // >();
 
-  /*const wss = */ createServer(
-    {
-      server,
-      verifyClient: async (info, cb) => {
-        const ll = log.extend('verifyClient');
+  // /*const wss = */ createServer(
+  //   {
+  //     server,
+  //     verifyClient: async (info, cb) => {
+  //       const ll = log.extend('verifyClient');
 
-        const cookieHeader = info.req.headers.cookie;
-        if (!cookieHeader) {
-          ll('Failed to authorize ');
-          return cb(false, 401, 'Not authorized');
-        }
+  //       const cookieHeader = info.req.headers.cookie;
+  //       if (!cookieHeader) {
+  //         ll('Failed to authorize ');
+  //         return cb(false, 401, 'Not authorized');
+  //       }
 
-        const sessionCookie = Cookie.parse(cookieHeader);
+  //       const sessionCookie = Cookie.parse(cookieHeader);
 
-        if (!sessionCookie) {
-          ll('AuthSession not found in cookie %o', cookieHeader);
-          return cb(false, 401, 'Not authorized');
-        }
+  //       if (!sessionCookie) {
+  //         ll('AuthSession not found in cookie %o', cookieHeader);
+  //         return cb(false, 401, 'Not authorized');
+  //       }
 
-        try {
-          // ll('cookie %o', sessionCookie.toString());
-          const response = await got('_session', {
-            baseUrl: couchDbUrl,
-            json: true,
-            headers: { cookie: sessionCookie.toString() },
-          });
+  //       try {
+  //         // ll('cookie %o', sessionCookie.toString());
+  //         const response = await got('_session', {
+  //           baseUrl: couchDbUrl,
+  //           json: true,
+  //           headers: { cookie: sessionCookie.toString() },
+  //         });
 
-          const profile: {
-            ok: boolean;
-            userCtx: Partial<UserProfile>;
-          } = response.body;
+  //         const profile: {
+  //           ok: boolean;
+  //           userCtx: Partial<UserProfile>;
+  //         } = response.body;
 
-          if (!profile.ok || !profile.userCtx.name) {
-            ll('No or anonymous profile %o', profile);
-            return cb(false, 401, 'Not authenticated');
-          }
+  //         if (!profile.ok || !profile.userCtx.name) {
+  //           ll('No or anonymous profile %o', profile);
+  //           return cb(false, 401, 'Not authenticated');
+  //         }
 
-          log('info %O', profile.userCtx);
-          validatedWebSocketProfiles.set(
-            info.req,
-            profile.userCtx as UserProfile
-          );
+  //         log('info %O', profile.userCtx);
+  //         validatedWebSocketProfiles.set(
+  //           info.req,
+  //           profile.userCtx as UserProfile
+  //         );
 
-          return cb(true);
-        } catch (e) {
-          ll('Network / profile error', e);
-          return cb(false, 500, 'Not authorized');
-        }
-      },
-    },
-    (clientStream, request) => {
-      const profile = validatedWebSocketProfiles.get(request)!;
-      const server = muxServer(nanoServer, profile);
-      const serverStream = server.createStream();
-      pull(clientStream, serverStream, clientStream);
-    }
-  );
+  //         return cb(true);
+  //       } catch (e) {
+  //         ll('Network / profile error', e);
+  //         return cb(false, 500, 'Not authorized');
+  //       }
+  //     },
+  //   },
+  //   (clientStream, request) => {
+  //     const profile = validatedWebSocketProfiles.get(request)!;
+  //     const server = muxServer(nanoServer, profile);
+  //     const serverStream = server.createStream();
+  //     pull(clientStream, serverStream, clientStream);
+  //   }
+  // );
 
   // wss.on('connection', (ws, req) => {
   //   const profile = validatedWebSocketProfiles.get(req)!;

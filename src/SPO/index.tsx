@@ -6,6 +6,10 @@ import { createObservable } from '../utils/spo-observable';
 import { useObserver } from 'mobx-react-lite';
 import { autorun, runInAction } from 'mobx';
 import { AsyncProject } from './model/Project';
+import { RouteComponentProps } from '@reach/router';
+
+import ReconnectingWebSocket from 'reconnecting-websocket';
+import { SPOWs } from '../utils/spo-ws';
 
 const projectId = 'bk0wb0a7sz';
 
@@ -15,6 +19,10 @@ const spotDb = new SpotDB('pokayoka');
 
 const hub = new SPOHub();
 const storage = new SPOStorage(hub, spotDb);
+const server = new SPOWs(
+  hub,
+  new ReconnectingWebSocket(`ws://localhost:3000/spows`)
+);
 // const observable = createObservable(hub, ['bk0wb0a7sz']).object;
 
 // setTimeout(
@@ -38,7 +46,7 @@ const project = AsyncProject(
 // // @ts-ignore
 // window.autorun = autorun;
 
-export const SPO: React.FunctionComponent<{}> = ({}) => {
+export const SPO: React.FunctionComponent<RouteComponentProps<{}>> = ({}) => {
   return useObserver(() => (
     <div>
       <h1>Partial: {project.partial.name}</h1>
