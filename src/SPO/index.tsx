@@ -1,52 +1,14 @@
 import React from 'react';
-import { SpotDB } from '../utils/spotdb';
-import { SPOHub } from '../utils/spo-hub';
-import { SPOStorage } from '../utils/spo-storage';
-import { createObservable } from '../utils/spo-observable';
 import { useObserver } from 'mobx-react-lite';
-import { autorun, runInAction } from 'mobx';
 import { AsyncProject } from './model/Project';
 import { RouteComponentProps } from '@reach/router';
 
-import ReconnectingWebSocket from 'reconnecting-websocket';
-import { SPOWs } from '../utils/spo-ws';
+import { useModel } from '../contexts/spo-hub';
 
 const projectId = 'bk0wb0a7sz';
 
-const spotDb = new SpotDB('pokayoka');
-// // @ts-ignore
-// window.spot = spotDb;
-
-const hub = new SPOHub();
-const storage = new SPOStorage(hub, spotDb);
-const server = new SPOWs(
-  hub,
-  new ReconnectingWebSocket(`ws://localhost:3000/spows`)
-);
-// const observable = createObservable(hub, ['bk0wb0a7sz']).object;
-
-// setTimeout(
-//   () =>
-//     runInAction(() => {
-//       const [name, count = '0'] = String(observable.name).split('|');
-//       observable.name = `${name}|${parseInt(count, 10) + 1}`;
-//     }),
-//   1000
-// );
-
-const project = AsyncProject(
-  subj => createObservable(hub, subj).object as any,
-  [projectId]
-);
-
-// // @ts-ignore
-// window.obs = observable;
-// console.log({ observable });
-
-// // @ts-ignore
-// window.autorun = autorun;
-
 export const SPO: React.FunctionComponent<RouteComponentProps<{}>> = ({}) => {
+  const project = useModel(AsyncProject, projectId);
   return useObserver(() => (
     <div>
       <h1>Partial: {project.partial.name}</h1>

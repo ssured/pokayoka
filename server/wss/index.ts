@@ -13,6 +13,7 @@ import mlts from 'monotonic-lexicographic-timestamp';
 import path from 'path';
 import { subj, pred, objt } from '../../src/utils/spo';
 import { AbstractIteratorOptions } from 'abstract-leveldown';
+import { ensureNever } from '../../src/utils/index';
 
 const getMachineState = mlts();
 
@@ -34,8 +35,8 @@ export function registerWssServer(server: Server) {
   wss.on('connection', ws => {
     ws.on('message', async message => {
       try {
-        console.log(`WS: ${message}`);
         const msg = JSON.parse(message.toString()) as Message;
+        console.log(`WS ${msg.type}: ${message}`);
 
         switch (msg.type) {
           case 'get':
@@ -101,6 +102,8 @@ export function registerWssServer(server: Server) {
               ]);
             }
             break;
+          default:
+            ensureNever(msg);
         }
       } catch (e) {
         console.log('Failed to process: %s', message, e);
