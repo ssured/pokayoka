@@ -5,9 +5,8 @@ import {
   Model,
   AsyncPropertiesOf,
   WrapAsync,
-  Resolver,
-  subj,
-  SetOf,
+  MapOf,
+  SPOShape,
 } from './base';
 
 import { computed } from 'mobx';
@@ -71,7 +70,7 @@ export class UserModel extends Model<User> implements AsyncPropertiesOf<User> {
 
   @computed
   get projects() {
-    return SetOf(AsyncProject, this.resolver, this.serialized.projects);
+    return MapOf(AsyncProject, this.serialized.projects);
   }
 
   // @computed
@@ -85,6 +84,6 @@ export class UserModel extends Model<User> implements AsyncPropertiesOf<User> {
   // }
 }
 
-export function AsyncUser(resolver: Resolver, subj: subj) {
-  return new WrapAsync(resolver, subj, SerializedUser, UserModel);
+export function AsyncUser(obj: SPOShape) {
+  return new WrapAsync(obj, SerializedUser, UserModel);
 }

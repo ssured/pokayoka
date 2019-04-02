@@ -1,14 +1,12 @@
 import * as t from 'io-ts';
 import {
   Serialized,
-  tOne,
   tMany,
   Model,
   AsyncPropertiesOf,
   WrapAsync,
-  Resolver,
-  subj,
-  SetOf,
+  MapOf,
+  SPOShape,
 } from './base';
 
 import { Task, AsyncTask } from './Task';
@@ -66,26 +64,26 @@ export class ProjectModel extends Model<Project>
   // get mainSite() {
   //   return (
   //     this.serialized.mainSite &&
-  //     AsyncSite(this.resolver, this.serialized.mainSite)
+  //     AsyncSite(this.serialized.mainSite)
   //   );
   // }
 
   @computed
   get sites() {
-    return SetOf(AsyncSite, this.resolver, this.serialized.sites || {});
+    return MapOf(AsyncSite, this.serialized.sites || {});
   }
 
   // @computed
   // get buildings() {
-  //   return SetOf(AsyncBuilding, this.resolver, this.serialized.sites);
+  //   return SetOf(AsyncBuilding, this.serialized.sites);
   // }
 
   // @computed
   // get tasks() {
-  //   return SetOf(AsyncTask, this.resolver, this.serialized.sites);
+  //   return SetOf(AsyncTask, this.serialized.sites);
   // }
 }
 
-export function AsyncProject(resolver: Resolver, subj: subj) {
-  return new WrapAsync(resolver, subj, SerializedProject, ProjectModel);
+export function AsyncProject(obj: SPOShape) {
+  return new WrapAsync(obj, SerializedProject, ProjectModel);
 }

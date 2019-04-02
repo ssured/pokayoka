@@ -29,7 +29,7 @@ const config: webpack.Configuration = {
     // new webpack.optimize.OccurrenceOrderPlugin(true),
     new webpack.NoEmitOnErrorsPlugin(),
 
-    new CleanWebpackPlugin(['dist']),
+    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       title: 'Output Management',
     }),

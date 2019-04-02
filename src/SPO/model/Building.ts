@@ -6,9 +6,8 @@ import {
   Model,
   AsyncPropertiesOf,
   WrapAsync,
-  Resolver,
-  subj,
-  SetOf,
+  MapOf,
+  SPOShape,
 } from './base';
 import { computed } from 'mobx';
 
@@ -50,10 +49,10 @@ export class BuildingModel extends Model<Building>
 
   @computed
   get tasks() {
-    return SetOf(AsyncTask, this.resolver, this.serialized.tasks);
+    return MapOf(AsyncTask, this.serialized.tasks);
   }
 }
 
-export function AsyncBuilding(resolver: Resolver, subj: subj) {
-  return new WrapAsync(resolver, subj, SerializedBuilding, BuildingModel);
+export function AsyncBuilding(obj: SPOShape) {
+  return new WrapAsync(obj, SerializedBuilding, BuildingModel);
 }

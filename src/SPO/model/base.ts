@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
-import { computed, ObservableSet, observable } from 'mobx';
-import { PathReporter } from 'io-ts/lib/PathReporter';
+import { computed, observable, ObservableMap } from 'mobx';
+import { SPOShape as SPOShape_ } from '../../utils/spo';
 
 type primitive = boolean | string | number | null | undefined;
 
@@ -9,42 +9,42 @@ export type subj = string[];
 // type objt = primitive | subj;
 // type Tuple = [subj, pred, objt];
 
-export type GraphableObj = { [K in string]: primitive | GraphableObj };
+export type SPOShape = SPOShape_; // { [K in string]: primitive | GraphableObj };
 
 type Dictionary<T> = Record<string, T>;
-type Many<T extends GraphableObj> = Dictionary<T>;
-type One<T extends GraphableObj> = T;
+type Many<T extends SPOShape> = Dictionary<T>;
+type One<T extends SPOShape> = T;
 
 type InnerSerialized<T> = T extends primitive
   ? T
   : T extends Many<infer U>
-  ? Dictionary<object>
+  ? Dictionary<SPOShape>
   : T extends One<infer U>
-  ? object
+  ? SPOShape
   : never;
 
-export type Serialized<T extends GraphableObj> = {
+export type Serialized<T extends SPOShape> = {
   [K in keyof T]: InnerSerialized<T[K]>
 };
-export const tOne = t.object;
-export const tMany = t.record(t.string, t.object);
 
-export abstract class Model<T extends GraphableObj> {
-  constructor(
-    protected resolver: Resolver,
-    protected serialized: Serialized<T>
-  ) {}
+export const tGraphableObject: t.Type<SPOShape> = t.object as any;
+
+export const tOne = tGraphableObject;
+export const tMany = t.record(t.string, tGraphableObject);
+
+export abstract class Model<T extends SPOShape> {
+  constructor(protected serialized: Serialized<T>) {}
 }
 
 export type KeysOfType<A extends object, B> = {
   [K in keyof A]-?: A[K] extends B ? K : never
 }[keyof A];
 
-export type AsyncPropertiesOf<T extends GraphableObj> = {
+export type AsyncPropertiesOf<T extends SPOShape> = {
   [K in keyof T]: T[K] extends Many<infer U> | undefined
-    ? undefined | ObservableSet<WrapAsync<U, any>>
+    ? undefined | ObservableMap<string, WrapAsync<U, any>>
     : T[K] extends Many<infer U>
-    ? ObservableSet<WrapAsync<U, any>>
+    ? ObservableMap<string, WrapAsync<U, any>>
     : T[K] extends One<infer U> | undefined
     ? undefined | WrapAsync<U, any>
     : T[K] extends One<infer U>
@@ -55,7 +55,7 @@ export type AsyncPropertiesOf<T extends GraphableObj> = {
 };
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-export type NonPrimitives<T extends GraphableObj> = {
+export type NonPrimitives<T extends SPOShape> = {
   [K in keyof Omit<T, KeysOfType<T, primitive>>]: T[K]
 };
 
@@ -67,14 +67,9 @@ export type PartialObj<T> = T extends primitive
   ? Partial<{ [K in keyof T]: PartialObj<T[K]> }>
   : never;
 
-export type Resolver = (subj: subj) => PartialObj<GraphableObj>;
+export type Resolver = (subj: subj) => PartialObj<SPOShape>;
 
-export class WrapAsync<T extends GraphableObj, U> {
-  @computed
-  get partial() {
-    return this.resolver(this.subj);
-  }
-
+export class WrapAsync<T extends SPOShape, U> {
   @computed
   get decoded() {
     return this.ioType.decode(this.partial);
@@ -96,44 +91,38 @@ export class WrapAsync<T extends GraphableObj, U> {
     return errors.length === 0 ? null : errors;
   }
 
-  @computed
-  get serialized() {
-    return this.ioType.is(this.partial)
-      ? this.partial
-      : Object.keys(this.partial) && undefined;
-    // we use object.keys here to force mobx to recompute
-    // TODO find out why IO-TS runtime checking does not work with mobx
-    // when you comment out the above to: return /* Object.keys(this.partial) && */ undefined
-    // mobx fails to recognize the validator
-  }
+  // @computed
+  // get serialized() {
+  //   return this.ioType.is(this.partial)
+  //     ? this.partial
+  //     : Object.keys(this.partial) && undefined;
+  //   // we use object.keys here to force mobx to recompute
+  //   // TODO find out why IO-TS runtime checking does not work with mobx
+  //   // when you comment out the above to: return /* Object.keys(this.partial) && */ undefined
+  //   // mobx fails to recognize the validator
+  // }
 
   @computed
   get value() {
-    return (
-      this.serialized && new this.modelFactory(this.resolver, this.serialized)
-    );
+    return this.errors == null
+      ? new this.modelFactory(this.partial as any)
+      : null;
   }
 
   constructor(
-    private resolver: Resolver,
-    public subj: subj,
+    public partial: SPOShape,
     private ioType: t.Type<Serialized<T>>,
-    private modelFactory: new (
-      resolver: Resolver,
-      serialized: Serialized<T>
-    ) => U
+    private modelFactory: new (serialized: Serialized<T>) => U
   ) {}
 }
 
-export function SetOf<T extends GraphableObj, U>(
-  wrapper: (resolver: Resolver, subj: subj) => WrapAsync<T, U>,
-  resolver: Resolver,
-  recordOfSubj: Record<string, object>
-) {
-  return observable.set(Object.values(recordOfSubj));
-  //   [...Object.values(recordOfSubj)]
-  //     .map(subj => JSON.stringify(subj)) // map to string
-  //     .filter((value, i, a) => a.indexOf(value) === i) // filter unique
-  //     .map(jsonSubj => wrapper(resolver, JSON.parse(jsonSubj)))
-  // );
+export function MapOf<T extends SPOShape, U>(
+  wrapper: (obj: SPOShape) => WrapAsync<T, U>,
+  recordOfSubj: Record<string, SPOShape>
+): ObservableMap<string, WrapAsync<T, U>> {
+  return observable.map(
+    [...Object.entries(recordOfSubj)].map(
+      ([key, obj]) => [key, wrapper(obj)] as [string, WrapAsync<T, U>]
+    )
+  );
 }

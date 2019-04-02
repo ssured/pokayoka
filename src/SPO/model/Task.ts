@@ -5,8 +5,7 @@ import {
   Model,
   AsyncPropertiesOf,
   WrapAsync,
-  Resolver,
-  subj,
+  SPOShape,
 } from './base';
 import { computed } from 'mobx';
 
@@ -43,6 +42,6 @@ export class TaskModel extends Model<Task> implements AsyncPropertiesOf<Task> {
   }
 }
 
-export function AsyncTask(resolver: Resolver, subj: subj) {
-  return new WrapAsync(resolver, subj, SerializedTask, TaskModel);
+export function AsyncTask(obj: SPOShape) {
+  return new WrapAsync(obj, SerializedTask, TaskModel);
 }
