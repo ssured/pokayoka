@@ -1,5 +1,6 @@
 import * as t from 'io-ts';
 import { computed, ObservableSet, observable } from 'mobx';
+import { PathReporter } from 'io-ts/lib/PathReporter';
 
 type primitive = boolean | string | number | null | undefined;
 
@@ -17,16 +18,16 @@ type One<T extends GraphableObj> = T;
 type InnerSerialized<T> = T extends primitive
   ? T
   : T extends Many<infer U>
-  ? Dictionary<subj>
+  ? Dictionary<object>
   : T extends One<infer U>
-  ? subj
+  ? object
   : never;
 
 export type Serialized<T extends GraphableObj> = {
   [K in keyof T]: InnerSerialized<T[K]>
 };
-export const tOne = t.array(t.string);
-export const tMany = t.record(t.string, tOne);
+export const tOne = t.object;
+export const tMany = t.record(t.string, t.object);
 
 export abstract class Model<T extends GraphableObj> {
   constructor(
@@ -75,8 +76,29 @@ export class WrapAsync<T extends GraphableObj, U> {
   }
 
   @computed
+  get decoded() {
+    return this.ioType.decode(this.partial);
+  }
+
+  @computed
+  get errors() {
+    const getPaths = <A>(v: t.Validation<A>): string[] => {
+      return v.fold(
+        errors =>
+          errors.map(error =>
+            error.context.map(({ key }) => `${key}`).join('.')
+          ),
+        () => []
+      );
+    };
+
+    const errors = getPaths(this.decoded);
+    return errors.length === 0 ? null : errors;
+  }
+
+  @computed
   get serialized() {
-    return this.validator(this.partial)
+    return this.ioType.is(this.partial)
       ? this.partial
       : Object.keys(this.partial) && undefined;
     // we use object.keys here to force mobx to recompute
@@ -95,7 +117,7 @@ export class WrapAsync<T extends GraphableObj, U> {
   constructor(
     private resolver: Resolver,
     public subj: subj,
-    private validator: (data: unknown) => data is Serialized<T>,
+    private ioType: t.Type<Serialized<T>>,
     private modelFactory: new (
       resolver: Resolver,
       serialized: Serialized<T>
@@ -106,12 +128,12 @@ export class WrapAsync<T extends GraphableObj, U> {
 export function SetOf<T extends GraphableObj, U>(
   wrapper: (resolver: Resolver, subj: subj) => WrapAsync<T, U>,
   resolver: Resolver,
-  recordOfSubj: Record<string, subj>
+  recordOfSubj: Record<string, object>
 ) {
-  return observable.set(
-    [...Object.values(recordOfSubj)]
-      .map(subj => JSON.stringify(subj)) // map to string
-      .filter((value, i, a) => a.indexOf(value) === i) // filter unique
-      .map(jsonSubj => wrapper(resolver, JSON.parse(jsonSubj)))
-  );
+  return observable.set(Object.values(recordOfSubj));
+  //   [...Object.values(recordOfSubj)]
+  //     .map(subj => JSON.stringify(subj)) // map to string
+  //     .filter((value, i, a) => a.indexOf(value) === i) // filter unique
+  //     .map(jsonSubj => wrapper(resolver, JSON.parse(jsonSubj)))
+  // );
 }

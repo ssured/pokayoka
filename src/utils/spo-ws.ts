@@ -14,7 +14,7 @@ export class SPOWs {
       try {
         const msg = JSON.parse(ev.data);
         // @ts-ignore
-        this.hub[msg.type](msg);
+        this.hub[msg.type](msg, this);
       } catch (e) {
         console.error('ws message error', e);
       }

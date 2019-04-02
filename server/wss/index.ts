@@ -2,37 +2,22 @@ import { Server } from 'http';
 import WebSocket from 'ws';
 import { StampedGetMessage, StampedPutMessage } from '../../src/utils/spo-hub';
 
-import levelup from 'levelup';
-import leveldown from 'leveldown';
-import encode from 'encoding-down';
-import charwise from 'charwise';
-import { KeyType, ValueType } from '../../src/storage/adapters/shared';
-
-import mlts from 'monotonic-lexicographic-timestamp';
-
-import path from 'path';
-import { subj, pred, objt } from '../../src/utils/spo';
+import { subj, pred, objt, spoInObject } from '../../src/utils/spo';
 import { AbstractIteratorOptions } from 'abstract-leveldown';
 import { ensureNever } from '../../src/utils/index';
 
-const getMachineState = mlts();
-
-const level = levelup(
-  encode<KeyType, ValueType>(
-    leveldown(path.join(__dirname, '../../pokayokadb')),
-    {
-      keyEncoding: charwise,
-      valueEncoding: 'json',
-    }
-  )
-);
+import { level } from './level';
+import { getMachineState } from './sync';
+import console = require('console');
 
 type Message = StampedGetMessage | StampedPutMessage;
 
 export function registerWssServer(server: Server) {
   const wss = new WebSocket.Server({ server });
 
-  wss.on('connection', ws => {
+  wss.on('connection', (ws, req) => {
+    console.log('cookie', req.headers.cookie);
+
     ws.on('message', async message => {
       try {
         const msg = JSON.parse(message.toString()) as Message;
@@ -42,6 +27,42 @@ export function registerWssServer(server: Server) {
           case 'get':
             {
               const { localState, subj, pred } = msg;
+
+              if (subj[0] === 'server') {
+                // we are requesting server data
+                if (subj[1] === 'user' && subj[2]) {
+                  const user = subj[2];
+
+                  console.log('return profile', subj);
+
+                  for (const tuple of spoInObject(['server', 'user', user], {
+                    name: user,
+                    projects: {
+                      bk0wb0a7sz: ['bk0wb0a7sz'],
+                      bg4g1l87dr: ['bg4g1l87dr'],
+                      c5ucr60kzn: ['c5ucr60kzn'],
+                    },
+                  })) {
+                    console.log(
+                      'out',
+                      JSON.stringify({
+                        type: 'put',
+                        tuple,
+                        state: localState,
+                      })
+                    );
+                    ws.send(
+                      JSON.stringify({
+                        type: 'put',
+                        tuple,
+                        state: localState,
+                      })
+                    );
+                  }
+                }
+                return;
+              }
+
               const machineState = getMachineState();
 
               const options: AbstractIteratorOptions = {};
@@ -79,6 +100,9 @@ export function registerWssServer(server: Server) {
                 state: tupleState,
                 localState,
               } = msg;
+
+              if (s[0] === 'server') return;
+
               const t = tupleState || localState;
               const machineState = getMachineState();
 

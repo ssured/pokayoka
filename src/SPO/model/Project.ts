@@ -87,5 +87,5 @@ export class ProjectModel extends Model<Project>
 }
 
 export function AsyncProject(resolver: Resolver, subj: subj) {
-  return new WrapAsync(resolver, subj, SerializedProject.is, ProjectModel);
+  return new WrapAsync(resolver, subj, SerializedProject, ProjectModel);
 }

@@ -121,7 +121,7 @@ export function* spoInObject(subj: subj, obj: SPOShape): Iterable<Tuple> {
           yield [subj, key, objToSubj.get(value)!];
         } else {
           yield* spoInObject(subj.concat(key), value);
-          yield [subj, key, subj.concat(key)];
+          // yield [subj, key, subj.concat(key)];
         }
       }
     }

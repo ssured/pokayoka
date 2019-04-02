@@ -1,4 +1,4 @@
-import * as t from "io-ts";
+import * as t from 'io-ts';
 import {
   Serialized,
   tMany,
@@ -6,30 +6,30 @@ import {
   AsyncPropertiesOf,
   WrapAsync,
   Resolver,
-  subj
-} from "./base";
-import { computed } from "mobx";
+  subj,
+} from './base';
+import { computed } from 'mobx';
 
 export const Task = t.intersection(
   [
     t.type({
-      name: t.string
+      name: t.string,
     }),
     t.partial({
-      deliverable: t.string
-    })
+      deliverable: t.string,
+    }),
   ],
-  "task"
+  'task'
 );
 export type Task = t.TypeOf<typeof Task>;
 type SerializedTask = Serialized<Task>;
 const SerializedTask: t.Type<SerializedTask> = t.intersection([
   t.type({
-    ...Task.types[0].props
+    ...Task.types[0].props,
   }),
   t.partial({
-    ...Task.types[1].props
-  })
+    ...Task.types[1].props,
+  }),
 ]);
 
 export class TaskModel extends Model<Task> implements AsyncPropertiesOf<Task> {
@@ -44,5 +44,5 @@ export class TaskModel extends Model<Task> implements AsyncPropertiesOf<Task> {
 }
 
 export function AsyncTask(resolver: Resolver, subj: subj) {
-  return new WrapAsync(resolver, subj, SerializedTask.is, TaskModel);
+  return new WrapAsync(resolver, subj, SerializedTask, TaskModel);
 }

@@ -1,5 +1,5 @@
-import * as t from "io-ts";
-import { Task, AsyncTask } from "./Task";
+import * as t from 'io-ts';
+import { Task, AsyncTask } from './Task';
 import {
   Serialized,
   tMany,
@@ -8,32 +8,32 @@ import {
   WrapAsync,
   Resolver,
   subj,
-  SetOf
-} from "./base";
-import { computed } from "mobx";
+  SetOf,
+} from './base';
+import { computed } from 'mobx';
 
 export const Building = t.intersection(
   [
     t.type({
       name: t.string,
-      tasks: t.record(t.string, Task)
+      tasks: t.record(t.string, Task),
     }),
     t.partial({
-      description: t.string
-    })
+      description: t.string,
+    }),
   ],
-  "building"
+  'building'
 );
 export type Building = t.TypeOf<typeof Building>;
 type SerializedBuilding = Serialized<Building>;
 const SerializedBuilding: t.Type<SerializedBuilding> = t.intersection([
   t.type({
     ...Building.types[0].props,
-    tasks: tMany
+    tasks: tMany,
   }),
   t.partial({
-    ...Building.types[1].props
-  })
+    ...Building.types[1].props,
+  }),
 ]);
 
 export class BuildingModel extends Model<Building>
@@ -55,5 +55,5 @@ export class BuildingModel extends Model<Building>
 }
 
 export function AsyncBuilding(resolver: Resolver, subj: subj) {
-  return new WrapAsync(resolver, subj, SerializedBuilding.is, BuildingModel);
+  return new WrapAsync(resolver, subj, SerializedBuilding, BuildingModel);
 }

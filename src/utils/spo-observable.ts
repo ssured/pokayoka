@@ -32,9 +32,11 @@ export function createObservable(
   hub: SPOHub,
   subj: subj
 ): {
-  object: SPOShape;
+  get: (subj: subj) => SPOShape;
   destroy: () => void;
 } {
+  console.log('createObservable', subj);
+
   let isUpdating = 0;
 
   const root = observable(newRoot());
@@ -43,15 +45,19 @@ export function createObservable(
 
   function applyTuple([subj, pred, objt]: Tuple) {
     if (!(subj[0] in root)) return;
+    console.log('applyTyple', isUpdating, subj, pred, objt);
     try {
       isUpdating += 1;
 
+      if (get(root, subj, pred) === objt) return;
       set(root, subj, pred, objt);
 
       if (isLink(objt)) {
         const key = JSON.stringify([subj, pred]);
+        console.log('applyTuple', key);
         if (disposers[key]) disposers[key]();
         disposers[key] = onBecomeObserved(get(root, subj), pred, () => {
+          console.log('onBecomeobserved');
           loadObject(objt);
           disposers[key]();
           delete disposers[key];
@@ -73,6 +79,7 @@ export function createObservable(
   }
 
   const subscription = hub.register(root, msg => {
+    console.log('subscr', msg);
     switch (msg.type) {
       case 'get':
         return;
@@ -103,7 +110,7 @@ export function createObservable(
   });
 
   return {
-    object: loadObject(subj),
+    get: loadObject,
     destroy: () => {
       subscription();
       Object.values(disposers).forEach(dispose => dispose());
