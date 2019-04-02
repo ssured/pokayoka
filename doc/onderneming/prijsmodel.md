@@ -36,13 +36,15 @@ Handovers met de juiste details en vwi's. BIM op de steiger. Implementeren van h
 - betalen voor zichzelf
 - betalen maandelijks of jaarlijks vooruit
 - licentie naar boven gedurende looptijd? Dan delta voor de rest van de periode betalen
-- kunnen anderen koppelen aan een project, die hun eigen licentie moeten betalen
+- kunnen licenties toekennen aan de aan hun organisatie gelinkte accounts
+- kunnen anderen koppelen aan een project
+- deze anderen moeten ook een toerijkende licentie hebben
+- kunnen de licentie betalen voor een contactpersoon
 - ?gaan individuen 3 en 4 wel gebruiken?
 
 ## Company accounts
 
 - betalen licenties van meerdere gebruikers (minimaal 10)
-- kunnen licenties toekennen aan de aan hun organisatie gelinkte accounts
 - betalen maandelijks op rekening achteraf
 - Kunnen korting krijgen op de stickerprijs.
 - Geven in contract per accounttype een plafond aantal op van de licenties die te verdelen zijn over de geassocieerde accounts. Dit is in het systeem te wijzigen door de geregistreerde tekenbevoegde personen.

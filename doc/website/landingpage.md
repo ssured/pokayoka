@@ -9,7 +9,7 @@ https://nl.wikipedia.org/wiki/Poka_yoke
    Geef bevindingen en vastleggingen aan in de plattegrond. Wijs bevindingen toe aan een verantwoordelijke en houdt de voortgang bij. Maak mooie, overzichtelijke rapporten.
 
 2. Planning
-   We hebben een betere manier van plannen voor bouwprojecten ontwikkeld. Onze planning is door alle betrokkenen in te zien, is _volledig_ en kan per aannemer, per ruimte en per element bekeken worden.
+   Alles komt bij elkaar in de planning. Onze planning is _volledig_ en kan per aannemer, per ruimte en per element door alle betrokkenen bekeken worden.
 
 3. Foutpreventie
    Fouten maken doen we allemaal wel eens, maar hoe zorg je ervoor dat het bij 1x blijft? Door gebruik te maken van het Pokayoka kwaliteitsverbeteringsproces!

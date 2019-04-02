@@ -1,48 +1,31 @@
-Links actie
-Rechts uitleg voor seo
+We maken allemaal wel eens een foutje. En dat is niet erg, daar leren we van! Of daar zouden we in ieder geval van moeten leren. Maar zodra er een vaste begrop faalkosten is ontstaan in een begroting, dan gaat er iets structureel niet goed. Ons product inspectie is er om de gemaakte fouten, maar ook de vastleggingen vast te leggen. We hebben ook een product om te sturen op kwaliteit en daardoor fouten te reduceren [link]().
 
-Faalkosten in de bouw. Continu opleveren. Opleverinspectie
-Grote tekst met achtergrond faalkosten, etc, bedoeld voor seo optimalisatie
+gebruik ons inspectie product om:
 
-De bestaande "communicatie" apps hebben veel weerstand opgeroepen, doordat ze vooral het gevoel geven dat er dingen over de schutting worden gegooid, waarmee het beeld van de gescheiden silo's wordt bevorderd.
-Communicatie is niet iemand via een appje een reeks bevindingen in de schoot werpen
+1. bevindingen vast te leggen bij een oplevering
+2. vastleggingen te doen tbv het asbuilt dossier
 
-meer rietje over de vingers
+Tegenwoordig zijn we in de bouw continu aan het opleveren, richting de opdrachtgever, maar ook aan elkaar binnen het bouwteam. Dit is een manier om grip te krijgen op het opleverproces en dit verhoogt tegelijkertijd de kwaliteit[referentie opzoeken]().
 
-Mentale overhead en negatief gevoel bij eigen werk
+kenmerken van Pokayoka inspecties
 
-dweilen naast een spuitend lek
+- niets installeren, gelijk aan de slag
+- makkelijk doorverwijzen naar collega's
+- stimuleert menselijke communicatie door [Handover werkwijze]()
+- niet meer dan 1 e-mailtje per dag
 
-techniek staat tussen de mensen in. Schuttingen
+bevindingen
 
-# Bevindingen
+- meerdere foto's per bevinding
+- commentaar op bevinding
+- algemene punten
+- bevinding op meerdere plattegronden en locaties
 
 1. Sleep een plattegrond in dit venster
 2. Maak foto's en annoteer bevindingen
 3. Wijs bevinding toe aan verantwoordelijke
 4. Maak mooie, heldere rapporten (download een voorbeeldrapport)
 
-Er gaat natuurlijk altijd wel iets fout. Hier kunnen dan bevindingen van worden vastgelegd en worden gekoppeld aan de BIM elementen waarop ze betrekking hebben. Op een ronde doet een uitvoerder of een kwaliteitsmedewerker misschien 15 bevindingen, wat er bij andere systemen voor zorgt dat de broekzak van de vakman 15x gaat trillen. Dit stoort hem in zijn werk en hij ervaart het als 15x een tik over zijn vingers.
-Bij ons staat het vastleggen van bevindingen los van het communiceren van een opdracht; de uitvoerder groepeert bevindingen in een Handover, die hij weer face-to-face met de vakman doorneemt. Er kan even over worden gesproken en de vakman gaat zonder negatieve energie weer aan de slag. Om ervoor te zorgen dat de ontstane fouten niet nog een keer worden gemaakt, past de uitvoerder - eventueel na overleg met een kwaliteitsmedewerker - de verwerkingsinstructie voor het element aan in ons systeem. Kennis, die meegenomen kan worden naar de uitvoering van het volgende werk.
-
-# Vastleggingen
-
-Lever een as-built dossier op aan de opdrachtgever
-
-Soldaten maken nog steeds 's ochtends hun bed op omdat het een goed gevoel geeft voor het begin van de dag
-Timmerman
-schoon erin, schoon eruit
-
-- weet wat hij moet doen door overdracht
-- controleert of zijn werk inderdaad klaar is mbv een checklist
-- maakt een foto van zijn werk en keurt daarbij zijn eigen werk
-- controleert of Pier Jillersma bezig kan met het leggen van de vloerverwarming
-- sluit met vertrouwen en een positief gevoel de opdracht af
-  ownership
-
-onze taak om ervoor te zorgen dat die dweil droog blijft
-
 [Sleep een plattegrond op dit vlak]()
 
 [opleverinspectie: welke app is het meest geschikt voor jou? Pokayoka, Ed controls en snagstream]()
-tekst met uitwerking verschillen tussen de verschillende systemen, bedoeld om te ranken op de namen van de concurrentie
