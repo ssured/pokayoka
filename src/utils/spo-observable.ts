@@ -29,14 +29,11 @@ function get<P>(
 }
 
 export function createObservable(
-  hub: SPOHub,
-  subj: subj
+  hub: SPOHub
 ): {
   get: (subj: subj) => SPOShape;
   destroy: () => void;
 } {
-  console.log('createObservable', subj);
-
   let isUpdating = 0;
 
   const root = observable(newRoot());
@@ -45,7 +42,7 @@ export function createObservable(
 
   function applyTuple([subj, pred, objt]: Tuple) {
     if (!(subj[0] in root)) return;
-    console.log('applyTyple', isUpdating, subj, pred, objt);
+    // console.log('applyTyple', isUpdating, subj, pred, objt);
     try {
       isUpdating += 1;
 
@@ -57,7 +54,7 @@ export function createObservable(
         console.log('applyTuple', key);
         if (disposers[key]) disposers[key]();
         disposers[key] = onBecomeObserved(get(root, subj), pred, () => {
-          console.log('onBecomeobserved');
+          // console.log('onBecomeobserved');
           loadObject(objt);
           disposers[key]();
           delete disposers[key];
@@ -71,7 +68,12 @@ export function createObservable(
   function loadObject(subj: subj): SPOShape {
     if (subj.length === 0) throw new Error(`subj cannot be empty`);
     hub.get({ subj }, root);
-    return get(root, subj);
+    try {
+      isUpdating += 1;
+      return get(root, subj);
+    } finally {
+      isUpdating -= 1;
+    }
   }
 
   function commit(tuple: Tuple) {
@@ -90,6 +92,7 @@ export function createObservable(
 
   recursiveDeepObserve(root, (change, subj) => {
     if (isUpdating > 0) return; // do not track own changes
+    debugger;
     const pred = change.name;
 
     switch (change.type) {
@@ -101,9 +104,9 @@ export function createObservable(
         if (isObjt(objt)) {
           commit([subj, pred, objt]);
         } else if (isSPOShape(objt)) {
-          for (const tuple of Array.from(spoInObject(subj, objt))) {
+          for (const tuple of spoInObject(subj.concat(pred), objt)) {
             commit(tuple);
-            applyTuple(tuple);
+            applyTuple(tuple); // ? not needed?
           }
         }
     }

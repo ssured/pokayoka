@@ -22,7 +22,7 @@ const storage = new SPOStorage(hub, spotDb);
 const ws = new ReconnectingWebSocket(`ws://localhost:3000/spows`);
 const server = new SPOWs(hub, ws);
 
-const SPOContext = createContext(createObservable(hub, ['server']));
+const SPOContext = createContext(createObservable(hub));
 
 export const useModel = <T extends SPOShape, U>(
   asyncFactory: (obj: SPOShape) => WrapAsync<T, U>,

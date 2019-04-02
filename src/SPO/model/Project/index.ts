@@ -7,12 +7,12 @@ import {
   WrapAsync,
   MapOf,
   SPOShape,
-} from './base';
+} from '../base';
 
-import { Task, AsyncTask } from './Task';
-import { Building, AsyncBuilding } from './Building';
-import { Site, AsyncSite } from './Site';
-import { computed } from 'mobx';
+import { Task, AsyncTask } from '../Task';
+import { Building, AsyncBuilding } from '../Building';
+import { Site, AsyncSite } from '../Site';
+import { computed, action } from 'mobx';
 
 export const Project = t.intersection(
   [

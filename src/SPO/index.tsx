@@ -5,6 +5,7 @@ import { RouteComponentProps } from '@reach/router';
 
 import { useModel } from '../contexts/spo-hub';
 import { AsyncUser } from './model/User';
+import { CreateForm } from './model/Project/create-form';
 
 const projectId = 'bk0wb0a7sz';
 
@@ -33,6 +34,11 @@ export const SPO: React.FunctionComponent<RouteComponentProps<{}>> = ({}) => {
               {key} {project.value ? project.value.name : 'not yet'}
             </li>
           ))}
+          <CreateForm
+            onSubmit={async project => {
+              user.value!.addProject(project);
+            }}
+          />
         </div>
       ) : (
         <pre>{user.errors && user.errors.join('\n')}</pre>

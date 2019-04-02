@@ -9,8 +9,9 @@ import {
   SPOShape,
 } from './base';
 
-import { computed } from 'mobx';
+import { computed, action } from 'mobx';
 import { Project, AsyncProject } from './Project';
+import { generateId } from '../../utils/id';
 
 export const User = t.intersection(
   [
@@ -82,6 +83,22 @@ export class UserModel extends Model<User> implements AsyncPropertiesOf<User> {
   // get tasks() {
   //   return SetOf(AsyncTask, this.resolver, this.serialized.sites);
   // }
+
+  @action
+  addProject(project: Project, key: string = generateId()) {
+    this.serialized.projects[key] = {
+      sites: {
+        [generateId()]: {
+          name: project.name,
+          buildings: { [generateId()]: { name: project.name } },
+        },
+      },
+      ...project,
+    };
+    // if (!project.sites || Object.keys(project.sites).length ===0) {
+    //   this.projects.get(key)!.value!.addSite(siteFromProject(project));
+    // }
+  }
 }
 
 export function AsyncUser(obj: SPOShape) {

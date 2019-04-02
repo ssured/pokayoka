@@ -28,37 +28,25 @@ export function registerWssServer(server: Server) {
             {
               const { localState, subj, pred } = msg;
 
-              if (subj[0] === 'server') {
-                // we are requesting server data
-                if (subj[1] === 'user' && subj[2]) {
-                  const user = subj[2];
+              // we are requesting server data
+              if (subj[0] === 'user' && subj[1]) {
+                const user = subj[2];
 
-                  console.log('return profile', subj);
-
-                  for (const tuple of spoInObject(['server', 'user', user], {
-                    name: user,
-                    projects: {
-                      bk0wb0a7sz: ['bk0wb0a7sz'],
-                      bg4g1l87dr: ['bg4g1l87dr'],
-                      c5ucr60kzn: ['c5ucr60kzn'],
-                    },
-                  })) {
-                    console.log(
-                      'out',
-                      JSON.stringify({
-                        type: 'put',
-                        tuple,
-                        state: localState,
-                      })
-                    );
-                    ws.send(
-                      JSON.stringify({
-                        type: 'put',
-                        tuple,
-                        state: localState,
-                      })
-                    );
-                  }
+                for (const tuple of spoInObject(['user', user], {
+                  name: user,
+                  projects: {
+                    bk0wb0a7sz: ['bk0wb0a7sz'],
+                    bg4g1l87dr: ['bg4g1l87dr'],
+                    c5ucr60kzn: ['c5ucr60kzn'],
+                  },
+                })) {
+                  ws.send(
+                    JSON.stringify({
+                      type: 'put',
+                      tuple,
+                      state: localState,
+                    })
+                  );
                 }
                 return;
               }
