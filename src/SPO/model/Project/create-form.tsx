@@ -25,7 +25,10 @@ export const CreateForm: React.FunctionComponent<{
           }
         }}
         render={(formikBag: FormikProps<FormValues>) => (
-          <Form onSubmit={formikBag.submitForm}>
+          <Form
+            onSubmit={formikBag.submitForm}
+            onReset={() => formikBag.resetForm()}
+          >
             <Field
               name="name"
               render={({ field, form }: FieldProps<FormValues>) => (
@@ -37,7 +40,20 @@ export const CreateForm: React.FunctionComponent<{
                 />
               )}
             />
-            <Button type="submit" label="Maak nieuw project" primary={true} disabled={!formikBag.isValid || formikBag.isSubmitting} />
+            <Box direction="row" justify="between" margin={{ top: 'medium' }}>
+              <Button label="Terug" />
+              <Button
+                type="reset"
+                label="Herstellen"
+                disabled={!formikBag.dirty}
+              />
+              <Button
+                type="submit"
+                label="Maak nieuw project"
+                primary
+                disabled={!formikBag.isValid || formikBag.isSubmitting}
+              />
+            </Box>
           </Form>
         )}
       />

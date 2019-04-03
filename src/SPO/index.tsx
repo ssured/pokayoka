@@ -9,17 +9,9 @@ import { CreateForm } from './model/Project/create-form';
 
 const projectId = 'bk0wb0a7sz';
 
-const weakIdMap = new WeakMap<object, string>();
-const weakId = <T extends object>(obj: T): string => {
-  if (!weakIdMap.has(obj)) {
-    weakIdMap.set(obj, Math.random().toString(36));
-  }
-  return weakIdMap.get(obj)!;
-};
-
 export const SPO: React.FunctionComponent<RouteComponentProps<{}>> = ({}) => {
   const project = useModel(AsyncProject, projectId);
-  const user = useModel(AsyncUser, ['server', 'user', 'sjoerd@weett.nl']);
+  const user = useModel(AsyncUser, ['user', 'sjoerd@weett.nl']);
 
   return useObserver(() => (
     <div>

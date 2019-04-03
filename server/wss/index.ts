@@ -30,7 +30,7 @@ export function registerWssServer(server: Server) {
 
               // we are requesting server data
               if (subj[0] === 'user' && subj[1]) {
-                const user = subj[2];
+                const user = subj[1];
 
                 for (const tuple of spoInObject(['user', user], {
                   name: user,

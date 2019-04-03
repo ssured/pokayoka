@@ -1,19 +1,14 @@
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  useRef,
-  useEffect,
-} from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { SpotDB } from '../utils/spotdb';
 import { SPOHub } from '../utils/spo-hub';
 import { SPOStorage } from '../utils/spo-storage';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { SPOWs } from '../utils/spo-ws';
-import { WrapAsync, SPOShape, Resolver } from '../SPO/model/base';
-import { subj, get } from '../utils/spo';
+import { WrapAsync, SPOShape } from '../SPO/model/base';
+import { subj } from '../utils/spo';
 import { createObservable } from '../utils/spo-observable';
+import createContainer from 'constate';
+import { AsyncUser } from '../SPO/model/User';
 
 const spotDb = new SpotDB('pokayoka');
 
@@ -36,3 +31,10 @@ export const useModel = <T extends SPOShape, U>(
     ...subj,
   ]);
 };
+
+export const useUser = ({ userId = 'anonymous' } = {}) =>
+  useModel(AsyncUser, ['user', userId]);
+
+export const AccountContainer = createContainer(useUser);
+
+export const useAccount = () => useContext(AccountContainer.Context);

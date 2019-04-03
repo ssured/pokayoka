@@ -10,19 +10,22 @@ import { SettingsOption, Projects, Book } from 'grommet-icons';
 
 import { useAuthentication } from '../contexts/authentication';
 import { RouteLink } from '../components/ui/RouteLink';
+import { useAccount } from '../contexts/spo-hub';
 
 interface HomeParams {}
 export const Home = observer((props: RouteComponentProps<HomeParams>) => {
-  const { authentication, logout } = useAuthentication();
+  const { logout } = useAuthentication();
+
+  const { value: account } = useAccount();
 
   return (
     <Box direction="column" fill="vertical">
       <Box direction="row" fill="horizontal" justify="between">
         {/* User */}
-        {authentication.ok && (
+        {account && (
           <Menu
             dropAlign={{ top: 'bottom', left: 'left' }}
-            label={authentication.name}
+            label={account.name}
             items={[
               { label: 'Accountbeheer', onClick: () => {} },
               {
