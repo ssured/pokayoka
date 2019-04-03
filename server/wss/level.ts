@@ -1,8 +1,11 @@
 import levelup from 'levelup';
 import leveldown from 'leveldown';
 import encode from 'encoding-down';
-import charwise from 'charwise';
-import { KeyType, ValueType } from '../../src/storage/adapters/shared';
+import charwise, { CharwiseKey } from 'charwise';
+
+import { JsonEntry } from '../../src/utils/json';
+export type KeyType = CharwiseKey;
+export type ValueType = JsonEntry;
 
 import path from 'path';
 

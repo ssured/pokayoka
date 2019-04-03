@@ -1,18 +1,11 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-} from 'react';
+import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { observable, autorun, action, computed, IReactionDisposer } from 'mobx';
 import { Icon, Overview, Calendar, Cubes } from 'grommet-icons';
 import { Heading } from 'grommet';
 import { observer } from 'mobx-react-lite';
 import { MenuItemButton } from '../UI/components/context-menu';
-import { runInThisContext } from 'vm';
-import styled from '@emotion/styled-base';
 import { RouteLink } from '../components/ui/RouteLink';
+import styled from 'styled-components';
 
 interface NavContext {
   label: string;

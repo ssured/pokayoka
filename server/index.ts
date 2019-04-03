@@ -3,20 +3,14 @@ import debug from 'debug';
 import path from 'path';
 import express from 'express';
 import bodyParser from 'body-parser';
-import { Cookie } from 'tough-cookie';
 import proxy from 'express-http-proxy';
 import http from 'http';
-
-import createServer from 'pull-ws/server';
-import pull from 'pull-stream';
-import { muxServer, UserProfile } from '../src/mux/server';
 
 import webpack from 'webpack';
 import webpackConfig from '../webpack.config';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 
-import got from 'got';
 import nano from 'nano';
 import { Channel, fromEmitter } from 'queueable';
 import { storeRoutes } from './store';
@@ -30,7 +24,6 @@ import { Strategy as Auth0Strategy } from 'passport-auth0';
 import { userInViews } from './middleware/user-in-views';
 import { authRouter } from './routes/auth';
 import { userRouter } from './routes/user';
-import expressWs from 'express-ws';
 import { registerWssServer } from './wss';
 
 dotenv.config();
@@ -41,9 +34,6 @@ dotenv.config();
   const log = debug(__filename.replace(__dirname, '~'));
 
   const app = express();
-  expressWs(app, undefined, {
-    wsOptions: {},
-  });
   const server = http.createServer(app);
 
   const isProduction = app.get('env') === 'production';

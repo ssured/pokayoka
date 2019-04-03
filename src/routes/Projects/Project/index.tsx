@@ -2,9 +2,6 @@ import { Router, RouteComponentProps, navigate } from '@reach/router';
 import React, { useContext } from 'react';
 
 import { Overview } from './Overview';
-import { Observations } from './Observations';
-import { ProvideStore } from '../../../contexts/store';
-import { Sheets } from './Sheets';
 import { useNewUIContext } from '../../../contexts/ui';
 import { Bug, MapLocation } from 'grommet-icons';
 
@@ -41,16 +38,9 @@ export const Project: React.FunctionComponent<
   return (
     <UIContext.Provider>
       <ProjectIdContext.Provider value={projectId!}>
-        <ProvideStore name={projectId!}>
-          {/* <Sync /> */}
-          {/* <ProvideProject> */}
-          <Router>
-            <Overview path="/" />
-            <Observations path="/observations" />
-            <Sheets path="/sheets" />
-          </Router>
-          {/* </ProvideProject> */}
-        </ProvideStore>
+        <Router>
+          <Overview path="/" />
+        </Router>
       </ProjectIdContext.Provider>
     </UIContext.Provider>
   );

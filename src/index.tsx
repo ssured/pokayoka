@@ -4,11 +4,9 @@ import { render } from 'react-dom';
 import { App } from './App';
 
 import { configure } from 'mobx';
-import { setLivelynessChecking } from 'mobx-state-tree';
 
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/markdown/markdown';
-import 'tailwindcss/css/preflight.css';
 import 'leaflet/dist/leaflet.css';
 
 import { IconContext } from 'react-icons';
@@ -36,7 +34,6 @@ if (
 const isProduction = false; // FIXME implement this
 
 configure({ enforceActions: 'observed', disableErrorBoundaries: isProduction });
-setLivelynessChecking(isProduction ? 'ignore' : 'error');
 
 /**
  * boot the app

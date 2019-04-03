@@ -1,9 +1,8 @@
-import { RouteComponentProps, Link } from '@reach/router';
+import { RouteComponentProps } from '@reach/router';
 import React from 'react';
 import { observer } from 'mobx-react-lite';
-import styled from 'styled-components';
 
-import { Box, Grid, Menu } from 'grommet';
+import { Box, Menu } from 'grommet';
 import { SettingsOption, Projects, Book } from 'grommet-icons';
 
 // import { NLSfB } from '../components/NLSfB';

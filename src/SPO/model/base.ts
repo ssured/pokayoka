@@ -1,6 +1,7 @@
 import * as t from 'io-ts';
 import { computed, observable, ObservableMap } from 'mobx';
 import { SPOShape as SPOShape_ } from '../../utils/spo';
+import { nothing } from '../../utils/maybe';
 
 type primitive = boolean | string | number | null | undefined;
 
@@ -107,6 +108,11 @@ export class WrapAsync<T extends SPOShape, U> {
     return this.errors == null
       ? new this.modelFactory(this.partial as any)
       : null;
+  }
+
+  @computed
+  get maybe() {
+    return this.value || nothing;
   }
 
   constructor(

@@ -16,7 +16,6 @@ module.exports = {
     ['@babel/plugin-proposal-class-properties', { loose: true }],
     '@babel/proposal-object-rest-spread',
     'macros',
-    'emotion',
   ],
   comments: true,
 };
