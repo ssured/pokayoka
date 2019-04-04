@@ -51,7 +51,7 @@ export function createObservable(
 
       if (isLink(objt)) {
         const key = JSON.stringify([subj, pred]);
-        console.log('applyTuple', key);
+        // console.log('applyTuple', key);
         if (disposers[key]) disposers[key]();
         disposers[key] = onBecomeObserved(get(root, subj), pred, () => {
           // console.log('onBecomeobserved');
@@ -81,7 +81,7 @@ export function createObservable(
   }
 
   const subscription = hub.register(root, msg => {
-    console.log('subscr', msg);
+    // console.log('subscr', msg);
     switch (msg.type) {
       case 'get':
         return;

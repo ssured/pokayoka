@@ -26,6 +26,12 @@ export const Project = t.intersection(
       // tasks: t.record(t.string, Task)
     }),
     t.partial({
+      /**
+       * Image of the project
+       * CDN hash
+       */
+      $image: t.string,
+
       // mainSite: Site
       sites: t.record(t.string, Site),
     }),

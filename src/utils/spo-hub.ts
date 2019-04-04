@@ -45,7 +45,7 @@ export class SPOHub {
 
   protected fire(outMsg: OutMessage, skipSource?: any) {
     whenMainThreadAvailable(() => {
-      console.log('Hub fires', JSON.stringify(outMsg));
+      // console.log('Hub fires', JSON.stringify(outMsg));
 
       this.listeners.forEach(listener => {
         if (this.sources.get(listener) !== skipSource) {

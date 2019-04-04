@@ -2,8 +2,13 @@ import React from 'react';
 import { Formik, FormikActions, FormikProps, Field, FieldProps } from 'formik';
 import { Form, FormField, Button, Heading, Box } from 'grommet';
 import { Project } from './index';
+import { ImageInput } from '../../../UI/image-input';
+import { Omit } from '../../../utils/typescript';
+import { toHex } from '../../../utils/buffer';
 
-interface FormValues extends Project {}
+interface FormValues extends Omit<Project, '$image'> {
+  $image?: Project['$image'] | File | Blob;
+}
 
 export const CreateForm: React.FunctionComponent<{
   onSubmit: (values: FormValues) => Promise<void>;
@@ -37,6 +42,42 @@ export const CreateForm: React.FunctionComponent<{
                   label="Naam"
                   placeholder="Projectnaam"
                   error={form.touched.name && form.errors.name}
+                />
+              )}
+            />
+            <Field
+              name="$image"
+              render={({ field, form }: FieldProps<FormValues>) => (
+                <FormField
+                  {...field}
+                  onChange={async blobOrNull => {
+                    if (blobOrNull) {
+                      form.setFieldValue(field.name, null);
+                      const blob = (blobOrNull as unknown) as Blob;
+
+                      const arrayBuffer = await new Response(
+                        blob
+                      ).arrayBuffer();
+
+                      const hash = toHex(
+                        await window.crypto.subtle.digest(
+                          'SHA-256',
+                          arrayBuffer
+                        )
+                      );
+
+                      const cdnCache = await window.caches.open('cdn');
+                      await cdnCache.put(`/cdn/${hash}`, new Response(blob));
+
+                      form.setFieldValue(field.name, hash);
+                    } else {
+                      form.setFieldValue(field.name, null);
+                    }
+                  }}
+                  label="Afbeelding"
+                  component={ImageInput}
+                  pad
+                  error={form.touched.$image && form.errors.$image}
                 />
               )}
             />
