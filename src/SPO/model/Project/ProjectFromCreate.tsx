@@ -6,11 +6,9 @@ import { ImageInput } from '../../../UI/image-input';
 import { Omit } from '../../../utils/typescript';
 import { toHex } from '../../../utils/buffer';
 
-interface FormValues extends Omit<Project, '$image' | 'sites'> {
-  $image?: Project['$image'] | File | Blob;
-}
+interface FormValues extends Omit<Project, 'sites'> {}
 
-export const CreateForm: React.FunctionComponent<{
+export const ProjectFormCreate: React.FunctionComponent<{
   onSubmit: (values: FormValues) => Promise<void>;
 }> = ({ onSubmit }) => {
   return (

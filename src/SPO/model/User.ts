@@ -6,12 +6,13 @@ import {
   AsyncPropertiesOf,
   WrapAsync,
   MapOf,
-  SPOShape,
 } from './base';
 
 import { computed, action } from 'mobx';
 import { Project, AsyncProject } from './Project/model';
 import { generateId } from '../../utils/id';
+import { Omit } from '../../utils/typescript';
+import { SPOShape } from '../../utils/spo';
 
 export const User = t.intersection(
   [
@@ -85,7 +86,10 @@ export class UserModel extends Model<User> implements AsyncPropertiesOf<User> {
   // }
 
   @action
-  addProject(project: Project, key: string = generateId()) {
+  addProject(
+    project: Project | Omit<Project, 'sites'>,
+    key: string = generateId()
+  ) {
     this.serialized.projects[key] = {
       sites: {
         [generateId()]: {
@@ -94,6 +98,7 @@ export class UserModel extends Model<User> implements AsyncPropertiesOf<User> {
         },
       },
       ...project,
+      $image: project.$image || null,
     };
     // if (!project.sites || Object.keys(project.sites).length ===0) {
     //   this.projects.get(key)!.value!.addSite(siteFromProject(project));

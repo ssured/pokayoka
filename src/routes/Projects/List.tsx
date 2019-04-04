@@ -2,38 +2,50 @@ import React from 'react';
 import { Box, Heading } from 'grommet';
 import { RouteComponentProps } from '@reach/router';
 import { useAccount } from '../../contexts/spo-hub';
-import { useObserver } from 'mobx-react-lite';
+import { useObserver, observer } from 'mobx-react-lite';
 import { ProjectTile } from '../../SPO/model/Project/ProjectTile';
+import { ProjectFormCreate } from '../../SPO/model/Project/ProjectFromCreate';
 
-export const List: React.SFC<RouteComponentProps<{}>> = ({}) => {
-  const maybeAccount = useAccount();
+export const List: React.SFC<RouteComponentProps<{}>> = observer(({}) => {
   return useObserver(() => {
-    const { value: account } = maybeAccount;
+    const account = useAccount();
     return (
       <>
         <Heading level="3">Projecten</Heading>
-        <Box
-          direction="row-responsive"
-          justify="center"
-          align="center"
-          pad="medium"
-          gap="medium"
-        >
-          {account != null
-            ? [...account.projects.entries()].map(([key, project]) =>
-                project.fold(
-                  project => (
-                    <ProjectTile
-                      key={key}
-                      project={[project, ['projects', key]]}
-                    />
-                  ),
-                  project => <div key={key}>Loading {project.name || ''}</div>
-                )
-              )
-            : 'Account is aan het synchroniseren'}
-        </Box>
+        {account.fold(
+          account => (
+            <>
+              <Box
+                direction="row-responsive"
+                justify="center"
+                align="center"
+                pad="medium"
+                gap="medium"
+              >
+                {[...account.projects.entries()].map(([key, project]) =>
+                  project.fold(
+                    project => (
+                      <ProjectTile
+                        key={key}
+                        project={[project, ['projects', key]]}
+                      />
+                    ),
+                    project => <div key={key}>Loading {project.name || ''}</div>
+                  )
+                )}
+              </Box>
+              <ProjectFormCreate
+                onSubmit={async project => {
+                  account.addProject(project);
+                }}
+              />
+            </>
+          ),
+          account => (
+            <>Account is aan het synchroniseren</>
+          )
+        )}
       </>
     );
   });
-};
+});
