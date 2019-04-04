@@ -78,6 +78,8 @@ Niet meer dan basis directievergoeding in eerste 3 jaar.
 
 - ASVB (Aan de Stegge Verenigde Bedrijven) (neef Sjoerd)
 - Itannex (Wim Bremmer)
+  Bram zorgt voor warme introductie. Aangepaste presentatie opsturen met BIM aangezet
+
 - BIMPuls netwerk
 - NOM (Veronique)
 

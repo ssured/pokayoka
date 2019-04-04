@@ -1,4 +1,4 @@
-# Kwaliteitsverbetering en kostenbesparing voor bouwteams
+# Samen werken aan kwaliteitsverbetering en kostenbesparing voor bouwteams
 
 # Pokayoka?
 
