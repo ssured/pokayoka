@@ -4,7 +4,7 @@ import { RouteComponentProps } from '@reach/router';
 import { useAccount } from '../../contexts/spo-hub';
 import { useObserver, observer } from 'mobx-react-lite';
 import { ProjectTile } from '../../SPO/model/Project/ProjectTile';
-import { ProjectFormCreate } from '../../SPO/model/Project/ProjectFromCreate';
+import { ProjectFormCreate } from '../../SPO/model/Project/ProjectFormCreate';
 
 export const List: React.SFC<RouteComponentProps<{}>> = observer(({}) => {
   return useObserver(() => {

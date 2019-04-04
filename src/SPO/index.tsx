@@ -5,7 +5,7 @@ import { RouteComponentProps } from '@reach/router';
 
 import { useModel, useAccount } from '../contexts/spo-hub';
 import { AsyncUser } from './model/User';
-import { ProjectFormCreate } from './model/Project/ProjectFromCreate';
+import { ProjectFormCreate } from './model/Project/ProjectFormCreate';
 
 const projectId = 'bk0wb0a7sz';
 

@@ -8,9 +8,11 @@ import {
   WrapAsync,
   MapOf,
 } from '../base';
-import { computed } from 'mobx';
+import { computed, action } from 'mobx';
 import { SPOShape } from '../../../utils/spo';
 import { BuildingStorey, AsyncBuildingStorey } from '../BuildingStorey/model';
+import { Omit } from '../../../utils/typescript';
+import { generateId } from '../../../utils/id';
 
 export const Building = t.intersection(
   [
@@ -58,6 +60,24 @@ export class BuildingModel extends Model<Building>
   @computed
   get buildingStoreys() {
     return MapOf(AsyncBuildingStorey, this.serialized.buildingStoreys || {});
+  }
+
+  @action
+  addBuildingStorey(
+    storey: BuildingStorey | Omit<BuildingStorey, 'sheets'>,
+    key: string = generateId()
+  ) {
+    const newStorey = {
+      sheets: {},
+      tasks: {},
+      ...storey,
+    };
+
+    if (this.serialized.buildingStoreys == null) {
+      this.serialized.buildingStoreys = { [key]: newStorey };
+    } else {
+      this.serialized.buildingStoreys[key] = newStorey;
+    }
   }
 }
 

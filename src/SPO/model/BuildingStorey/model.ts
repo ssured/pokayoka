@@ -8,8 +8,10 @@ import {
   WrapAsync,
   MapOf,
 } from '../base';
-import { computed } from 'mobx';
+import { computed, action } from 'mobx';
 import { SPOShape } from '../../../utils/spo';
+import { Sheet, AsyncSheet } from '../Sheet/model';
+import { generateId } from '../../../utils/id';
 
 export const BuildingStorey = t.intersection(
   [
@@ -19,9 +21,10 @@ export const BuildingStorey = t.intersection(
     t.partial({
       description: t.string,
       tasks: t.record(t.string, Task),
+      sheets: t.record(t.string, Sheet),
     }),
   ],
-  'building'
+  'buildingStorey'
 );
 export type BuildingStorey = t.TypeOf<typeof BuildingStorey>;
 type SerializedBuildingStorey = Serialized<BuildingStorey>;
@@ -34,6 +37,7 @@ const SerializedBuildingStorey: t.Type<
   t.partial({
     ...BuildingStorey.types[1].props,
     tasks: tMany,
+    sheets: tMany,
   }),
 ]);
 
@@ -52,6 +56,17 @@ export class BuildingStoreyModel extends Model<BuildingStorey>
   @computed
   get tasks() {
     return MapOf(AsyncTask, this.serialized.tasks || {});
+  }
+
+  @computed
+  get sheets() {
+    return MapOf(AsyncSheet, this.serialized.sheets || {});
+  }
+
+  @action
+  addSheet(sheet: Sheet, key: string = generateId()) {
+    this.serialized.sheets = this.serialized.sheets || {};
+    this.serialized.sheets[key] = sheet;
   }
 }
 

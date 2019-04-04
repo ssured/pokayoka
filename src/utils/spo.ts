@@ -1,6 +1,6 @@
 import dlv from 'dlv';
 
-export type primitive = boolean | string | number | null;
+export type primitive = boolean | string | number | null | undefined;
 export type subj = string[];
 export type pred = string;
 export type objt = primitive | subj;

@@ -5,6 +5,7 @@ import { Box, Heading } from 'grommet';
 import { BuildingModel } from './model';
 import { subj } from '../../../utils/spo';
 import { BuildingStoreyTile } from '../BuildingStorey/BuildingStoreyTile';
+import { BuildingStoreyFormCreate } from '../BuildingStorey/BuildingStoreyFormCreate';
 
 export const BuildingOverview: React.FunctionComponent<{
   building: [BuildingModel, subj];
@@ -36,6 +37,11 @@ export const BuildingOverview: React.FunctionComponent<{
           )
         )}
       </Box>
+      <BuildingStoreyFormCreate
+        onSubmit={async data => {
+          building.addBuildingStorey(data);
+        }}
+      />
     </>
   );
 });

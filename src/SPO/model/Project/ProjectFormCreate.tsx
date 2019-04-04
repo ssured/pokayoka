@@ -2,14 +2,14 @@ import React from 'react';
 import { Formik, FormikActions, FormikProps, Field, FieldProps } from 'formik';
 import { Form, FormField, Button, Heading, Box } from 'grommet';
 import { Project } from './model';
-import { ImageInput } from '../../../UI/image-input';
+import { ImageInput } from '../../../UI/binary-input';
 import { Omit } from '../../../utils/typescript';
 import { toHex } from '../../../utils/buffer';
 
-interface FormValues extends Omit<Project, 'sites'> {}
+interface ProjectFormCreateValues extends Omit<Project, 'sites'> {}
 
 export const ProjectFormCreate: React.FunctionComponent<{
-  onSubmit: (values: FormValues) => Promise<void>;
+  onSubmit: (values: ProjectFormCreateValues) => Promise<void>;
 }> = ({ onSubmit }) => {
   return (
     <Box>
@@ -17,8 +17,8 @@ export const ProjectFormCreate: React.FunctionComponent<{
       <Formik
         initialValues={{ name: '' }}
         onSubmit={async (
-          values: FormValues,
-          actions: FormikActions<FormValues>
+          values: ProjectFormCreateValues,
+          actions: FormikActions<ProjectFormCreateValues>
         ) => {
           try {
             await onSubmit(values);
@@ -27,14 +27,17 @@ export const ProjectFormCreate: React.FunctionComponent<{
             actions.setSubmitting(false);
           }
         }}
-        render={(formikBag: FormikProps<FormValues>) => (
+        render={(formikBag: FormikProps<ProjectFormCreateValues>) => (
           <Form
             onSubmit={formikBag.submitForm}
             onReset={() => formikBag.resetForm()}
           >
             <Field
               name="name"
-              render={({ field, form }: FieldProps<FormValues>) => (
+              render={({
+                field,
+                form,
+              }: FieldProps<ProjectFormCreateValues>) => (
                 <FormField
                   {...field}
                   label="Naam"
@@ -45,17 +48,18 @@ export const ProjectFormCreate: React.FunctionComponent<{
             />
             <Field
               name="$image"
-              render={({ field, form }: FieldProps<FormValues>) => (
+              render={({
+                field,
+                form,
+              }: FieldProps<ProjectFormCreateValues>) => (
                 <FormField
                   {...field}
                   onChange={async blobOrNull => {
                     if (blobOrNull) {
                       form.setFieldValue(field.name, null);
                       const blob = (blobOrNull as unknown) as Blob;
-
-                      const arrayBuffer = await new Response(
-                        blob
-                      ).arrayBuffer();
+                      const response = new Response(blob);
+                      const arrayBuffer = await response.clone().arrayBuffer();
 
                       const hash = toHex(
                         await window.crypto.subtle.digest(
@@ -65,7 +69,7 @@ export const ProjectFormCreate: React.FunctionComponent<{
                       );
 
                       const cdnCache = await window.caches.open('cdn');
-                      await cdnCache.put(`/cdn/${hash}`, new Response(blob));
+                      await cdnCache.put(`/cdn/${hash}`, response);
 
                       form.setFieldValue(field.name, hash);
                     } else {

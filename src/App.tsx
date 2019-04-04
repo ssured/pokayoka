@@ -20,6 +20,7 @@ import { useUIContext, useNewUIContext } from './contexts/ui';
 import { SPO } from './SPO';
 import { Site } from './routes/Sites/Site/index';
 import { Building } from './routes/Buildings/Building/index';
+import { BuildingStorey } from './routes/BuildingStoreys/BuildingStorey/index';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -309,6 +310,7 @@ export const App: React.FunctionComponent<{}> = () => {
                     <Projects path="projects/*" />
                     <Site path="sites/:siteId/*" />
                     <Building path="buildings/:buildingId/*" />
+                    <BuildingStorey path="buildingStoreys/:buildingStoreyId/*" />
                     <SPO path="/spo" />
 
                     <NotFound default />
