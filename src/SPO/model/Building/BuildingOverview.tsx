@@ -3,8 +3,8 @@ import { observer } from 'mobx-react-lite';
 
 import { Box, Heading } from 'grommet';
 import { BuildingModel } from './model';
-import { BuildingTile } from './BuildingTile';
 import { subj } from '../../../utils/spo';
+import { BuildingStoreyTile } from '../BuildingStorey/BuildingStoreyTile';
 
 export const BuildingOverview: React.FunctionComponent<{
   building: [BuildingModel, subj];
@@ -19,18 +19,22 @@ export const BuildingOverview: React.FunctionComponent<{
         pad="medium"
         gap="medium"
       >
-        TOT HIER {subj.join('.')}
-        {/* {[...building.buildings.entries()].map(([key, building]) =>
-          building.fold(
-            building => (
-              <BuildingTile
+        {[...building.buildingStoreys.entries()].map(([key, buildingStorey]) =>
+          buildingStorey.fold(
+            buildingStorey => (
+              <BuildingStoreyTile
                 key={key}
-                building={[building, [...subj, 'buildings', key]]}
+                buildingStorey={[
+                  buildingStorey,
+                  [...subj, 'buildingStoreys', key],
+                ]}
               />
             ),
-            building => <div>Loading building {building.name || ''}</div>
+            buildingStorey => (
+              <div>Loading buildingStorey {buildingStorey.name || ''}</div>
+            )
           )
-        )} */}
+        )}
       </Box>
     </>
   );

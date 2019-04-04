@@ -24,6 +24,7 @@ export const Project = t.intersection(
 
       // buildings: t.record(t.string, Building),
       // tasks: t.record(t.string, Task)
+      sites: t.record(t.string, Site),
     }),
     t.partial({
       /**
@@ -33,7 +34,6 @@ export const Project = t.intersection(
       $image: t.string,
 
       // mainSite: Site
-      sites: t.record(t.string, Site),
     }),
   ],
   'project'
@@ -45,10 +45,10 @@ const SerializedProject: t.Type<Serialized<Project>> = t.intersection([
     ...Project.types[0].props,
     // buildings: tMany,
     // tasks: tMany
+    sites: tMany,
   }),
   t.partial({
     ...Project.types[1].props,
-    sites: tMany,
     // mainSite: tOne
   }),
 ]);
@@ -80,7 +80,7 @@ export class ProjectModel extends Model<Project>
 
   @computed
   get sites() {
-    return MapOf(AsyncSite, this.serialized.sites || {});
+    return MapOf(AsyncSite, this.serialized.sites);
   }
 
   // @computed

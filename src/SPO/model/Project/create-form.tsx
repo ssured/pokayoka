@@ -6,7 +6,7 @@ import { ImageInput } from '../../../UI/image-input';
 import { Omit } from '../../../utils/typescript';
 import { toHex } from '../../../utils/buffer';
 
-interface FormValues extends Omit<Project, '$image'> {
+interface FormValues extends Omit<Project, '$image' | 'sites'> {
   $image?: Project['$image'] | File | Blob;
 }
 

@@ -10,6 +10,7 @@ import {
 } from '../base';
 import { computed } from 'mobx';
 import { SPOShape } from '../../../utils/spo';
+import { BuildingStorey, AsyncBuildingStorey } from '../BuildingStorey/model';
 
 export const Building = t.intersection(
   [
@@ -19,6 +20,7 @@ export const Building = t.intersection(
     t.partial({
       description: t.string,
       tasks: t.record(t.string, Task),
+      buildingStoreys: t.record(t.string, BuildingStorey),
     }),
   ],
   'building'
@@ -32,6 +34,7 @@ const SerializedBuilding: t.Type<SerializedBuilding> = t.intersection([
   t.partial({
     ...Building.types[1].props,
     tasks: tMany,
+    buildingStoreys: tMany,
   }),
 ]);
 
@@ -50,6 +53,11 @@ export class BuildingModel extends Model<Building>
   @computed
   get tasks() {
     return MapOf(AsyncTask, this.serialized.tasks || {});
+  }
+
+  @computed
+  get buildingStoreys() {
+    return MapOf(AsyncBuildingStorey, this.serialized.buildingStoreys || {});
   }
 }
 
