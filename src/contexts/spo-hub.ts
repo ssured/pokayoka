@@ -4,11 +4,12 @@ import { SPOHub } from '../utils/spo-hub';
 import { SPOStorage } from '../utils/spo-storage';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { SPOWs } from '../utils/spo-ws';
-import { WrapAsync, SPOShape } from '../SPO/model/base';
-import { subj } from '../utils/spo';
+import { WrapAsync } from '../SPO/model/base';
+import { subj, SPOShape } from '../utils/spo';
 import { createObservable } from '../utils/spo-observable';
 import createContainer from 'constate';
 import { AsyncUser } from '../SPO/model/User';
+import { useAuthentication } from './authentication';
 
 const spotDb = new SpotDB('pokayoka');
 
@@ -24,7 +25,11 @@ export const useModel = <T extends SPOShape, U>(
   id: string | subj
 ) => {
   const shape = useContext(SPOContext);
-  const subj = typeof id === 'string' ? [id] : id;
+  const auth = useAuthentication();
+  const subj = [
+    'user',
+    (auth.authentication.ok && auth.authentication.name) || 'anonymous',
+  ].concat(id);
   return useMemo(() => asyncFactory(shape.get(subj)), [
     asyncFactory,
     shape,
@@ -32,9 +37,4 @@ export const useModel = <T extends SPOShape, U>(
   ]);
 };
 
-export const useUser = ({ userId = 'anonymous' } = {}) =>
-  useModel(AsyncUser, ['user', userId]);
-
-export const AccountContainer = createContainer(useUser);
-
-export const useAccount = () => useContext(AccountContainer.Context);
+export const useAccount = () => useModel(AsyncUser, []);

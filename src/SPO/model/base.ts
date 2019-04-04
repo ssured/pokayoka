@@ -1,22 +1,14 @@
 import * as t from 'io-ts';
 import { computed, observable, ObservableMap } from 'mobx';
-import { SPOShape as SPOShape_ } from '../../utils/spo';
+import { primitive, SPOShape, subj } from '../../utils/spo';
 import { nothing } from '../../utils/maybe';
-
-type primitive = boolean | string | number | null | undefined;
-
-export type subj = string[];
-// type pred = string;
-// type objt = primitive | subj;
-// type Tuple = [subj, pred, objt];
-
-export type SPOShape = SPOShape_; // { [K in string]: primitive | GraphableObj };
+import { ReactElement } from 'react';
 
 type Dictionary<T> = Record<string, T>;
 type Many<T extends SPOShape> = Dictionary<T>;
 type One<T extends SPOShape> = T;
 
-type InnerSerialized<T> = T extends primitive
+type InnerSerialized<T> = T extends primitive | undefined
   ? T
   : T extends Many<infer U>
   ? Dictionary<SPOShape>
@@ -50,7 +42,7 @@ export type AsyncPropertiesOf<T extends SPOShape> = {
     ? undefined | WrapAsync<U, any>
     : T[K] extends One<infer U>
     ? WrapAsync<U, any>
-    : T[K] extends primitive
+    : T[K] extends primitive | undefined
     ? T[K]
     : never
 };
@@ -60,7 +52,7 @@ export type NonPrimitives<T extends SPOShape> = {
   [K in keyof Omit<T, KeysOfType<T, primitive>>]: T[K]
 };
 
-export type PartialObj<T> = T extends primitive
+export type PartialObj<T> = T extends primitive | undefined
   ? T
   : T extends Many<infer U>
   ? { [K in keyof T]: PartialObj<T[K]> } | undefined
@@ -113,6 +105,16 @@ export class WrapAsync<T extends SPOShape, U> {
   @computed
   get maybe() {
     return this.value || nothing;
+  }
+
+  fold(
+    ValueComponent: (value: U) => ReactElement<any> | null,
+    PartialComponent: (shape: PartialObj<T>) => ReactElement<any> | null
+  ): ReactElement<any> | null {
+    if (this.value != null) {
+      return ValueComponent(this.value);
+    }
+    return PartialComponent(this.partial as any);
   }
 
   constructor(

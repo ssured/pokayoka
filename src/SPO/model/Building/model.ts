@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { Task, AsyncTask } from './Task';
+import { Task, AsyncTask } from '../Task';
 import {
   Serialized,
   tMany,
@@ -7,18 +7,18 @@ import {
   AsyncPropertiesOf,
   WrapAsync,
   MapOf,
-  SPOShape,
-} from './base';
+} from '../base';
 import { computed } from 'mobx';
+import { SPOShape } from '../../../utils/spo';
 
 export const Building = t.intersection(
   [
     t.type({
       name: t.string,
-      tasks: t.record(t.string, Task),
     }),
     t.partial({
       description: t.string,
+      tasks: t.record(t.string, Task),
     }),
   ],
   'building'
@@ -28,10 +28,10 @@ type SerializedBuilding = Serialized<Building>;
 const SerializedBuilding: t.Type<SerializedBuilding> = t.intersection([
   t.type({
     ...Building.types[0].props,
-    tasks: tMany,
   }),
   t.partial({
     ...Building.types[1].props,
+    tasks: tMany,
   }),
 ]);
 
@@ -49,7 +49,7 @@ export class BuildingModel extends Model<Building>
 
   @computed
   get tasks() {
-    return MapOf(AsyncTask, this.serialized.tasks);
+    return MapOf(AsyncTask, this.serialized.tasks || {});
   }
 }
 

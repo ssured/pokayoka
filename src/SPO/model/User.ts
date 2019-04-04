@@ -10,7 +10,7 @@ import {
 } from './base';
 
 import { computed, action } from 'mobx';
-import { Project, AsyncProject } from './Project';
+import { Project, AsyncProject } from './Project/model';
 import { generateId } from '../../utils/id';
 
 export const User = t.intersection(

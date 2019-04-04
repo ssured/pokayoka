@@ -92,7 +92,6 @@ export function createObservable(
 
   recursiveDeepObserve(root, (change, subj) => {
     if (isUpdating > 0) return; // do not track own changes
-    debugger;
     const pred = change.name;
 
     switch (change.type) {

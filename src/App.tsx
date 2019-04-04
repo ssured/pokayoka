@@ -18,7 +18,8 @@ import { useToggle } from 'react-use';
 import { MenuItemButton, ButtonLiner } from './UI/components/context-menu';
 import { useUIContext, useNewUIContext } from './contexts/ui';
 import { SPO } from './SPO';
-import { AccountContainer } from './contexts/spo-hub';
+import { Site } from './routes/Sites/Site/index';
+import { Building } from './routes/Buildings/Building/index';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -295,66 +296,64 @@ export const App: React.FunctionComponent<{}> = () => {
               }
             />
           ) : (
-            <AccountContainer.Provider
-              userId={(authentication.ok && authentication.name) || ''}
-            >
-              <StyledWrapper>
-                <SidebarContext.Provider value={isSidebarOpen}>
-                  <Header>
-                    <UI.NavContext />
-                  </Header>
-                  <Content>
-                    <StyledRouter>
-                      <Home path="/" />
-                      {/* <Debug path="debug" /> */}
-                      {/* <SyncStatus path="sync" /> */}
-                      <Projects path="projects/*" />
-                      <SPO path="/spo" />
+            <StyledWrapper>
+              <SidebarContext.Provider value={isSidebarOpen}>
+                <Header>
+                  <UI.NavContext />
+                </Header>
+                <Content>
+                  <StyledRouter>
+                    <Home path="/" />
+                    {/* <Debug path="debug" /> */}
+                    {/* <SyncStatus path="sync" /> */}
+                    <Projects path="projects/*" />
+                    <Site path="sites/:siteId/*" />
+                    <Building path="buildings/:buildingId/*" />
+                    <SPO path="/spo" />
 
-                      <NotFound default />
-                      {/* <User path=":userId">
+                    <NotFound default />
+                    {/* <User path=":userId">
                   <Project path=":projectId" />
                 </User> */}
-                    </StyledRouter>
-                  </Content>
-                  <MainNav
-                    toggleSidebar={toggleSidebar}
-                    isSidebarOpen={isSidebarOpen}
-                  >
-                    <MenuItemButton
-                      icon={Icons.Home}
-                      actionFn={() => navigate('/')}
-                      label="Beginscherm"
-                    />
-                    <MenuItemButton
-                      icon={Icons.Projects}
-                      actionFn={() => {
-                        navigate('/projects');
-                      }}
-                      label="Projecten"
-                    />
-                    <MenuItemButton
-                      icon={Icons.Projects}
-                      actionFn={() => {
-                        navigate('/spo');
-                      }}
-                      label="SPO"
-                    />
-                    <MenuItemButton
-                      icon={Icons.Book}
-                      actionFn={() => {
-                        alert('Verwerkingsinstructies');
-                      }}
-                      label="Verwerkingsinstructies"
-                    />
-                    <div className="context-menu-items">
-                      <UI.ContextSubMenu />
-                    </div>
-                  </MainNav>
-                  <StyledFooter />
-                </SidebarContext.Provider>
-              </StyledWrapper>
-            </AccountContainer.Provider>
+                  </StyledRouter>
+                </Content>
+                <MainNav
+                  toggleSidebar={toggleSidebar}
+                  isSidebarOpen={isSidebarOpen}
+                >
+                  <MenuItemButton
+                    icon={Icons.Home}
+                    actionFn={() => navigate('/')}
+                    label="Beginscherm"
+                  />
+                  <MenuItemButton
+                    icon={Icons.Projects}
+                    actionFn={() => {
+                      navigate('/projects');
+                    }}
+                    label="Projecten"
+                  />
+                  <MenuItemButton
+                    icon={Icons.Projects}
+                    actionFn={() => {
+                      navigate('/spo');
+                    }}
+                    label="SPO"
+                  />
+                  <MenuItemButton
+                    icon={Icons.Book}
+                    actionFn={() => {
+                      alert('Verwerkingsinstructies');
+                    }}
+                    label="Verwerkingsinstructies"
+                  />
+                  <div className="context-menu-items">
+                    <UI.ContextSubMenu />
+                  </div>
+                </MainNav>
+                <StyledFooter />
+              </SidebarContext.Provider>
+            </StyledWrapper>
           )}
         </CapabilitiesCheck>
       </Grommet>

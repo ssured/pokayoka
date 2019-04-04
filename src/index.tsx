@@ -11,7 +11,6 @@ import 'leaflet/dist/leaflet.css';
 
 import { IconContext } from 'react-icons';
 import { AuthenticationContainer } from './contexts/authentication';
-import { AccountContainer } from './contexts/spo-hub';
 
 // fix marker urls
 // https://github.com/PaulLeCam/react-leaflet/issues/255#issuecomment-261904061
@@ -47,9 +46,7 @@ function renderApp() {
   render(
     <IconContext.Provider value={{ style: { verticalAlign: 'middle' } }}>
       <AuthenticationContainer.Provider>
-        <AccountContainer.Provider>
-          <App />
-        </AccountContainer.Provider>
+        <App />
       </AuthenticationContainer.Provider>
     </IconContext.Provider>,
     document.getElementById('root')

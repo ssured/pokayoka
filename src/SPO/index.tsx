@@ -1,6 +1,6 @@
 import React from 'react';
 import { useObserver } from 'mobx-react-lite';
-import { AsyncProject } from './model/Project';
+import { AsyncProject } from './model/Project/model';
 import { RouteComponentProps } from '@reach/router';
 
 import { useModel } from '../contexts/spo-hub';

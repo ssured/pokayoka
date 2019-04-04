@@ -198,7 +198,9 @@ dotenv.config();
             path.join(webpackConfig.output!.path!, file)
           )
         );
-      } else if (file.indexOf('.') === -1 && !file.match(/^__webpack_hmr$/)) {
+      } else if (
+        /*file.indexOf('.') === -1 &&*/ !file.match(/^__webpack_hmr$/)
+      ) {
         // if the url does not have an extension, assume they've navigated to something like /home and want index.html
         res.end(
           devMiddleware.fileSystem.readFileSync(

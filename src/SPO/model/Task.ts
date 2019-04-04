@@ -1,13 +1,7 @@
 import * as t from 'io-ts';
-import {
-  Serialized,
-  tMany,
-  Model,
-  AsyncPropertiesOf,
-  WrapAsync,
-  SPOShape,
-} from './base';
+import { Serialized, tMany, Model, AsyncPropertiesOf, WrapAsync } from './base';
 import { computed } from 'mobx';
+import { SPOShape } from '../../utils/spo';
 
 export const Task = t.intersection(
   [

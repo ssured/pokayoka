@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
-import { Task, AsyncTask } from './Task';
-import { Building, AsyncBuilding } from './Building';
+import { Task, AsyncTask } from '../Task';
+import { Building, AsyncBuilding } from '../Building/model';
 import {
   Serialized,
   tMany,
@@ -8,18 +8,18 @@ import {
   AsyncPropertiesOf,
   WrapAsync,
   MapOf,
-  SPOShape,
-} from './base';
+} from '../base';
 import { computed } from 'mobx';
+import { SPOShape } from '../../../utils/spo';
 
 export const Site = t.intersection(
   [
     t.type({
       name: t.string,
       buildings: t.record(t.string, Building),
-      tasks: t.record(t.string, Task),
     }),
     t.partial({
+      tasks: t.record(t.string, Task),
       description: t.string,
     }),
   ],
@@ -31,10 +31,10 @@ const SerializedSite: t.Type<SerializedSite> = t.intersection([
   t.type({
     ...Site.types[0].props,
     buildings: tMany,
-    tasks: tMany,
   }),
   t.partial({
     ...Site.types[1].props,
+    tasks: tMany,
   }),
 ]);
 
@@ -56,7 +56,7 @@ export class SiteModel extends Model<Site> implements AsyncPropertiesOf<Site> {
 
   @computed
   get tasks() {
-    return MapOf(AsyncTask, this.serialized.tasks);
+    return MapOf(AsyncTask, this.serialized.tasks || {});
   }
 }
 

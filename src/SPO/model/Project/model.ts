@@ -6,13 +6,13 @@ import {
   AsyncPropertiesOf,
   WrapAsync,
   MapOf,
-  SPOShape,
 } from '../base';
 
 import { Task, AsyncTask } from '../Task';
-import { Building, AsyncBuilding } from '../Building';
-import { Site, AsyncSite } from '../Site';
+import { Building, AsyncBuilding } from '../Building/model';
+import { Site, AsyncSite } from '../Site/model';
 import { computed, action } from 'mobx';
+import { SPOShape } from '../../../utils/spo';
 
 export const Project = t.intersection(
   [
@@ -40,8 +40,7 @@ export const Project = t.intersection(
 );
 
 export type Project = t.TypeOf<typeof Project>;
-type SerializedProject = Serialized<Project>;
-const SerializedProject: t.Type<SerializedProject> = t.intersection([
+const SerializedProject: t.Type<Serialized<Project>> = t.intersection([
   t.type({
     ...Project.types[0].props,
     // buildings: tMany,
@@ -59,6 +58,11 @@ export class ProjectModel extends Model<Project>
   @computed
   get name() {
     return this.serialized.name;
+  }
+
+  @computed
+  get $image() {
+    return this.serialized.$image;
   }
 
   @computed
