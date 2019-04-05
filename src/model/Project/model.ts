@@ -12,7 +12,7 @@ import { Task, AsyncTask } from '../Task';
 import { Building, AsyncBuilding } from '../Building/model';
 import { Site, AsyncSite } from '../Site/model';
 import { computed, action } from 'mobx';
-import { SPOShape } from '../../../utils/spo';
+import { SPOShape } from '../../utils/spo';
 
 export const Project = t.intersection(
   [

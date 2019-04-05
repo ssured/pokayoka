@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import { Serialized, Model, AsyncPropertiesOf, WrapAsync } from '../base';
 import { computed } from 'mobx';
-import { SPOShape } from '../../../utils/spo';
+import { SPOShape } from '../../utils/spo';
 
 export const Tile = t.type(
   {

@@ -2,7 +2,6 @@ import { Router, RouteComponentProps, navigate } from '@reach/router';
 import React, { useContext } from 'react';
 
 import { useNewUIContext } from '../../../contexts/ui';
-import { Bug, MapLocation } from 'grommet-icons';
 import {
   BuildingStoreyModel,
   AsyncBuildingStorey,
@@ -26,35 +25,19 @@ export const BuildingStorey: React.FunctionComponent<
   const UIContext = useNewUIContext({
     navContext: {
       label: 'BuildingStorey',
-      path: `/buildings/${buildingStoreyId}`,
-    },
-    contextSubMenu: {
-      type: 'append',
-      items: [
-        {
-          icon: Bug,
-          actionFn: () =>
-            navigate(`/buildings/${buildingStoreyId}/observations`),
-          label: 'Bevindingen',
-        },
-        {
-          icon: MapLocation,
-          actionFn: () => navigate(`/buildings/${buildingStoreyId}/sheets`),
-          label: 'Bouwlagen',
-        },
-      ],
+      path: `/buildingStoreys/${buildingStoreyId}`,
     },
   });
 
   const subj = buildingStoreyId!.split('.');
-  const building = useModel(AsyncBuildingStorey, subj);
+  const buildingStorey = useModel(AsyncBuildingStorey, subj);
 
   // console.log({ buildingStoreyId });
   return (
     <UIContext.Provider>
-      {building.fold(
-        building => (
-          <BuildingStoreyContext.Provider value={[building, subj]}>
+      {buildingStorey.fold(
+        buildingStorey => (
+          <BuildingStoreyContext.Provider value={[buildingStorey, subj]}>
             <Router>
               <Overview path="/" />
             </Router>

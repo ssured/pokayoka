@@ -10,7 +10,7 @@ import {
   MapOf,
 } from '../base';
 import { computed } from 'mobx';
-import { SPOShape } from '../../../utils/spo';
+import { SPOShape } from '../../utils/spo';
 
 export const Site = t.intersection(
   [

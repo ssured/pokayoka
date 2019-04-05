@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { Box, Heading } from 'grommet';
 import { ProjectModel } from './model';
 import { SiteTile } from '../Site/SiteTile';
-import { subj } from '../../../utils/spo';
+import { subj } from '../../utils/spo';
 
 export const ProjectOverview: React.FunctionComponent<{
   project: [ProjectModel, subj];

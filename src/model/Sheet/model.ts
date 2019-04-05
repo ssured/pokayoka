@@ -8,8 +8,9 @@ import {
   MapOf,
 } from '../base';
 import { computed } from 'mobx';
-import { SPOShape } from '../../../utils/spo';
+import { SPOShape } from '../../utils/spo';
 import { Tile, AsyncTile } from './tile';
+import { TRANSPARENT_PIXEL } from '../../constants';
 
 export const Sheet = t.intersection(
   [
@@ -62,6 +63,31 @@ export class SheetModel extends Model<Sheet>
   @computed
   get images() {
     return MapOf(AsyncTile, this.serialized.images);
+  }
+
+  urlForXYZ(x: number, y: number, z: number) {
+    const key = [z, y, x].join('/');
+    const image = this.images && this.images.get(key);
+    console.log(
+      'urlForXYZ',
+      z,
+      y,
+      z,
+      image && image.value && image.value.$hash
+    );
+    return image && image.value
+      ? `/cdn/${image.value.$hash}`
+      : TRANSPARENT_PIXEL;
+  }
+
+  @computed
+  get availableZoomLevels() {
+    const levels = new Set<number>();
+    for (const key of this.images.keys()) {
+      const [z] = key.split('/');
+      levels.add(parseInt(z, 10));
+    }
+    return [...levels].sort();
   }
 }
 

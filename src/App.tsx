@@ -20,6 +20,7 @@ import { useUIContext, useNewUIContext } from './contexts/ui';
 import { Site } from './routes/Sites/Site/index';
 import { Building } from './routes/Buildings/Building/index';
 import { BuildingStorey } from './routes/BuildingStoreys/BuildingStorey/index';
+import { Sheet } from './routes/Sheets/Sheet/index';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -269,6 +270,10 @@ const StyledRouter = styled(Router)`
   flex: 1;
   display: flex;
   flex-direction: column;
+
+  > * {
+    min-height: 100%;
+  }
 `;
 
 export const App: React.FunctionComponent<{}> = () => {
@@ -310,6 +315,7 @@ export const App: React.FunctionComponent<{}> = () => {
                     <Site path="sites/:siteId/*" />
                     <Building path="buildings/:buildingId/*" />
                     <BuildingStorey path="buildingStoreys/:buildingStoreyId/*" />
+                    <Sheet path="sheets/:sheetId/*" />
 
                     <NotFound default />
                     {/* <User path=":userId">

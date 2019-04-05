@@ -3,10 +3,7 @@ import React, { useContext } from 'react';
 
 import { useNewUIContext } from '../../../contexts/ui';
 import { Bug, MapLocation } from 'grommet-icons';
-import {
-  BuildingModel,
-  AsyncBuilding,
-} from '../../../model/Building/model';
+import { BuildingModel, AsyncBuilding } from '../../../model/Building/model';
 import { Loader } from '../../../components/Loader/index';
 import { BuildingOverview } from '../../../model/Building/BuildingOverview';
 import { subj } from '../../../utils/spo';

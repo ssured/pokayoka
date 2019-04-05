@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { Box, Heading } from 'grommet';
 import { SiteModel } from './model';
 import { BuildingTile } from '../Building/BuildingTile';
-import { subj } from '../../../utils/spo';
+import { subj } from '../../utils/spo';
 
 export const SiteOverview: React.FunctionComponent<{
   site: [SiteModel, subj];
