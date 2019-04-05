@@ -17,7 +17,6 @@ import { useToggle } from 'react-use';
 
 import { MenuItemButton, ButtonLiner } from './UI/components/context-menu';
 import { useUIContext, useNewUIContext } from './contexts/ui';
-import { SPO } from './SPO';
 import { Site } from './routes/Sites/Site/index';
 import { Building } from './routes/Buildings/Building/index';
 import { BuildingStorey } from './routes/BuildingStoreys/BuildingStorey/index';
@@ -311,7 +310,6 @@ export const App: React.FunctionComponent<{}> = () => {
                     <Site path="sites/:siteId/*" />
                     <Building path="buildings/:buildingId/*" />
                     <BuildingStorey path="buildingStoreys/:buildingStoreyId/*" />
-                    <SPO path="/spo" />
 
                     <NotFound default />
                     {/* <User path=":userId">
