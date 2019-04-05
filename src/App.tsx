@@ -21,6 +21,7 @@ import { Site } from './routes/Sites/Site/index';
 import { Building } from './routes/Buildings/Building/index';
 import { BuildingStorey } from './routes/BuildingStoreys/BuildingStorey/index';
 import { Sheet } from './routes/Sheets/Sheet/index';
+import { Sync } from './routes/Sync/index';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -310,7 +311,7 @@ export const App: React.FunctionComponent<{}> = () => {
                   <StyledRouter>
                     <Home path="/" />
                     {/* <Debug path="debug" /> */}
-                    {/* <SyncStatus path="sync" /> */}
+                    <Sync path="sync" />
                     <Projects path="projects/*" />
                     <Site path="sites/:siteId/*" />
                     <Building path="buildings/:buildingId/*" />

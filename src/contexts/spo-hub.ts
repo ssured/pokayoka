@@ -7,7 +7,6 @@ import { SPOWs } from '../utils/spo-ws';
 import { WrapAsync } from '../model/base';
 import { subj, SPOShape } from '../utils/spo';
 import { createObservable } from '../utils/spo-observable';
-import createContainer from 'constate';
 import { AsyncUser } from '../model/User';
 import { useAuthentication } from './authentication';
 

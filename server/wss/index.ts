@@ -6,27 +6,51 @@ import { subj, pred, objt, spoInObject } from '../../src/utils/spo';
 import { AbstractIteratorOptions } from 'abstract-leveldown';
 import { ensureNever } from '../../src/utils/index';
 
-import { level } from './level';
+import { level, levelId, persist } from './level';
 import { getMachineState } from './sync';
 import console = require('console');
 
-type Message = StampedGetMessage | StampedPutMessage;
+export type IdentificationMessage = {
+  type: 'identification';
+  databaseId: string;
+  databaseState: string;
+};
 
-export function registerWssServer(server: Server) {
+type IncomingMessage = StampedGetMessage | StampedPutMessage;
+export type OutgoingMessage =
+  | StampedGetMessage
+  | StampedPutMessage
+  | IdentificationMessage;
+
+function send(ws: WebSocket, msg: OutgoingMessage) {
+  ws.send(JSON.stringify(msg));
+}
+
+export async function registerWssServer(server: Server) {
+  const databaseId = await levelId();
+
   const wss = new WebSocket.Server({ server });
 
-  wss.on('connection', (ws, req) => {
+  wss.on('connection', async (ws, req) => {
     console.log('cookie', req.headers.cookie);
+
+    // send database id to client
+    send(ws, {
+      type: 'identification',
+      databaseId,
+      databaseState: getMachineState(),
+    });
 
     ws.on('message', async message => {
       try {
-        const msg = JSON.parse(message.toString()) as Message;
-        console.log(`WS ${msg.type}: ${message}`);
+        const msg = JSON.parse(message.toString()) as IncomingMessage;
+        // console.log(`WS ${msg.type}: ${message}`);
 
         switch (msg.type) {
           case 'get':
             {
               const { localState, subj, pred } = msg;
+              const machineState = getMachineState();
 
               // we are requesting server data
               if (subj[0] === 'user' && subj[1]) {
@@ -40,26 +64,23 @@ export function registerWssServer(server: Server) {
                     c5ucr60kzn: ['c5ucr60kzn'],
                   },
                 })) {
-                  ws.send(
-                    JSON.stringify({
-                      type: 'put',
-                      tuple,
-                      state: localState,
-                    })
-                  );
+                  send(ws, {
+                    type: 'put',
+                    tuple,
+                    state: machineState,
+                    localState: machineState,
+                  });
                 }
                 return;
               }
 
-              const machineState = getMachineState();
-
               const options: AbstractIteratorOptions = {};
 
               if (pred) {
-                options.gte = options.lte = ['spo', subj, pred];
+                options.gte = options.lte = ['sp', subj, pred];
               } else {
-                options.gte = ['spo', subj];
-                options.lt = ['spo', [...subj, undefined]];
+                options.gte = ['sp', subj];
+                options.lt = ['sp', [...subj, undefined]];
               }
 
               for await (const data of level.createReadStream(options)) {
@@ -67,51 +88,26 @@ export function registerWssServer(server: Server) {
                   key: [_, s, p],
                   value: [o, t],
                 } = (data as unknown) as {
-                  key: ['spo', subj, pred];
+                  key: ['sp', subj, pred];
                   value: [objt, string];
                 };
 
-                ws.send(
-                  JSON.stringify({
-                    type: 'put',
-                    tuple: [s, p, o],
-                    state: t,
-                  })
-                );
+                send(ws, {
+                  type: 'put',
+                  tuple: [s, p, o],
+                  state: t,
+                  localState: machineState,
+                });
               }
             }
             break;
           case 'put':
             {
-              const {
-                tuple: [s, p, o],
-                state: tupleState,
-                localState,
-              } = msg;
-
-              if (s[0] === 'server') return;
-
-              const t = tupleState || localState;
-              const machineState = getMachineState();
-
-              await level.batch([
-                { type: 'put', key: ['spt', s, p, t], value: [o] },
-                {
-                  type: 'put',
-                  key: ['log', machineState, s, p, o, t],
-                  value: true,
-                },
-                {
-                  type: 'put',
-                  key: ['spo', s, p],
-                  value: [o, t, machineState],
-                },
-                { type: 'put', key: ['pso', p, s, o], value: true },
-                { type: 'put', key: ['ops', o, p, s], value: true },
-                { type: 'put', key: ['sop', s, o, p], value: true },
-                { type: 'put', key: ['osp', o, s, p], value: true },
-                { type: 'put', key: ['pos', p, o, s], value: true },
-              ]);
+              console.log('put', msg);
+              const { tuple, state } = msg;
+              if (state) {
+                persist(tuple, state);
+              }
             }
             break;
           default:
