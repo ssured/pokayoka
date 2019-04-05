@@ -3,10 +3,10 @@ import React, { useContext } from 'react';
 
 import { useNewUIContext } from '../../../contexts/ui';
 import { Bug, MapLocation } from 'grommet-icons';
-import { ProjectModel } from '../../../SPO/model/Project/model';
+import { ProjectModel } from '../../../model/Project/model';
 import { useProjects } from '../index';
 import { Loader } from '../../../components/Loader/index';
-import { ProjectOverview } from '../../../SPO/model/Project/ProjectOverview';
+import { ProjectOverview } from '../../../model/Project/ProjectOverview';
 import { subj } from '../../../utils/spo';
 import { observer } from 'mobx-react-lite';
 

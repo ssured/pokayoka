@@ -9,9 +9,9 @@ import {
   MapOf,
 } from '../base';
 import { computed, action } from 'mobx';
-import { SPOShape } from '../../../utils/spo';
+import { SPOShape } from '../../utils/spo';
 import { Sheet, AsyncSheet } from '../Sheet/model';
-import { generateId } from '../../../utils/id';
+import { generateId } from '../../utils/id';
 
 export const BuildingStorey = t.intersection(
   [

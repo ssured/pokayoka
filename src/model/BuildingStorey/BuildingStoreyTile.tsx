@@ -2,9 +2,9 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Box, Heading } from 'grommet';
-import { RouteButton } from '../../../components/ui/RouteLink';
+import { RouteButton } from '../../components/ui/RouteLink';
 import { BuildingStoreyModel } from './model';
-import { subj } from '../../../utils/spo';
+import { subj } from '../../utils/spo';
 
 export const BuildingStoreyTile: React.FunctionComponent<{
   buildingStorey: [BuildingStoreyModel, subj];

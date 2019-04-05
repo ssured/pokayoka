@@ -4,11 +4,11 @@ import { SPOHub } from '../utils/spo-hub';
 import { SPOStorage } from '../utils/spo-storage';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { SPOWs } from '../utils/spo-ws';
-import { WrapAsync } from '../SPO/model/base';
+import { WrapAsync } from '../model/base';
 import { subj, SPOShape } from '../utils/spo';
 import { createObservable } from '../utils/spo-observable';
 import createContainer from 'constate';
-import { AsyncUser } from '../SPO/model/User';
+import { AsyncUser } from '../model/User';
 import { useAuthentication } from './authentication';
 
 const spotDb = new SpotDB('pokayoka');

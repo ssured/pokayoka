@@ -6,7 +6,7 @@ import { CAMERA_JPEG_QUALITY, CAMERA_MAX_SIZE } from '../constants';
 import { generateId } from '../utils/id';
 import { toHex } from '../utils/buffer';
 import { DocumentPdf } from 'grommet-icons';
-import { Tile } from '../SPO/model/Sheet/Tile';
+import { Tile } from '../model/Sheet/Tile';
 
 export const ImageInput: FunctionComponent<{
   onChange: (image: File | Blob | null) => void;

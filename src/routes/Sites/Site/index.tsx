@@ -3,9 +3,9 @@ import React, { useContext } from 'react';
 
 import { useNewUIContext } from '../../../contexts/ui';
 import { Bug, MapLocation } from 'grommet-icons';
-import { SiteModel, AsyncSite } from '../../../SPO/model/Site/model';
+import { SiteModel, AsyncSite } from '../../../model/Site/model';
 import { Loader } from '../../../components/Loader/index';
-import { SiteOverview } from '../../../SPO/model/Site/SiteOverview';
+import { SiteOverview } from '../../../model/Site/SiteOverview';
 import { subj } from '../../../utils/spo';
 import { useModel } from '../../../contexts/spo-hub';
 import { observer } from 'mobx-react-lite';

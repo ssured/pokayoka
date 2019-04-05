@@ -2,9 +2,9 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Box, Heading, Image } from 'grommet';
-import { RouteButton } from '../../../components/ui/RouteLink';
+import { RouteButton } from '../../components/ui/RouteLink';
 import { ProjectModel } from './model';
-import { subj } from '../../../utils/spo';
+import { subj } from '../../utils/spo';
 import { Image as ImageIcon } from 'grommet-icons';
 
 export const ProjectTile: React.FunctionComponent<{

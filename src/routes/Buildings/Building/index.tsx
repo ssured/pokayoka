@@ -6,9 +6,9 @@ import { Bug, MapLocation } from 'grommet-icons';
 import {
   BuildingModel,
   AsyncBuilding,
-} from '../../../SPO/model/Building/model';
+} from '../../../model/Building/model';
 import { Loader } from '../../../components/Loader/index';
-import { BuildingOverview } from '../../../SPO/model/Building/BuildingOverview';
+import { BuildingOverview } from '../../../model/Building/BuildingOverview';
 import { subj } from '../../../utils/spo';
 import { useModel } from '../../../contexts/spo-hub';
 import { observer } from 'mobx-react-lite';

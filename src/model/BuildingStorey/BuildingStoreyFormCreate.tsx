@@ -2,11 +2,7 @@ import React from 'react';
 import { Formik, FormikActions, FormikProps, Field, FieldProps } from 'formik';
 import { Form, FormField, Button, Heading, Box } from 'grommet';
 import { BuildingStorey } from './model';
-import { ImageInput } from '../../../UI/binary-input';
-import { Omit } from '../../../utils/typescript';
-import { toHex } from '../../../utils/buffer';
 
-// interface FormValues extends Omit<BuildingStorey, 'sheets'> {}
 interface BuildingStoreyFormCreateValues extends BuildingStorey {}
 
 export const BuildingStoreyFormCreate: React.FunctionComponent<{

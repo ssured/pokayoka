@@ -2,9 +2,9 @@ import React from 'react';
 import { Formik, FormikActions, FormikProps, Field, FieldProps } from 'formik';
 import { Form, FormField, Button, Heading, Box } from 'grommet';
 import { Sheet } from './model';
-import { PDFInput, PDFData } from '../../../UI/binary-input';
-import { Omit } from '../../../utils/typescript';
-import { toHex } from '../../../utils/buffer';
+import { PDFInput, PDFData } from '../../UI/binary-input';
+import { Omit } from '../../utils/typescript';
+import { toHex } from '../../utils/buffer';
 
 interface SheetFormCreateValues extends Sheet {}
 

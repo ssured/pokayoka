@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import { computed, observable, ObservableMap } from 'mobx';
-import { primitive, SPOShape, subj } from '../../utils/spo';
-import { nothing } from '../../utils/maybe';
+import { primitive, SPOShape, subj } from '../utils/spo';
+import { nothing } from '../utils/maybe';
 import { ReactElement } from 'react';
 
 type Dictionary<T> = Record<string, T>;

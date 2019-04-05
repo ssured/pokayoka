@@ -10,9 +10,9 @@ import {
 
 import { computed, action } from 'mobx';
 import { Project, AsyncProject } from './Project/model';
-import { generateId } from '../../utils/id';
-import { Omit } from '../../utils/typescript';
-import { SPOShape } from '../../utils/spo';
+import { generateId } from '../utils/id';
+import { Omit } from '../utils/typescript';
+import { SPOShape } from '../utils/spo';
 
 export const User = t.intersection(
   [

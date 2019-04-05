@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 
 import { Box, Heading } from 'grommet';
 import { BuildingStoreyModel } from './model';
-import { subj } from '../../../utils/spo';
+import { subj } from '../../utils/spo';
 import { SheetFormCreate } from '../Sheet/SheetFormCreate';
 import { SheetTile } from '../Sheet/SheetTile';
 

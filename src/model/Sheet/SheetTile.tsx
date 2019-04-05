@@ -2,9 +2,9 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Box, Heading, Image } from 'grommet';
-import { RouteButton } from '../../../components/ui/RouteLink';
+import { RouteButton } from '../../components/ui/RouteLink';
 import { SheetModel } from './model';
-import { subj } from '../../../utils/spo';
+import { subj } from '../../utils/spo';
 
 export const SheetTile: React.FunctionComponent<{
   sheet: [SheetModel, subj];

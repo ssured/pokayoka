@@ -2,9 +2,9 @@ import React from 'react';
 import { Formik, FormikActions, FormikProps, Field, FieldProps } from 'formik';
 import { Form, FormField, Button, Heading, Box } from 'grommet';
 import { Project } from './model';
-import { ImageInput } from '../../../UI/binary-input';
-import { Omit } from '../../../utils/typescript';
-import { toHex } from '../../../utils/buffer';
+import { ImageInput } from '../../UI/binary-input';
+import { Omit } from '../../utils/typescript';
+import { toHex } from '../../utils/buffer';
 
 interface ProjectFormCreateValues extends Omit<Project, 'sites'> {}
 
