@@ -68,13 +68,6 @@ export class SheetModel extends Model<Sheet>
   urlForXYZ(x: number, y: number, z: number) {
     const key = [z, y, x].join('/');
     const image = this.images && this.images.get(key);
-    console.log(
-      'urlForXYZ',
-      z,
-      y,
-      z,
-      image && image.value && image.value.$hash
-    );
     return image && image.value
       ? `/cdn/${image.value.$hash}`
       : TRANSPARENT_PIXEL;
