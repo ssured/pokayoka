@@ -334,13 +334,6 @@ export const App: React.FunctionComponent<{}> = () => {
                     label="Projecten"
                   />
                   <MenuItemButton
-                    icon={Icons.Projects}
-                    actionFn={() => {
-                      navigate('/spo');
-                    }}
-                    label="SPO"
-                  />
-                  <MenuItemButton
                     icon={Icons.Book}
                     actionFn={() => {
                       alert('Verwerkingsinstructies');
