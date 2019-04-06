@@ -11,7 +11,7 @@ import path from 'path';
 import { generateId } from '../../src/utils/id';
 import { Tuple, subj, pred, objt, state } from '../../src/utils/spo';
 import { AbstractBatch } from 'abstract-leveldown';
-import { getMachineState, stateToMs } from './sync';
+import { getMachineState } from './sync';
 import { ham } from '../../src/utils/ham';
 import console = require('console');
 
@@ -81,7 +81,7 @@ async function updateFromTSP() {
         value: [objt];
       };
 
-      const batch = await merge([s, p, o], t);
+      const batch = await merge([s, p, o, t]);
 
       if (batch.length > 0) {
         console.log('will merge', s.join('.'), p, o);
@@ -105,7 +105,7 @@ async function updateFromTSP() {
   }
 }
 
-async function merge([s, p, o]: Tuple, t: state) {
+async function merge([s, p, o, t]: Tuple) {
   const batch: AbstractBatch[] = [];
   const curr = await current(s, p);
   const machineState = getMachineState();
@@ -116,12 +116,11 @@ async function merge([s, p, o]: Tuple, t: state) {
   } else {
     const [currentValue, currentState] = curr;
     const result = ham(machineState, t, currentState, o, currentValue);
-    console.log({ curr, t, result });
-
     doMerge = result.resolution === 'merge' && result.incoming;
   }
 
   if (doMerge) {
+    console.log(`doMerge ${JSON.stringify([s, p, o, t])}`);
     batch.push(
       {
         type: 'put',
@@ -133,24 +132,24 @@ async function merge([s, p, o]: Tuple, t: state) {
         key: ['log', machineState, s, p, t],
         value: [o],
       },
-      { type: 'put', key: ['spo', s, p, o], value: true },
-      { type: 'put', key: ['pso', p, s, o], value: true },
-      { type: 'put', key: ['ops', o, p, s], value: true },
-      { type: 'put', key: ['sop', s, o, p], value: true },
-      { type: 'put', key: ['osp', o, s, p], value: true },
-      { type: 'put', key: ['pos', p, o, s], value: true }
+      { type: 'put', key: ['spo', s, p, o, t], value: true },
+      { type: 'put', key: ['pso', p, s, o, t], value: true },
+      { type: 'put', key: ['ops', o, p, s, t], value: true },
+      { type: 'put', key: ['sop', s, o, p, t], value: true },
+      { type: 'put', key: ['osp', o, s, p, t], value: true },
+      { type: 'put', key: ['pos', p, o, s, t], value: true }
     );
 
     if (curr) {
       // remove old items
-      const [o] = curr;
+      const [o, t] = curr;
       batch.push(
-        { type: 'del', key: ['spo', s, p, o] },
-        { type: 'del', key: ['pso', p, s, o] },
-        { type: 'del', key: ['ops', o, p, s] },
-        { type: 'del', key: ['sop', s, o, p] },
-        { type: 'del', key: ['osp', o, s, p] },
-        { type: 'del', key: ['pos', p, o, s] }
+        { type: 'del', key: ['spo', s, p, o, t] },
+        { type: 'del', key: ['pso', p, s, o, t] },
+        { type: 'del', key: ['ops', o, p, s, t] },
+        { type: 'del', key: ['sop', s, o, p, t] },
+        { type: 'del', key: ['osp', o, s, p, t] },
+        { type: 'del', key: ['pos', p, o, s, t] }
       );
     }
   }
@@ -158,7 +157,7 @@ async function merge([s, p, o]: Tuple, t: state) {
   return batch;
 }
 
-export async function persist([s, p, o]: Tuple, t: state) {
+export async function persist([s, p, o, t]: Tuple) {
   const machineState = getMachineState();
 
   const batch: AbstractBatch[] = [

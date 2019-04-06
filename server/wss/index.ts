@@ -10,13 +10,23 @@ import { level, levelId, persist } from './level';
 import { getMachineState } from './sync';
 import console = require('console');
 
-export type IdentificationMessage = {
+type IdentificationMessage = {
   type: 'identification';
   databaseId: string;
   databaseState: string;
 };
 
-type IncomingMessage = StampedGetMessage | StampedPutMessage;
+// request to push all tuples since a known state
+// in chronological order
+type TuplesSinceState = {
+  type: 'tuplessince';
+  state: string;
+};
+
+export type IncomingMessage =
+  | StampedGetMessage
+  | StampedPutMessage
+  | TuplesSinceState;
 export type OutgoingMessage =
   | StampedGetMessage
   | StampedPutMessage
@@ -46,28 +56,30 @@ export async function registerWssServer(server: Server) {
         const msg = JSON.parse(message.toString()) as IncomingMessage;
         // console.log(`WS ${msg.type}: ${message}`);
 
+        const machineState = getMachineState();
+
         switch (msg.type) {
           case 'get':
             {
-              const { localState, subj, pred } = msg;
-              const machineState = getMachineState();
+              const { subj, pred } = msg;
 
               // we are requesting server data
               if (subj[0] === 'user' && subj[1]) {
                 const user = subj[1];
 
-                for (const tuple of spoInObject(['user', user], {
-                  name: user,
-                  projects: {
-                    bk0wb0a7sz: ['bk0wb0a7sz'],
-                    bg4g1l87dr: ['bg4g1l87dr'],
-                    c5ucr60kzn: ['c5ucr60kzn'],
+                for (const tuple of spoInObject(
+                  ['user', user],
+                  {
+                    name: user,
+                    projects: {
+                      bk0wb0a7sz: ['bk0wb0a7sz'],
+                    },
                   },
-                })) {
+                  machineState
+                )) {
                   send(ws, {
                     type: 'put',
                     tuple,
-                    state: machineState,
                     localState: machineState,
                   });
                 }
@@ -94,8 +106,7 @@ export async function registerWssServer(server: Server) {
 
                 send(ws, {
                   type: 'put',
-                  tuple: [s, p, o],
-                  state: t,
+                  tuple: [s, p, o, t],
                   localState: machineState,
                 });
               }
@@ -103,10 +114,30 @@ export async function registerWssServer(server: Server) {
             break;
           case 'put':
             {
-              console.log('put', msg);
-              const { tuple, state } = msg;
-              if (state) {
-                persist(tuple, state);
+              persist(msg.tuple);
+            }
+            break;
+
+          case 'tuplessince':
+            {
+              const since = msg.state;
+              for await (const data of level.createReadStream({
+                gte: ['log', since],
+                lt: ['log', undefined],
+              })) {
+                const {
+                  key: [_0, machineState, s, p, t],
+                  value: [o],
+                } = (data as unknown) as {
+                  key: ['log', string, subj, pred, string];
+                  value: [objt];
+                };
+
+                send(ws, {
+                  type: 'put',
+                  tuple: [s, p, o, t],
+                  localState: machineState,
+                });
               }
             }
             break;

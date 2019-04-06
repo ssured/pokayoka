@@ -1,16 +1,36 @@
 import { SPOHub, StampedGetMessage, StampedPutMessage } from './spo-hub';
 import ReconnectingWebSocket from 'reconnecting-websocket';
-import { OutgoingMessage, IdentificationMessage } from '../../server/wss';
+import { IncomingMessage, OutgoingMessage } from '../../server/wss';
 
 export class SPOWs {
   public databaseId: string | null = null;
   private disposer: () => void;
+  public connections = 0;
+
+  private send(msg: IncomingMessage) {
+    this.ws.send(JSON.stringify(msg));
+  }
 
   constructor(protected hub: SPOHub, protected ws: ReconnectingWebSocket) {
     this.disposer = hub.register(this, msg => {
       // @ts-ignore
       this[msg.type](msg);
     });
+
+    const lastKnowRemoteState = ''; // FIXME: implement a cache for this
+
+    ws.onopen = async () => {
+      // this is either a first connection or a reconnection after the network was out
+      this.connections += 1;
+      this.send({
+        type: 'tuplessince',
+        state: lastKnowRemoteState,
+      });
+    };
+
+    ws.onclose = () => {
+      this.connections -= 1;
+    };
 
     ws.onmessage = ev => {
       try {
@@ -31,13 +51,11 @@ export class SPOWs {
   }
 
   protected async get(msg: StampedGetMessage) {
-    this.ws.send(JSON.stringify(msg));
+    this.send(msg);
   }
 
   protected put(msg: StampedPutMessage) {
-    this.ws.send(
-      JSON.stringify({ ...msg, state: msg.state || msg.localState })
-    );
+    this.send(msg);
   }
 
   public destroy() {

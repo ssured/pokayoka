@@ -5,6 +5,7 @@ import { useAccount } from '../../contexts/spo-hub';
 import { useObserver, observer } from 'mobx-react-lite';
 import { ProjectTile } from '../../model/Project/ProjectTile';
 import { ProjectFormCreate } from '../../model/Project/ProjectFormCreate';
+import { toJS } from 'mobx';
 
 export const List: React.SFC<RouteComponentProps<{}>> = observer(({}) => {
   return useObserver(() => {
@@ -30,7 +31,12 @@ export const List: React.SFC<RouteComponentProps<{}>> = observer(({}) => {
                         project={[project, ['projects', key]]}
                       />
                     ),
-                    project => <div key={key}>Loading {project.name || ''}</div>
+                    project => (
+                      <div key={key}>
+                        Loading {project.name || ''}{' '}
+                        <pre>{JSON.stringify(toJS(project), null, 2)}</pre>
+                      </div>
+                    )
                   )
                 )}
               </Box>

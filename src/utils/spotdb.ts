@@ -27,25 +27,19 @@ type query = {
   filter?: (tuple: Tuple) => boolean;
 };
 
-function objectFromTuple(
-  [subj, pred, objt]: Tuple,
-  tupleState: state,
-  dbState: state
-) {
+function objectFromTuple([subj, pred, objt, state]: Tuple, dbState: state) {
   const enc = charwise.encode;
   return {
     hash: sha256(enc([subj, pred])),
-
-    t: tupleState,
     db: dbState,
 
     // hex indexes
-    spo: enc([subj, pred, objt]),
-    pos: enc([pred, objt, subj]),
-    pso: enc([pred, subj, objt]),
-    ops: enc([objt, pred, subj]),
-    osp: enc([objt, subj, pred]),
-    sop: enc([subj, objt, pred]),
+    spo: enc([subj, pred, objt, state]),
+    pos: enc([pred, objt, subj, state]),
+    pso: enc([pred, subj, objt, state]),
+    ops: enc([objt, pred, subj, state]),
+    osp: enc([objt, subj, pred, state]),
+    sop: enc([subj, objt, pred, state]),
   };
 }
 
@@ -107,21 +101,11 @@ export class SpotDB {
     (tuples: Tuple[]) => void
   >();
 
-  public async commit(tuplesOrTuplesWithState: (Tuple | [Tuple, state])[]) {
+  public async commit(tuples: Tuple[]) {
     const tx = (await this.db).transaction(this.objectStoreName, 'readwrite');
-    const tuples: Tuple[] = [];
 
-    for (const tupleOrTupleWithState of tuplesOrTuplesWithState) {
-      let tuple: Tuple;
-      let state: state;
-      if (tupleOrTupleWithState.length === 2) {
-        [tuple, state] = tupleOrTupleWithState;
-      } else {
-        tuple = tupleOrTupleWithState;
-        state = this.dbState();
-      }
-      tuples.push(tuple);
-      const object = objectFromTuple(tuple, state, this.dbState());
+    for (const tuple of tuples) {
+      const object = objectFromTuple(tuple, this.dbState());
       tx.store.put(object);
     }
 
@@ -193,15 +177,20 @@ export class SpotDB {
         case 'spo':
           return (i: string[]) => i as Tuple;
         case 'pos':
-          return (pos: [pred, objt, subj]) => [pos[2], pos[0], pos[1]] as Tuple;
+          return (pos: [pred, objt, subj, state]) =>
+            [pos[2], pos[0], pos[1], pos[3]] as Tuple;
         case 'pso':
-          return (pso: [pred, subj, objt]) => [pso[1], pso[0], pso[2]] as Tuple;
+          return (pso: [pred, subj, objt, state]) =>
+            [pso[1], pso[0], pso[2], pso[3]] as Tuple;
         case 'ops':
-          return (ops: [objt, pred, subj]) => [ops[2], ops[1], ops[0]] as Tuple;
+          return (ops: [objt, pred, subj, state]) =>
+            [ops[2], ops[1], ops[0], ops[3]] as Tuple;
         case 'osp':
-          return (osp: [objt, subj, pred]) => [osp[1], osp[2], osp[0]] as Tuple;
+          return (osp: [objt, subj, pred, state]) =>
+            [osp[1], osp[2], osp[0], osp[3]] as Tuple;
         case 'sop':
-          return (sop: [subj, objt, pred]) => [sop[0], sop[2], sop[1]] as Tuple;
+          return (sop: [subj, objt, pred, state]) =>
+            [sop[0], sop[2], sop[1], sop[3]] as Tuple;
       }
     })()!;
 

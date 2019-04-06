@@ -23,7 +23,6 @@ export class SPOStorage {
       ])) {
         return this.hub.put({ tuple: result.tuples[0] }, this);
       }
-      return this.hub.put({ tuple: [subj, pred, null] }, this);
     }
 
     for await (const result of this.db.query(v => [
@@ -38,7 +37,7 @@ export class SPOStorage {
   }
 
   protected put(msg: StampedPutMessage) {
-    this.db.commit(msg.state ? [[msg.tuple, msg.state]] : [msg.tuple]);
+    this.db.commit([msg.tuple]);
   }
 
   public destroy() {

@@ -11,12 +11,37 @@ import {
   spoInObject,
   pred,
   objt,
+  getSubj,
 } from './spo';
 import { observable, onBecomeObserved, runInAction } from 'mobx';
 import { recursiveDeepObserve, IDisposer } from './mobx-deep-observe';
 import { SPOHub } from './spo-hub';
+import { ham } from './ham';
 
-function set(root: SPOShape, subj: subj, pred: pred, objt: objt) {
+const shapeStates = new WeakMap<SPOShape, { [key: string]: string }>();
+
+function keyFromSubjPred(subj: subj, pred: pred) {
+  return JSON.stringify([subj, pred]);
+}
+
+function updateState(root: SPOShape, tuple: Tuple) {
+  const [subj, pred, objt, state] = tuple;
+
+  if (!shapeStates.has(root)) {
+    shapeStates.set(root, {});
+  }
+
+  shapeStates.get(root)![keyFromSubjPred(subj, pred)] = state;
+}
+
+function getState(root: SPOShape, subj: subj, pred: pred) {
+  const states = shapeStates.get(root);
+  return (states && states[keyFromSubjPred(subj, pred)]) || '';
+}
+
+function set(root: SPOShape, tuple: Tuple) {
+  updateState(root, tuple);
+  const [subj, pred, objt, state] = tuple;
   return runInAction(() => nonSafeSet(root, subj, pred, objt));
 }
 
@@ -40,25 +65,51 @@ export function createObservable(
 
   const disposers: { [key: string]: IDisposer } = {};
 
-  function applyTuple([subj, pred, objt]: Tuple) {
+  function applyTuple(tuple: Tuple) {
+    const [subj, pred, objt, state] = tuple;
     if (!(subj[0] in root)) return;
     // console.log('applyTyple', isUpdating, subj, pred, objt);
     try {
       isUpdating += 1;
 
-      if (get(root, subj, pred) === objt) return;
-      set(root, subj, pred, objt);
+      let currentValue = get(root, subj, pred);
+      if (isSPOShape(currentValue)) {
+        currentValue = getSubj(currentValue);
+        if (currentValue === undefined) {
+          throw new Error('subj not found for value');
+        }
+      }
 
-      if (isLink(objt)) {
-        const key = JSON.stringify([subj, pred]);
-        // console.log('applyTuple', key);
-        if (disposers[key]) disposers[key]();
-        disposers[key] = onBecomeObserved(get(root, subj), pred, () => {
-          // console.log('onBecomeobserved');
-          loadObject(objt);
-          disposers[key]();
-          delete disposers[key];
-        });
+      let doMerge = false;
+      if (currentValue === undefined) {
+        doMerge = true;
+      } else {
+        const machineState = hub.getCurrentState();
+        const currentState = getState(root, subj, pred);
+        const result = ham(
+          machineState,
+          state,
+          currentState,
+          objt,
+          currentValue
+        );
+        doMerge = result.resolution === 'merge' && result.incoming;
+      }
+
+      if (doMerge) {
+        const key = keyFromSubjPred(subj, pred);
+        set(root, tuple);
+
+        if (isLink(objt)) {
+          // console.log('applyTuple', key);
+          if (disposers[key]) disposers[key]();
+          disposers[key] = onBecomeObserved(get(root, subj), pred, () => {
+            // console.log('onBecomeobserved');
+            loadObject(objt);
+            disposers[key]();
+            delete disposers[key];
+          });
+        }
       }
     } finally {
       isUpdating -= 1;
@@ -93,17 +144,18 @@ export function createObservable(
   recursiveDeepObserve(root, (change, subj) => {
     if (isUpdating > 0) return; // do not track own changes
     const pred = change.name;
+    const state = hub.getCurrentState();
 
     switch (change.type) {
       case 'remove':
-        commit([subj, pred, null]);
+        commit([subj, pred, null, state]);
         break;
       default:
         const objt = change.newValue as unknown;
         if (isObjt(objt)) {
-          commit([subj, pred, objt]);
+          commit([subj, pred, objt, state]);
         } else if (isSPOShape(objt)) {
-          for (const tuple of spoInObject(subj.concat(pred), objt)) {
+          for (const tuple of spoInObject(subj.concat(pred), objt, state)) {
             commit(tuple);
             applyTuple(tuple); // ? not needed?
           }

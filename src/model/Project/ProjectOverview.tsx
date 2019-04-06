@@ -5,6 +5,7 @@ import { Box, Heading } from 'grommet';
 import { ProjectModel } from './model';
 import { SiteTile } from '../Site/SiteTile';
 import { subj } from '../../utils/spo';
+import { toJS } from 'mobx';
 
 export const ProjectOverview: React.FunctionComponent<{
   project: [ProjectModel, subj];
@@ -26,7 +27,7 @@ export const ProjectOverview: React.FunctionComponent<{
             site => (
               <SiteTile key={key} site={[site, [...subj, 'sites', key]]} />
             ),
-            site => <div>Loading {site.name || ''}</div>
+            site => <div key={key}>Loading {site.name || ''}</div>
           )
         )}
       </Box>

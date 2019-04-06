@@ -4,8 +4,8 @@ export type primitive = boolean | string | number | null | undefined;
 export type subj = string[];
 export type pred = string;
 export type objt = primitive | subj;
-export type Tuple = [subj, pred, objt];
 export type state = string;
+export type Tuple = [subj, pred, objt, state];
 export type SPOShape = { [K in string]: objt | SPOShape };
 
 const objToSubj = new WeakMap<SPOShape, subj>();
@@ -95,7 +95,11 @@ export function set(
   }
 }
 
-export function* spoInObject(subj: subj, obj: SPOShape): Iterable<Tuple> {
+export function* spoInObject(
+  subj: subj,
+  obj: SPOShape,
+  state: state
+): Iterable<Tuple> {
   if (objToSubj.has(obj)) {
     throw new Error('this did not occur before, check implementation below');
     // console.log("frompaths", subj, obj, paths.get(obj));
@@ -110,7 +114,7 @@ export function* spoInObject(subj: subj, obj: SPOShape): Iterable<Tuple> {
     objToSubj.set(obj, subj);
     for (const [key, value] of Object.entries(obj)) {
       if (isObjt(value)) {
-        yield [subj, key, value];
+        yield [subj, key, value, state];
       } else if (isObject(value)) {
         if (Array.isArray(value)) {
           throw new Error(
@@ -118,9 +122,9 @@ export function* spoInObject(subj: subj, obj: SPOShape): Iterable<Tuple> {
           );
         }
         if (objToSubj.has(value)) {
-          yield [subj, key, objToSubj.get(value)!];
+          yield [subj, key, objToSubj.get(value)!, state];
         } else {
-          yield* spoInObject(subj.concat(key), value);
+          yield* spoInObject(subj.concat(key), value, state);
           // yield [subj, key, subj.concat(key)];
         }
       }

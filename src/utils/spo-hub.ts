@@ -15,7 +15,6 @@ export interface StampedGetMessage extends GetMessage {
 
 export interface PutMessage {
   tuple: Tuple;
-  state?: state;
 }
 export interface StampedPutMessage extends PutMessage {
   type: 'put';
@@ -33,6 +32,10 @@ function whenMainThreadAvailable(effect: () => void) {
 export class SPOHub {
   protected listeners: Set<Listener> = new Set();
   protected sources: WeakMap<Listener, any> = new WeakMap();
+
+  public getCurrentState() {
+    return getLocalState();
+  }
 
   public register(source: any, listener: Listener) {
     this.listeners.add(listener);
