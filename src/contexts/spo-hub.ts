@@ -7,7 +7,7 @@ import { SPOWs } from '../utils/spo-ws';
 import { WrapAsync } from '../model/base';
 import { subj, SPOShape } from '../utils/spo';
 import { createObservable } from '../utils/spo-observable';
-import { AsyncUser } from '../model/User';
+import { AsyncUser, User } from '../model/User';
 import { useAuthentication } from './authentication';
 
 const spotDb = new SpotDB('pokayoka');
@@ -17,7 +17,13 @@ const storage = new SPOStorage(hub, spotDb);
 const ws = new ReconnectingWebSocket(`ws://localhost:3000/spows`);
 const server = new SPOWs(hub, ws);
 
-const SPOContext = createContext(createObservable(hub));
+const SPOContext = createContext(
+  createObservable<{
+    user: {
+      [key: string]: User;
+    };
+  }>(hub)
+);
 
 export const useModel = <T extends SPOShape, U>(
   asyncFactory: (obj: SPOShape) => WrapAsync<T, U>,

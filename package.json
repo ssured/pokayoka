@@ -72,22 +72,6 @@
     "worker-loader": "^2.0.0",
     "ws": "^6.2.1"
   },
-  "scripts": {
-    "type-check": "tsc --noEmit",
-    "type-check:watch": "npm run type-check -- --watch",
-    "build": "npm run build:types && npm run build:js",
-    "build:types": "tsc --emitDeclarationOnly",
-    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
-    "bundle": "TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack",
-    "bundle:dev": "TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack --mode=development",
-    "couchdb": "mkdir -p \"$(pwd)/couchdb\" && mkdir -p \"$(pwd)/couchdb.d\" && touch \"$(pwd)/couchdb.d/local.ini\" && docker run -p 5984:5984 -v \"$(pwd)/couchdb:/opt/couchdb/data\" -v \"$(pwd)/couchdb.d:/opt/couchdb/etc/local.d\" -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=admin couchdb",
-    "server": "concurrently \"npm run couchdb\" \"ts-node-dev server.ts\"",
-    "gen": "yarn run hygen",
-    "test": "jest",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook",
-    "postinstall": "patch-package"
-  },
   "dependencies": {
     "@reach/router": "^1.2.1",
     "@types/codemirror": "^0.0.72",
@@ -192,5 +176,21 @@
     "validator": "^10.11.0",
     "writable-async-iterable-stream": "^5.1.0",
     "xstate": "^4.3.0"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "npm run type-check -- --watch",
+    "build": "npm run build:types && npm run build:js",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
+    "bundle": "TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack",
+    "bundle:dev": "TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack --mode=development",
+    "couchdb": "mkdir -p \"$(pwd)/couchdb\" && mkdir -p \"$(pwd)/couchdb.d\" && touch \"$(pwd)/couchdb.d/local.ini\" && docker run -p 5984:5984 -v \"$(pwd)/couchdb:/opt/couchdb/data\" -v \"$(pwd)/couchdb.d:/opt/couchdb/etc/local.d\" -e COUCHDB_USER=admin -e COUCHDB_PASSWORD=admin couchdb",
+    "server": "concurrently \"npm run couchdb\" \"ts-node-dev server.ts\"",
+    "gen": "yarn run hygen",
+    "test": "jest",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook",
+    "postinstall": "patch-package"
   }
 }

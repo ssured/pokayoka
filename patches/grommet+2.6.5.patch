@@ -1,3 +1,25 @@
+diff --git a/node_modules/grommet/components/Accordion/index.d.ts b/node_modules/grommet/components/Accordion/index.d.ts
+index 3bdf265..cb4c434 100644
+--- a/node_modules/grommet/components/Accordion/index.d.ts
++++ b/node_modules/grommet/components/Accordion/index.d.ts
+@@ -1,6 +1,7 @@
+ import * as React from "react";
++import { BoxProps } from "grommet/components/Box";
+ 
+-export interface AccordionProps {
++export interface AccordionProps extends BoxProps {
+   a11yTitle?: string;
+   alignSelf?: "start" | "center" | "end" | "stretch";
+   gridArea?: string;
+@@ -8,7 +9,7 @@ export interface AccordionProps {
+   activeIndex?: number | number[];
+   animate?: boolean;
+   children?: React.ReactNode;
+-  onActive?: ((...args: any[]) => any);
++  onActive?: (activePanelIndexes: number[]) => void;
+   multiple?: boolean;
+   messages?: {tabContents?: string};
+ }
 diff --git a/node_modules/grommet/components/Anchor/index.d.ts b/node_modules/grommet/components/Anchor/index.d.ts
 index 8b55b87..841e93d 100644
 --- a/node_modules/grommet/components/Anchor/index.d.ts
@@ -24,3 +46,25 @@ index 70508ba..2651134 100644
    plain?: boolean;
    primary?: boolean;
    reverse?: boolean;
+diff --git a/node_modules/grommet/components/Form/index.d.ts b/node_modules/grommet/components/Form/index.d.ts
+index 784ab6a..ed8a0af 100644
+--- a/node_modules/grommet/components/Form/index.d.ts
++++ b/node_modules/grommet/components/Form/index.d.ts
+@@ -1,14 +1,15 @@
+ import * as React from "react";
++import { Omit } from "grommet/utils";
+ 
+ export interface FormProps {
+   errors?: {};
+   messages?: {invalid?: string,required?: string};
+   onChange?: ((...args: any[]) => any);
+-  onSubmit?: ((...args: any[]) => any);
++  onSubmit?: ((event: React.FormEvent<HTMLFormElement> & {value: object}) => any);
+   onReset?: ((event: React.SyntheticEvent) => any);
+   value?: {};
+ }
+ 
+-declare const Form: React.ComponentClass<FormProps & JSX.IntrinsicElements['form']>;
++declare const Form: React.ComponentClass<FormProps & Omit<JSX.IntrinsicElements['form'], 'onSubmit'>>;
+ 
+ export { Form };

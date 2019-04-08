@@ -53,10 +53,10 @@ function get<P>(
   return runInAction(() => nonSafeGet(root, subj, pred));
 }
 
-export function createObservable(
+export function createObservable<T extends SPOShape = SPOShape>(
   hub: SPOHub
 ): {
-  get: (subj: subj) => SPOShape;
+  get: (subj: subj) => T;
   destroy: () => void;
 } {
   let isUpdating = 0;

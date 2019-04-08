@@ -12,7 +12,7 @@ import { Task, AsyncTask } from '../Task';
 import { Building, AsyncBuilding } from '../Building/model';
 import { Site, AsyncSite } from '../Site/model';
 import { computed, action } from 'mobx';
-import { SPOShape } from '../../utils/spo';
+import { SPOShape, primitive } from '../../utils/spo';
 
 export const Project = t.intersection(
   [
@@ -40,6 +40,7 @@ export const Project = t.intersection(
 );
 
 export type Project = t.TypeOf<typeof Project>;
+
 const SerializedProject: t.Type<Serialized<Project>> = t.intersection([
   t.type({
     ...Project.types[0].props,

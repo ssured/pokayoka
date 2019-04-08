@@ -60,6 +60,15 @@ export type PartialObj<T> = T extends primitive | undefined
   ? Partial<{ [K in keyof T]: PartialObj<T[K]> }>
   : never;
 
+type DeepSPOMaybe<T extends SPOShape> = {
+  [K in KeysOfType<T, primitive>]: T[K] | undefined
+} &
+  {
+    [K in KeysOfType<T, SPOShape>]: T[K] extends SPOShape
+      ? DeepSPOMaybe<T[K]>
+      : never
+  };
+
 export type Resolver = (subj: subj) => PartialObj<SPOShape>;
 
 export class WrapAsync<T extends SPOShape, U> {

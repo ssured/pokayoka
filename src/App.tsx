@@ -22,6 +22,8 @@ import { Building } from './routes/Buildings/Building/index';
 import { BuildingStorey } from './routes/BuildingStoreys/BuildingStorey/index';
 import { Sheet } from './routes/Sheets/Sheet/index';
 import { Sync } from './routes/Sync/index';
+import { Tree } from './routes/Tree/index';
+import { Columns } from './routes/Columns/index';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -288,7 +290,7 @@ export const App: React.FunctionComponent<{}> = () => {
     navContext: { label: 'Home', path: '/' },
   });
 
-  const [isSidebarOpen, toggleSidebar] = useToggle(true);
+  const [isSidebarOpen, toggleSidebar] = useToggle(false);
   const UI = useUIContext();
 
   return (
@@ -304,9 +306,6 @@ export const App: React.FunctionComponent<{}> = () => {
           ) : (
             <StyledWrapper>
               <SidebarContext.Provider value={isSidebarOpen}>
-                <Header>
-                  <UI.NavContext />
-                </Header>
                 <Content>
                   <StyledRouter>
                     <Home path="/" />
@@ -317,6 +316,9 @@ export const App: React.FunctionComponent<{}> = () => {
                     <Building path="buildings/:buildingId/*" />
                     <BuildingStorey path="buildingStoreys/:buildingStoreyId/*" />
                     <Sheet path="sheets/:sheetId/*" />
+
+                    <Tree path="tree" />
+                    <Columns path="columns" />
 
                     <NotFound default />
                     {/* <User path=":userId">
@@ -351,7 +353,6 @@ export const App: React.FunctionComponent<{}> = () => {
                     <UI.ContextSubMenu />
                   </div>
                 </MainNav>
-                <StyledFooter />
               </SidebarContext.Provider>
             </StyledWrapper>
           )}
