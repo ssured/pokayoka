@@ -56,11 +56,10 @@ function get<P>(
 }
 
 export type UndefinedOrPartialSPO<T extends SPOShape> = {
-  [K in keyof T]: T[K] extends primitive
-    ? T[K] | undefined
-    : T[K] extends Many<infer U>
-    ? Dictionary<undefined | UndefinedOrPartialSPO<U>>
-    : T[K] extends SPOShape
+  [K in keyof T]?: T[K] extends primitive
+    ? T[K] // : T[K] extends Many<infer U>
+    : // ? undefined | Dictionary<undefined | UndefinedOrPartialSPO<U>>
+    T[K] extends SPOShape
     ? UndefinedOrPartialSPO<T[K]>
     : never
 };

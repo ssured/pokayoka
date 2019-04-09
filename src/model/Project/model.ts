@@ -19,6 +19,11 @@ export const Project = t.intersection(
   [
     t.type({
       /**
+       * Unique code of the project
+       */
+      code: t.string,
+
+      /**
        * Name of the project
        */
       name: t.string,
@@ -61,6 +66,11 @@ export class ProjectModel extends Model<Project>
   @computed
   get name() {
     return this.serialized.name;
+  }
+
+  @computed
+  get code() {
+    return this.serialized.code;
   }
 
   @computed

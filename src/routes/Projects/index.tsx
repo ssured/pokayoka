@@ -1,7 +1,8 @@
-import { Router, RouteComponentProps } from '@reach/router';
+import { Router, RouteComponentProps, navigate } from '@reach/router';
 import React, { useContext } from 'react';
 
 import { List } from './List';
+import { Create } from './Create';
 import { useNewUIContext } from '../../contexts/ui';
 import { ObservableMap } from 'mobx';
 import { WrapAsync } from '../../model/base';
@@ -31,6 +32,10 @@ export const Projects: React.FunctionComponent<
           <ProjectsContext.Provider value={user.projects}>
             <Router>
               <List path="/" />
+              <Create
+                path="/create"
+                onCreate={project => navigate(`/columns/${project.code}`)}
+              />
               <ProjectComponent path="/:projectId/*" />
             </Router>
           </ProjectsContext.Provider>

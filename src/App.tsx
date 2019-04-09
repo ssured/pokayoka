@@ -318,7 +318,7 @@ export const App: React.FunctionComponent<{}> = () => {
                     <Sheet path="sheets/:sheetId/*" />
 
                     <Tree path="tree" />
-                    <Columns path="columns" />
+                    <Columns path="columns/:projectCode" />
 
                     <NotFound default />
                     {/* <User path=":userId">

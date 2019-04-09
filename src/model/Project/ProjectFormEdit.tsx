@@ -1,24 +1,28 @@
 import React from 'react';
 
 import { Form, Heading, FormField, Box, Button } from 'grommet';
-import { Project, PartialProject } from './model';
+import { PartialProject } from './model';
 import { observer } from 'mobx-react-lite';
-import { runInAction } from 'mobx';
-import { updateSubject } from '../base';
 
 export const ProjectFormEdit: React.FunctionComponent<{
   project: PartialProject;
-}> = observer(({ project }) => {
+  onSubmit: (
+    event: React.FormEvent<HTMLFormElement> & {
+      value: {
+        code: string;
+        name: string;
+      };
+    }
+  ) => any;
+}> = observer(({ project, onSubmit }) => {
   return (
-    <Form
-      onSubmit={e => updateSubject(project, e.value as Project)}
-      value={project}
-    >
+    <Form onSubmit={onSubmit} value={project}>
       <Heading level="1" textAlign="center">
         Bewerk project
       </Heading>
 
       <Box direction="row" justify="center" gap="medium">
+        <FormField label="Projectcode" name="code" required />
         <FormField label="Projectnaam" name="name" required />
         {/* <FormField label="Plaats" name="city" required /> */}
       </Box>
