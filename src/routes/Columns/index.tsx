@@ -27,8 +27,12 @@ import { action } from 'mobx';
 import { observer, useObservable } from 'mobx-react-lite';
 import React, { useContext } from 'react';
 import { useQuery, SPOContext } from '../../contexts/spo-hub';
-import { PartialProject } from '../../model/Project/model';
+import { PartialProject, Project } from '../../model/Project/model';
 import { subj } from '../../utils/spo';
+import { Site } from '../../model/Site/model';
+import { Building } from '../../model/Building/model';
+import { BuildingStorey } from '../../model/BuildingStorey/model';
+import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
 
 export const Columns: React.FunctionComponent<
   RouteComponentProps<{ projectCode: string }> & {}
@@ -62,7 +66,7 @@ const Snagging: React.FunctionComponent<{ project: PartialProject }> = observer(
           { name: 'title', start: [0, 0], end: [0, 0] },
           { name: 'filters', start: [0, 1], end: [0, 1] },
           { name: 'buttons', start: [0, 2], end: [0, 2] },
-          { name: 'main', start: [1, 0], end: [1, 0] },
+          { name: 'main', start: [1, 0], end: [1, 2] },
         ]}
       >
         {/* <Box gridArea="title" direction="column">
@@ -211,9 +215,53 @@ const Snagging: React.FunctionComponent<{ project: PartialProject }> = observer(
         </Box>
 
         <Box gridArea="main" direction="column" justify="center">
-          Main {project.name} {project.code}
+          <Heading level="1">
+            {project.code} {project.name}
+          </Heading>
+          {Object.entries(project.sites || {}).map(
+            ([key, site]) =>
+              site && (
+                <div key={key}>
+                  <Heading level="2">{site.name}</Heading>
+                  {Object.entries(site.buildings || {}).map(
+                    ([key, building]) =>
+                      building && (
+                        <div key={key}>
+                          <Heading level="3">{building.name}</Heading>
+                          {Object.entries(building.buildingStoreys || {}).map(
+                            ([key, buildingStorey]) =>
+                              buildingStorey && (
+                                <div key={key}>
+                                  <Heading level="3">
+                                    {buildingStorey.name}
+                                  </Heading>
+                                </div>
+                              )
+                          )}
+                        </div>
+                      )
+                  )}
+                </div>
+              )
+          )}
         </Box>
       </Grid>
     );
   }
 );
+
+function* walkHierarchy(
+  obj: UndefinedOrPartialSPO<Project | Site | Building | BuildingStorey>,
+  level: number = 0
+): IterableIterator<{
+  obj: UndefinedOrPartialSPO<Project | Site | Building | BuildingStorey>;
+  level: number;
+}> {
+  yield { obj, level };
+  const { sites, buildings, buildingStoreys } = obj as any;
+  for (const type of [sites, buildings, buildingStoreys]) {
+    for (const child of type || []) {
+      yield* walkHierarchy(child, level + 1);
+    }
+  }
+}
