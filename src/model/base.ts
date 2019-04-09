@@ -76,8 +76,18 @@ export function updateSubject(obj: SPOShape, values: SPOShape) {
   runInAction(() => Object.assign(obj, values));
 }
 
-export function setSubject(obj: SPOShape, pred: pred, objt: SPOShape['prop']) {
-  runInAction(() => (obj[pred] = objt));
+export function setSubject<
+  T extends SPOShape,
+  P extends keyof T,
+  O extends T[P]
+>(obj: T, pred: P, objt: O) {
+  runInAction(() => {
+    if (objt == null) {
+      delete obj[pred];
+    } else {
+      obj[pred] = objt;
+    }
+  });
 }
 
 export class WrapAsync<T extends SPOShape, U> {

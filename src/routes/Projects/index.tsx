@@ -32,10 +32,7 @@ export const Projects: React.FunctionComponent<
           <ProjectsContext.Provider value={user.projects}>
             <Router>
               <List path="/" />
-              <Create
-                path="/create"
-                onCreate={project => navigate(`/columns/${project.code}`)}
-              />
+              <Create path="/create" />
               <ProjectComponent path="/:projectId/*" />
             </Router>
           </ProjectsContext.Provider>

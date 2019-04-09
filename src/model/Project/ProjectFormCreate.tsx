@@ -1,105 +1,34 @@
 import React from 'react';
-import { Formik, FormikActions, FormikProps, Field, FieldProps } from 'formik';
-import { Form, FormField, Button, Heading, Box } from 'grommet';
-import { Project } from './model';
-import { ImageInput } from '../../UI/binary-input';
-import { Omit } from '../../utils/typescript';
-import { toHex } from '../../utils/buffer';
 
-interface ProjectFormCreateValues extends Omit<Project, 'sites'> {}
+import { Form, Heading, FormField, Box, Button } from 'grommet';
+
+export interface FormValue {
+  code: string;
+  name: string;
+  sitename: string;
+}
 
 export const ProjectFormCreate: React.FunctionComponent<{
-  onSubmit: (values: ProjectFormCreateValues) => Promise<void>;
-}> = ({ onSubmit }) => {
+  onCreate: (value: FormValue) => any;
+  initial?: Partial<FormValue>;
+}> = ({ onCreate, initial = {} }) => {
   return (
-    <Box>
-      <Heading level="2">Nieuw project</Heading>
-      <Formik
-        initialValues={{ name: '' }}
-        onSubmit={async (
-          values: ProjectFormCreateValues,
-          actions: FormikActions<ProjectFormCreateValues>
-        ) => {
-          try {
-            await onSubmit(values);
-            actions.resetForm();
-          } finally {
-            actions.setSubmitting(false);
-          }
-        }}
-        render={(formikBag: FormikProps<ProjectFormCreateValues>) => (
-          <Form
-            onSubmit={formikBag.submitForm}
-            onReset={() => formikBag.resetForm()}
-          >
-            <Field
-              name="name"
-              render={({
-                field,
-                form,
-              }: FieldProps<ProjectFormCreateValues>) => (
-                <FormField
-                  {...field}
-                  label="Naam"
-                  placeholder="Projectnaam"
-                  error={form.touched.name && form.errors.name}
-                />
-              )}
-            />
-            <Field
-              name="$image"
-              render={({
-                field,
-                form,
-              }: FieldProps<ProjectFormCreateValues>) => (
-                <FormField
-                  {...field}
-                  onChange={async blobOrNull => {
-                    if (blobOrNull) {
-                      form.setFieldValue(field.name, null);
-                      const blob = (blobOrNull as unknown) as Blob;
-                      const response = new Response(blob);
-                      const arrayBuffer = await response.clone().arrayBuffer();
+    <Form onSubmit={e => onCreate(e.value)} value={initial}>
+      <Heading level="1" textAlign="center">
+        Maak nieuw project
+      </Heading>
 
-                      const hash = toHex(
-                        await window.crypto.subtle.digest(
-                          'SHA-256',
-                          arrayBuffer
-                        )
-                      );
+      <Box direction="row" justify="center" gap="medium">
+        <FormField label="Projectcode" name="code" required />
+        <FormField label="Projectnaam" name="name" required />
+        <FormField label="Plaats" name="sitename" required />
+      </Box>
 
-                      const cdnCache = await window.caches.open('cdn');
-                      await cdnCache.put(`/cdn/${hash}`, response);
-
-                      form.setFieldValue(field.name, hash);
-                    } else {
-                      form.setFieldValue(field.name, null);
-                    }
-                  }}
-                  label="Afbeelding"
-                  component={ImageInput}
-                  pad
-                  error={form.touched.$image && form.errors.$image}
-                />
-              )}
-            />
-            <Box direction="row" justify="between" margin={{ top: 'medium' }}>
-              <Button label="Terug" />
-              <Button
-                type="reset"
-                label="Herstellen"
-                disabled={!formikBag.dirty}
-              />
-              <Button
-                type="submit"
-                label="Maak nieuw project"
-                primary
-                disabled={!formikBag.isValid || formikBag.isSubmitting}
-              />
-            </Box>
-          </Form>
-        )}
-      />
-    </Box>
+      <Box direction="row" justify="evenly" margin={{ top: 'medium' }}>
+        <Button label="Terug" />
+        <Box />
+        <Button type="submit" label="Volgende" primary />
+      </Box>
+    </Form>
   );
 };
