@@ -4,8 +4,9 @@ import { Form, Heading, FormField, Box, Button } from 'grommet';
 import { PartialBuilding, Building } from './model';
 import { observer } from 'mobx-react-lite';
 import { updateSubject } from '../base';
+import { ImageInput } from '../../UI/binary-input';
 
-export type FormValue = Pick<Building, 'name'>;
+export type FormValue = Pick<Building, 'name' | '$image'>;
 
 export const BuildingFormEdit: React.FunctionComponent<{
   heading?: ReactNode;
@@ -33,6 +34,7 @@ export const BuildingFormEdit: React.FunctionComponent<{
         {heading}
 
         <Box direction="row" justify="center" gap="medium">
+          <FormField label="Afbeelding" name="$image" component={ImageInput} />
           <FormField label="Gebouw naam" name="name" required />
         </Box>
 

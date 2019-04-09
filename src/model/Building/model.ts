@@ -21,6 +21,7 @@ export const Building = t.intersection(
       name: t.string,
     }),
     t.partial({
+      $image: t.string,
       description: t.string,
       tasks: t.record(t.string, Task),
       buildingStoreys: t.record(t.string, BuildingStorey),

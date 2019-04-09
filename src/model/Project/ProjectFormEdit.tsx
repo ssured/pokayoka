@@ -4,8 +4,9 @@ import { Form, Heading, FormField, Box, Button } from 'grommet';
 import { PartialProject, Project } from './model';
 import { observer } from 'mobx-react-lite';
 import { updateSubject } from '../base';
+import { ImageInput } from '../../UI/binary-input';
 
-export type FormValue = Pick<Project, 'code' | 'name'>;
+export type FormValue = Pick<Project, 'code' | 'name' | '$image'>;
 
 export const ProjectFormEdit: React.FunctionComponent<{
   heading?: ReactNode;
@@ -33,6 +34,7 @@ export const ProjectFormEdit: React.FunctionComponent<{
         {heading}
 
         <Box direction="row" justify="center" gap="medium">
+          <FormField label="Afbeelding" name="$image" component={ImageInput} />
           <FormField label="Projectcode" name="code" required />
           <FormField label="Projectnaam" name="name" required />
         </Box>

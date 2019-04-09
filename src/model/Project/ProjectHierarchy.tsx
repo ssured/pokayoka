@@ -1,5 +1,5 @@
 import React from 'react';
-import { Accordion, AccordionPanel, Heading } from 'grommet';
+import { Accordion, AccordionPanel, Heading, Box, Image } from 'grommet';
 import { ProjectFormEdit } from './ProjectFormEdit';
 import { PartialProject } from './model';
 import { SiteFormEdit } from '../Site/SiteFormEdit';
@@ -29,9 +29,16 @@ export const ProjectHierarchy: React.FunctionComponent<{
     >
       <AccordionPanel
         header={
-          <Heading level="1">
-            {project.code} {project.name}
-          </Heading>
+          <Box direction="row" align="center" gap="medium">
+            {project.$image && (
+              <Box height="small" width="small">
+                <Image src={`/cdn/${project.$image}`} fit="cover" />
+              </Box>
+            )}
+            <Heading level="1">
+              {project.code} {project.name}
+            </Heading>
+          </Box>
         }
       >
         <ProjectFormEdit
@@ -63,7 +70,17 @@ export const ProjectHierarchy: React.FunctionComponent<{
                     <AccordionPanel
                       key={key}
                       header={
-                        <Heading level="3">&nbsp;&nbsp;{building.name}</Heading>
+                        <Box direction="row" align="center" gap="medium">
+                          {building.$image && (
+                            <Box height="xsmall" width="xsmall">
+                              <Image
+                                src={`/cdn/${building.$image}`}
+                                fit="cover"
+                              />
+                            </Box>
+                          )}
+                          <Heading level="3">{building.name}</Heading>
+                        </Box>
                       }
                     >
                       <BuildingFormEdit

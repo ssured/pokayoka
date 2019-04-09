@@ -7,9 +7,10 @@ import { generateId } from '../utils/id';
 import { toHex } from '../utils/buffer';
 import { DocumentPdf } from 'grommet-icons';
 import { Tile } from '../model/Sheet/Tile';
+import { Image as ImageIcon } from 'grommet-icons';
 
 export const ImageInput: FunctionComponent<{
-  onChange: (image: File | Blob | null) => void;
+  onChange: (result: { value: string | null }) => void;
   value: string | null;
 }> = ({ onChange, value: hash }) => {
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -20,7 +21,21 @@ export const ImageInput: FunctionComponent<{
       maxHeight: CAMERA_MAX_SIZE,
     });
 
-    canvas.toBlob(onChange, 'image/jpeg', CAMERA_JPEG_QUALITY);
+    canvas.toBlob(
+      async blob => {
+        const response = new Response(blob);
+        const arrayBuffer = await response.clone().arrayBuffer();
+        const hash = toHex(
+          await window.crypto.subtle.digest('SHA-256', arrayBuffer)
+        );
+        const cdnCache = await window.caches.open('cdn');
+        await cdnCache.put(`/cdn/${hash}`, response);
+
+        onChange({ value: hash });
+      },
+      'image/jpeg',
+      CAMERA_JPEG_QUALITY
+    );
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -30,21 +45,14 @@ export const ImageInput: FunctionComponent<{
   });
   return (
     <Box {...getRootProps()} border={isDragActive}>
-      {hash && (
-        <Box height="small" width="small" border>
+      {hash ? (
+        <Box height="xsmall" width="xsmall" border>
           <Image src={`/cdn/${hash}`} fit="cover" />
         </Box>
+      ) : (
+        <ImageIcon size="xlarge" />
       )}
       <input {...getInputProps()} />
-      {isDragActive ? (
-        <Text>Laat los om te updaten</Text>
-      ) : hash == null ? (
-        <Text>
-          Klik hier of sleep <code>.jpg</code>/<code>.png</code> op dit vlak
-        </Text>
-      ) : (
-        undefined
-      )}
     </Box>
   );
 };
