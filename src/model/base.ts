@@ -4,9 +4,9 @@ import { primitive, SPOShape, subj } from '../utils/spo';
 import { nothing } from '../utils/maybe';
 import { ReactElement } from 'react';
 
-type Dictionary<T> = Record<string, T>;
-type Many<T extends SPOShape> = Dictionary<T>;
-type One<T extends SPOShape> = T;
+export type Dictionary<T> = Record<string, T>;
+export type Many<T extends SPOShape> = Dictionary<T>;
+export type One<T extends SPOShape> = T;
 
 type InnerSerialized<T> = T extends primitive | undefined
   ? T

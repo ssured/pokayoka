@@ -12,11 +12,13 @@ import {
   pred,
   objt,
   getSubj,
+  primitive,
 } from './spo';
 import { observable, onBecomeObserved, runInAction } from 'mobx';
 import { recursiveDeepObserve, IDisposer } from './mobx-deep-observe';
 import { SPOHub } from './spo-hub';
 import { ham } from './ham';
+import { Many, Dictionary } from '../model/base';
 
 const shapeStates = new WeakMap<SPOShape, { [key: string]: string }>();
 
@@ -53,10 +55,21 @@ function get<P>(
   return runInAction(() => nonSafeGet(root, subj, pred));
 }
 
+export type UndefinedOrPartialSPO<T extends SPOShape> = {
+  [K in keyof T]: T[K] extends primitive
+    ? T[K] | undefined
+    : T[K] extends Many<infer U>
+    ? Dictionary<undefined | UndefinedOrPartialSPO<U>>
+    : T[K] extends SPOShape
+    ? UndefinedOrPartialSPO<T[K]>
+    : never
+};
+
 export function createObservable<T extends SPOShape = SPOShape>(
   hub: SPOHub
 ): {
-  get: (subj: subj) => T;
+  root: UndefinedOrPartialSPO<T>;
+  get: (subj: subj) => any;
   destroy: () => void;
 } {
   let isUpdating = 0;
@@ -164,6 +177,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
   });
 
   return {
+    root: root as any,
     get: loadObject,
     destroy: () => {
       subscription();
