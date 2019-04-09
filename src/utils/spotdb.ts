@@ -114,7 +114,22 @@ export class SpotDB {
     // expose all written tuples to live listeners
     this.committedTuples.fire(tuples);
 
+    // console.log('committed', tuples);
+
     return;
+  }
+
+  public async get(subj: subj, pred: pred): Promise<Tuple | undefined> {
+    try {
+      const record = await (await this.db).get(
+        'hexastore',
+        sha256(charwise.encode([subj, pred]))
+      );
+      const tuple = record && (charwise.decode(record.spo) as Tuple);
+      return tuple;
+    } catch (e) {
+      console.error('error spotdb get', subj, pred, e);
+    }
   }
 
   private async *singleQuery<

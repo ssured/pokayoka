@@ -6,10 +6,13 @@ import { ProjectModel } from './model';
 import { SiteTile } from '../Site/SiteTile';
 import { subj } from '../../utils/spo';
 import { toJS } from 'mobx';
+import { ProjectFormEdit } from './ProjectFormEdit';
+import { useRoot } from '../../contexts/spo-hub';
 
 export const ProjectOverview: React.FunctionComponent<{
   project: [ProjectModel, subj];
 }> = observer(({ project: [project, subj] }) => {
+  const partialProject = useRoot().projects[subj[subj.length - 1]];
   return (
     <>
       <Heading level="3">
@@ -31,6 +34,7 @@ export const ProjectOverview: React.FunctionComponent<{
           )
         )}
       </Box>
+      {partialProject && <ProjectFormEdit project={partialProject} />}
     </>
   );
 });

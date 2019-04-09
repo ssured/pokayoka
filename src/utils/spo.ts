@@ -6,7 +6,7 @@ export type pred = string;
 export type objt = primitive | subj;
 export type state = string;
 export type Tuple = [subj, pred, objt, state];
-export type SPOShape = { [K in string]: objt | SPOShape };
+export type SPOShape = { [K in string]: primitive | SPOShape };
 
 const objToSubj = new WeakMap<SPOShape, subj>();
 

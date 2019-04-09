@@ -13,6 +13,7 @@ import { Building, AsyncBuilding } from '../Building/model';
 import { Site, AsyncSite } from '../Site/model';
 import { computed, action } from 'mobx';
 import { SPOShape, primitive } from '../../utils/spo';
+import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
 
 export const Project = t.intersection(
   [
@@ -40,6 +41,7 @@ export const Project = t.intersection(
 );
 
 export type Project = t.TypeOf<typeof Project>;
+export type PartialProject = UndefinedOrPartialSPO<Project>;
 
 const SerializedProject: t.Type<Serialized<Project>> = t.intersection([
   t.type({

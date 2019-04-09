@@ -170,7 +170,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
         } else if (isSPOShape(objt)) {
           for (const tuple of spoInObject(subj.concat(pred), objt, state)) {
             commit(tuple);
-            applyTuple(tuple); // ? not needed?
+            // applyTuple(tuple); // ? not needed?
           }
         }
     }

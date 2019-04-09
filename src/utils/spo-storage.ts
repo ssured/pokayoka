@@ -1,5 +1,6 @@
 import { SPOHub, StampedGetMessage, StampedPutMessage } from './spo-hub';
 import { SpotDB } from './spotdb';
+import { ham } from './ham';
 
 export class SPOStorage {
   private disposer: () => void;
@@ -36,8 +37,24 @@ export class SPOStorage {
     }
   }
 
-  protected put(msg: StampedPutMessage) {
-    this.db.commit([msg.tuple]);
+  protected async put(msg: StampedPutMessage) {
+    const [subj, pred, incomingValue, incomingState] = msg.tuple;
+    const [, , currentValue = undefined, currentState = ''] =
+      (await this.db.get(subj, pred)) || [];
+    const machineState = msg.localState;
+
+    const result = ham(
+      machineState,
+      incomingState,
+      currentState,
+      incomingValue,
+      currentValue
+    );
+
+    if (result.resolution === 'merge' && result.incoming) {
+      console.log('merge', msg);
+      this.db.commit([msg.tuple]);
+    }
   }
 
   public destroy() {

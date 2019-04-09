@@ -1,8 +1,9 @@
 import * as t from 'io-ts';
-import { computed, observable, ObservableMap } from 'mobx';
-import { primitive, SPOShape, subj } from '../utils/spo';
+import { computed, observable, ObservableMap, runInAction } from 'mobx';
+import { primitive, SPOShape, subj, objt, pred } from '../utils/spo';
 import { nothing } from '../utils/maybe';
 import { ReactElement } from 'react';
+import { object } from 'prop-types';
 
 export type Dictionary<T> = Record<string, T>;
 export type Many<T extends SPOShape> = Dictionary<T>;
@@ -70,6 +71,14 @@ type DeepSPOMaybe<T extends SPOShape> = {
   };
 
 export type Resolver = (subj: subj) => PartialObj<SPOShape>;
+
+export function updateSubject(obj: SPOShape, values: SPOShape) {
+  runInAction(() => Object.assign(obj, values));
+}
+
+export function setSubject(obj: SPOShape, pred: pred, objt: SPOShape['prop']) {
+  runInAction(() => (obj[pred] = objt));
+}
 
 export class WrapAsync<T extends SPOShape, U> {
   @computed

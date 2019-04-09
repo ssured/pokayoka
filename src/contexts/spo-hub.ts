@@ -25,6 +25,13 @@ const SPOContext = createContext(
   }>(hub)
 );
 
+export const useRoot = () => {
+  const auth = useAuthentication();
+  return useContext(SPOContext).root.user[
+    (auth.authentication.ok && auth.authentication.name) || 'anonymous'
+  ]!;
+};
+
 export const useModel = <T extends SPOShape, U>(
   asyncFactory: (obj: SPOShape) => WrapAsync<T, U>,
   id: string | subj
