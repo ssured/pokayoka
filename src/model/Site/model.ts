@@ -11,6 +11,7 @@ import {
 } from '../base';
 import { computed } from 'mobx';
 import { SPOShape } from '../../utils/spo';
+import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
 
 export const Site = t.intersection(
   [
@@ -25,7 +26,10 @@ export const Site = t.intersection(
   ],
   'site'
 );
+
 export type Site = t.TypeOf<typeof Site>;
+export type PartialSite = UndefinedOrPartialSPO<Site>;
+
 type SerializedSite = Serialized<Site>;
 const SerializedSite: t.Type<SerializedSite> = t.intersection([
   t.type({

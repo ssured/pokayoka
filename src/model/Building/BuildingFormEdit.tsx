@@ -1,40 +1,39 @@
 import React, { ReactNode } from 'react';
 
 import { Form, Heading, FormField, Box, Button } from 'grommet';
-import { PartialProject, Project } from './model';
+import { PartialBuilding, Building } from './model';
 import { observer } from 'mobx-react-lite';
 import { updateSubject } from '../base';
 
-export type FormValue = Pick<Project, 'code' | 'name'>;
+export type FormValue = Pick<Building, 'name'>;
 
-export const ProjectFormEdit: React.FunctionComponent<{
+export const BuildingFormEdit: React.FunctionComponent<{
   heading?: ReactNode;
-  project: PartialProject;
+  building: PartialBuilding;
   onSubmit?: (value: FormValue) => void;
   onCancel?: () => void;
   afterSubmit?: () => void;
 }> = observer(
   ({
-    project,
+    building,
     onCancel,
     afterSubmit,
     onSubmit = (value: FormValue) => {
-      updateSubject(project, value);
+      updateSubject(building, value);
       if (afterSubmit) afterSubmit();
     },
     heading = (
       <Heading level="1" textAlign="center">
-        Bewerk project
+        Bewerk gebouw
       </Heading>
     ),
   }) => {
     return (
-      <Form onSubmit={e => onSubmit(e.value)} value={project}>
+      <Form onSubmit={e => onSubmit(e.value)} value={building}>
         {heading}
 
         <Box direction="row" justify="center" gap="medium">
-          <FormField label="Projectcode" name="code" required />
-          <FormField label="Projectnaam" name="name" required />
+          <FormField label="Gebouw naam" name="name" required />
         </Box>
 
         <Box direction="row" justify="evenly" margin={{ top: 'medium' }}>

@@ -13,6 +13,7 @@ import { SPOShape } from '../../utils/spo';
 import { BuildingStorey, AsyncBuildingStorey } from '../BuildingStorey/model';
 import { Omit } from '../../utils/typescript';
 import { generateId } from '../../utils/id';
+import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
 
 export const Building = t.intersection(
   [
@@ -27,7 +28,10 @@ export const Building = t.intersection(
   ],
   'building'
 );
+
 export type Building = t.TypeOf<typeof Building>;
+export type PartialBuilding = UndefinedOrPartialSPO<Building>;
+
 type SerializedBuilding = Serialized<Building>;
 const SerializedBuilding: t.Type<SerializedBuilding> = t.intersection([
   t.type({

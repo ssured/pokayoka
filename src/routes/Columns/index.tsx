@@ -33,6 +33,8 @@ import { Site } from '../../model/Site/model';
 import { Building } from '../../model/Building/model';
 import { BuildingStorey } from '../../model/BuildingStorey/model';
 import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
+import { ProjectFormEdit } from '../../model/Project/ProjectFormEdit';
+import { ProjectHierarchy } from '../../model/Project/ProjectHierarchy';
 
 export const Columns: React.FunctionComponent<
   RouteComponentProps<{ projectCode: string }> & {}
@@ -215,35 +217,7 @@ const Snagging: React.FunctionComponent<{ project: PartialProject }> = observer(
         </Box>
 
         <Box gridArea="main" direction="column" justify="center">
-          <Heading level="1">
-            {project.code} {project.name}
-          </Heading>
-          {Object.entries(project.sites || {}).map(
-            ([key, site]) =>
-              site && (
-                <div key={key}>
-                  <Heading level="2">{site.name}</Heading>
-                  {Object.entries(site.buildings || {}).map(
-                    ([key, building]) =>
-                      building && (
-                        <div key={key}>
-                          <Heading level="3">{building.name}</Heading>
-                          {Object.entries(building.buildingStoreys || {}).map(
-                            ([key, buildingStorey]) =>
-                              buildingStorey && (
-                                <div key={key}>
-                                  <Heading level="3">
-                                    {buildingStorey.name}
-                                  </Heading>
-                                </div>
-                              )
-                          )}
-                        </div>
-                      )
-                  )}
-                </div>
-              )
-          )}
+          <ProjectHierarchy project={project} />
         </Box>
       </Grid>
     );

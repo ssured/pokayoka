@@ -72,7 +72,10 @@ type DeepSPOMaybe<T extends SPOShape> = {
 
 export type Resolver = (subj: subj) => PartialObj<SPOShape>;
 
-export function updateSubject(obj: SPOShape, values: SPOShape) {
+export function updateSubject<T extends SPOShape, V extends PartialObj<T>>(
+  obj: T,
+  values: V
+) {
   runInAction(() => Object.assign(obj, values));
 }
 
