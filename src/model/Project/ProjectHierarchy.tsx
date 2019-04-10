@@ -1,11 +1,17 @@
 import React from 'react';
-import { Accordion, AccordionPanel, Heading, Box, Image } from 'grommet';
+import { Accordion, AccordionPanel, Heading, Box, Image, Grid } from 'grommet';
 import { ProjectFormEdit } from './ProjectFormEdit';
 import { PartialProject } from './model';
 import { SiteFormEdit } from '../Site/SiteFormEdit';
 import { observer, useObservable } from 'mobx-react-lite';
 import { action } from 'mobx';
 import { BuildingFormEdit } from '../Building/BuildingFormEdit';
+import { Map, TileLayer, Marker } from 'react-leaflet';
+import { Add } from 'grommet-icons';
+import { BuildingStoreyFormCreate } from '../BuildingStorey/BuildingStoreyFormCreate';
+import { updateSubject, setSubject } from '../base';
+import { generateId } from '../../../server/utils/snag-id';
+import { BuildingStoreyFormEdit } from '../BuildingStorey/BuildingStoreyFormEdit';
 
 export const ProjectHierarchy: React.FunctionComponent<{
   project: PartialProject;
@@ -29,16 +35,52 @@ export const ProjectHierarchy: React.FunctionComponent<{
     >
       <AccordionPanel
         header={
-          <Box direction="row" align="center" gap="medium">
+          <Grid
+            fill
+            rows={['auto', 'auto']}
+            columns={['auto', 'flex']}
+            areas={[
+              // { name: 'header', start: [0, 0], end: [1, 0] },
+              { name: 'title', start: [0, 0], end: [1, 0] },
+              { name: 'image', start: [0, 1], end: [0, 1] },
+              { name: 'map', start: [1, 1], end: [1, 1] },
+            ]}
+            gap="medium"
+          >
+            <Heading level="1" gridArea="title">
+              <code>{project.code}</code> {project.name}
+            </Heading>
+
             {project.$image && (
-              <Box height="small" width="small">
+              <Box height="small" width="small" gridArea="image">
                 <Image src={`/cdn/${project.$image}`} fit="cover" />
               </Box>
             )}
-            <Heading level="1">
-              {project.code} {project.name}
-            </Heading>
-          </Box>
+
+            <Box gridArea="map" style={{ position: 'relative' }}>
+              <Map
+                center={[52.2975, 6.318611]}
+                zoom={14}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                }}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <Marker
+                  position={[52.2975, 6.318611]}
+                  draggable
+                  onDragend={console.log}
+                />
+              </Map>
+            </Box>
+          </Grid>
         }
       >
         <ProjectFormEdit
@@ -53,7 +95,11 @@ export const ProjectHierarchy: React.FunctionComponent<{
           site && [
             <AccordionPanel
               key={key}
-              header={<Heading level="2">&nbsp;{site.name}</Heading>}
+              header={
+                <Box margin="medium">
+                  <Heading level="3">Locatie: {site.name}</Heading>
+                </Box>
+              }
             >
               <SiteFormEdit
                 heading={null}
@@ -70,7 +116,12 @@ export const ProjectHierarchy: React.FunctionComponent<{
                     <AccordionPanel
                       key={key}
                       header={
-                        <Box direction="row" align="center" gap="medium">
+                        <Box
+                          direction="row"
+                          align="center"
+                          margin="medium"
+                          gap="medium"
+                        >
                           {building.$image && (
                             <Box height="xsmall" width="xsmall">
                               <Image
@@ -95,11 +146,69 @@ export const ProjectHierarchy: React.FunctionComponent<{
                       .map(
                         ([key, buildingStorey]) =>
                           buildingStorey && (
-                            <div key={key}>
-                              <Heading level="3">{buildingStorey.name}</Heading>
-                            </div>
+                            <AccordionPanel
+                              key={key}
+                              header={
+                                <Box
+                                  direction="row"
+                                  align="center"
+                                  margin="medium"
+                                  gap="medium"
+                                >
+                                  {/* {building.$image && (
+                            <Box height="xsmall" width="xsmall">
+                              <Image
+                                src={`/cdn/${building.$image}`}
+                                fit="cover"
+                              />
+                            </Box>
+                          )} */}
+                                  <Heading level="4">
+                                    {buildingStorey.name}
+                                  </Heading>
+                                </Box>
+                              }
+                            >
+                              <BuildingStoreyFormEdit
+                                heading={null}
+                                buildingStorey={buildingStorey}
+                                onCancel={closePanels}
+                                afterSubmit={closePanels}
+                              />
+                            </AccordionPanel>
                           )
                       ),
+                    <AccordionPanel
+                      key={`${key}_add_storey`}
+                      header={
+                        <Box
+                          direction="row"
+                          align="center"
+                          margin="small"
+                          gap="medium"
+                        >
+                          <Add size="medium" />
+
+                          <Heading level="4">Plattegrond toevoegen</Heading>
+                        </Box>
+                      }
+                    >
+                      <BuildingStoreyFormCreate
+                        onSubmit={async data => {
+                          const storey = {
+                            [generateId()]: {
+                              sheets: {},
+                              tasks: {},
+                              ...data,
+                            },
+                          };
+                          if (!building.buildingStoreys) {
+                            setSubject(building, 'buildingStoreys', storey);
+                          }
+                          updateSubject(building.buildingStoreys!, storey);
+                        }}
+                      />
+                    </AccordionPanel>,
                   ]
               ),
           ]

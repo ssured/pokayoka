@@ -12,6 +12,7 @@ import { computed, action } from 'mobx';
 import { SPOShape } from '../../utils/spo';
 import { Sheet, AsyncSheet } from '../Sheet/model';
 import { generateId } from '../../utils/id';
+import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
 
 export const BuildingStorey = t.intersection(
   [
@@ -26,7 +27,10 @@ export const BuildingStorey = t.intersection(
   ],
   'buildingStorey'
 );
+
 export type BuildingStorey = t.TypeOf<typeof BuildingStorey>;
+export type PartialBuildingStorey = UndefinedOrPartialSPO<BuildingStorey>;
+
 type SerializedBuildingStorey = Serialized<BuildingStorey>;
 const SerializedBuildingStorey: t.Type<
   SerializedBuildingStorey

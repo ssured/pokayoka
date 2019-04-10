@@ -14,13 +14,13 @@ import { AuthenticationContainer } from './contexts/authentication';
 
 // fix marker urls
 // https://github.com/PaulLeCam/react-leaflet/issues/255#issuecomment-261904061
-// const L = require('leaflet');
-// delete L.Icon.Default.prototype._getIconUrl;
-// L.Icon.Default.mergeOptions({
-//   iconRetinaUrl: require('leaflet/images/marker-icon-2x.png'),
-//   iconUrl: require('leaflet/images/marker-icon.png'),
-//   shadowUrl: require('leaflet/images/marker-shadow.png'),
-// });
+const L = require('leaflet');
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('./marker-icon-2x.png'),
+  iconUrl: require('./marker-icon.png'),
+  shadowUrl: require('./marker-shadow.png'),
+});
 
 if (
   'serviceWorker' in navigator &&

@@ -189,7 +189,7 @@ dotenv.config();
 
       if (
         file.match(
-          /^(index\.html)|(.*\.bundle\.js)|(.*\.worker\.js)|(.*\.hot-update\.js(on)?)|(precache-manifest\..*\.js)$/
+          /^(index\.html)|(.*\.bundle\.js)|(.*\.worker\.js)|(.*\.hot-update\.js(on)?)|(precache-manifest\..*\.js)|(.*\.png)$/
         )
       ) {
         res.contentType(file);
