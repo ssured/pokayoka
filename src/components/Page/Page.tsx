@@ -1,6 +1,7 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useContext } from 'react';
 import { Box, Heading, Grid } from 'grommet';
 import { navigate } from '@reach/router';
+import { UI_EMPTY_STRING } from '../../constants';
 
 const colorsLightToDark = [
   'white',
@@ -23,6 +24,36 @@ const sizesSmallToBig = [
   'large',
   'xlarge',
 ];
+
+const PageTitlesContext = React.createContext<[string, string | undefined][]>(
+  []
+);
+
+export const PageTitle: React.FunctionComponent<{
+  /**
+   * title of the page, if undefined defaults to UI_EMTPY_STRING constant
+   */
+  title: string | undefined;
+
+  /**
+   * absolute link, or relative when starting with './'
+   */
+  href: string | undefined;
+}> = ({ title, href, children }) => {
+  const current = useContext(PageTitlesContext);
+
+  // parse relative links, which start with './'
+  const link =
+    href && href.match(/^\.\//) ? current[0][1] + href.substr(1) : href;
+
+  return (
+    <PageTitlesContext.Provider
+      value={[[title || UI_EMPTY_STRING, link], ...current]}
+    >
+      {children}
+    </PageTitlesContext.Provider>
+  );
+};
 
 export const Title: React.FunctionComponent<{}> = ({ children }) => {
   return <Heading level="2">{children}</Heading>;
@@ -75,9 +106,9 @@ const Tab: React.FunctionComponent<{
 };
 
 export const Page: React.FunctionComponent<{
-  titles: [string, string?][];
+  titles?: [string, string?][];
   rightOfTitle?: ReactNode;
-}> = ({ titles, children, rightOfTitle }) => {
+}> = ({ titles = useContext(PageTitlesContext), children, rightOfTitle }) => {
   const border: Border = {
     color: 'border',
     size: 'xsmall',

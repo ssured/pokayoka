@@ -1,39 +1,24 @@
-import { RouteComponentProps, navigate } from '@reach/router';
-import {
-  Text,
-  Box,
-  Grid,
-  TextInput,
-  Image,
-  Heading,
-  Stack,
-  Keyboard,
-} from 'grommet';
-import { Image as ImageIcon, Add } from 'grommet-icons';
-import { observer, useObserver } from 'mobx-react-lite';
-import React, { useContext, ReactNode } from 'react';
-import { useQuery, SPOContext } from '../../contexts/spo-hub';
-import { PartialProject } from '../../model/Project/model';
-import { subj, SPOShape } from '../../utils/spo';
-import { Page } from '../../components/Page/Page';
+import { navigate, RouteComponentProps, Router } from '@reach/router';
+import { Box, Grid, Image, Stack, Text } from 'grommet';
+import { Add, Image as ImageIcon } from 'grommet-icons';
+import { observer } from 'mobx-react-lite';
+import React, { useContext } from 'react';
+import { Map, Marker, TileLayer } from 'react-leaflet';
 import { useToggle } from 'react-use';
+import { EditInlineStringProp } from '../../components/EditInlineStringProp';
+import { Page, PageTitle } from '../../components/Page/Page';
+import { PageSection } from '../../components/Page/PageSection';
 import { TextButton } from '../../components/TextButton';
-import {
-  useLens,
-  LensShowComponent,
-  LensEditComponent,
-} from '../../hooks/lens';
-import { setSubject } from '../../model/base';
-import { KeysOfType } from '../../utils/typescript';
-import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
-import { Map, TileLayer, Marker } from 'react-leaflet';
+import { SPOContext, useQuery } from '../../contexts/spo-hub';
+import { PartialProject } from '../../model/Project/model';
+import { subj } from '../../utils/spo';
+import { SitePage } from './SitePage';
 
 export const ProjectPage: React.FunctionComponent<
   RouteComponentProps<{ projectCode: string }> & {}
 > = observer(({ projectCode }) => {
   const { get } = useContext(SPOContext);
   const q = useQuery(v => [{ s: v('s'), p: 'code', o: projectCode }]);
-  const [showEdit, toggleEdit] = useToggle(false);
 
   const project =
     q.length === 1
@@ -42,123 +27,42 @@ export const ProjectPage: React.FunctionComponent<
 
   if (project) {
     return (
-      <Page
-        titles={[[project.name || '', `/paged/${projectCode}`]]}
-        rightOfTitle={
-          <TextButton
-            label={showEdit ? 'verwijder project' : 'wijzig project'}
-            onClick={() => toggleEdit()}
-          />
-        }
-      >
-        {showEdit ? (
-          <ProjectEdit project={project} />
-        ) : (
-          <ProjectShow project={project} />
-        )}
-      </Page>
+      <PageTitle title={project.name} href={`/paged/${projectCode}`}>
+        <Router>
+          <ProjectFrame path="/" {...{ project }} />
+          <SitePage path="/:siteKey/*" projectCode={projectCode!} />
+        </Router>
+      </PageTitle>
     );
   }
 
   return <div>Loading project</div>;
 });
 
-const TextInputStatic: React.FunctionComponent<{}> = ({ children }) => (
-  <Text truncate>{children}</Text>
-);
+const ProjectFrame: React.FunctionComponent<
+  RouteComponentProps<{}> & {
+    project: PartialProject;
+  }
+> = ({ project }) => {
+  const [showEdit, toggleEdit] = useToggle(false);
 
-interface EditInlineStringPropProps<T extends SPOShape> {
-  subject: UndefinedOrPartialSPO<T>;
-  prop: KeysOfType<Required<T>, string>;
-  rtl?: boolean;
-  show?: LensShowComponent<string | undefined>;
-  edit?: LensEditComponent<string | undefined>;
-}
-
-function EditInlineStringProp<T extends SPOShape>({
-  subject,
-  prop,
-  rtl,
-  show = value => <TextInputStatic>{value}</TextInputStatic>,
-  edit = ([value, setValue], { cancel, save }) => (
-    <Keyboard onEsc={cancel} onEnter={save}>
-      <TextInput
-        value={value || ''}
-        onChange={e => {
-          setValue(e.target.value);
-        }}
-      />
-    </Keyboard>
-  ),
-}: EditInlineStringPropProps<T>): ReturnType<
-  React.FunctionComponent<EditInlineStringPropProps<T>>
-> {
-  const lens = useLens(
-    {
-      getter: () => subject[prop] as string | undefined,
-      setter: value => setSubject(subject, prop, value as any),
-    },
-    [subject, prop]
+  return (
+    <Page
+      rightOfTitle={
+        <TextButton
+          label={showEdit ? 'verwijder project' : 'wijzig project'}
+          onClick={() => toggleEdit()}
+        />
+      }
+    >
+      {showEdit ? (
+        <ProjectEdit project={project} />
+      ) : (
+        <ProjectShow project={project} />
+      )}
+    </Page>
   );
-  return useObserver(() => {
-    const value = (
-      <Box justify="center">
-        {lens.fold({
-          show,
-          edit,
-        })}
-      </Box>
-    );
-    const button = (
-      <Box justify="center">
-        {lens.fold({
-          busy: () => null,
-          show: (_, { editButtonProps }) => (
-            <TextButton {...editButtonProps} label="Edit" />
-          ),
-          edit: (_, { saveButtonProps, cancelButtonProps }) => (
-            <Box direction="row" gap="medium">
-              <TextButton {...saveButtonProps} label="Save" />
-              <TextButton {...cancelButtonProps} label="Cancel" />
-            </Box>
-          ),
-        })}
-      </Box>
-    );
-    return rtl ? (
-      <>
-        {button}
-        {value}
-      </>
-    ) : (
-      <>
-        {value}
-        {button}
-      </>
-    );
-  });
-}
-
-const PageSection: React.FunctionComponent<{
-  heading: string;
-  action?: ReactNode;
-}> = ({ heading, action }) => (
-  <Box
-    direction="row"
-    justify="between"
-    border="bottom"
-    margin={{ bottom: 'medium' }}
-  >
-    <Heading level="3" margin={{ bottom: 'xsmall' }}>
-      {heading}
-    </Heading>
-    {action && (
-      <Box direction="row" align="end" margin={{ bottom: 'xsmall' }}>
-        {action}
-      </Box>
-    )}
-  </Box>
-);
+};
 
 const ProjectShow: React.FunctionComponent<{
   project: PartialProject;
@@ -217,7 +121,7 @@ const ProjectShow: React.FunctionComponent<{
                 direction="column"
                 align="center"
                 style={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/paged/${project.code!}/${site.name}`)}
+                onClick={() => navigate(`/paged/${project.code!}/${key}`)}
               >
                 <Stack fill>
                   <Map

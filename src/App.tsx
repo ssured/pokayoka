@@ -320,7 +320,7 @@ export const App: React.FunctionComponent<{}> = () => {
 
                     <Tree path="tree" />
                     <Columns path="columns/:projectCode" />
-                    <ProjectPage path="paged/:projectCode" />
+                    <ProjectPage path="paged/:projectCode/*" />
 
                     <NotFound default />
                     {/* <User path=":userId">

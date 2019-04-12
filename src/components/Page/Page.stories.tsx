@@ -1,9 +1,20 @@
 import React from 'react';
 import { storiesOf } from '@storybook/react';
-import { Page } from './Page';
+import { Page, PageTitle } from './Page';
 import { Grommet, Box } from 'grommet';
 
 storiesOf('Page', module)
+  .add('context', () => (
+    <Grommet full plain>
+      <Box fill pad="medium">
+        <PageTitle title="Molukkenstraat" href="/hello">
+          <PageTitle title="Groningen" href="/hello/grunn">
+            <Page>Content</Page>
+          </PageTitle>
+        </PageTitle>
+      </Box>
+    </Grommet>
+  ))
   .add('nested', () => (
     <Grommet full plain>
       <Box fill pad="medium">

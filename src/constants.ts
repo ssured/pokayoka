@@ -12,3 +12,5 @@ export const TRANSPARENT_PIXEL =
 
 export const CAMERA_MAX_SIZE = 1024;
 export const CAMERA_JPEG_QUALITY = 0.5;
+
+export const UI_EMPTY_STRING = '-';
