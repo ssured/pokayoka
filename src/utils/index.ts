@@ -20,8 +20,9 @@ export const objectFromPatchStream = (): {
   };
 };
 
-export const ensureNever = (arg: never, shouldThrow = true) => {
+export const ensureNever = <T = any>(arg: never, shouldThrow = true): T => {
   if (shouldThrow) {
     throw new Error('Typescript never error, should never be reached');
   }
+  return (undefined as unknown) as T;
 };

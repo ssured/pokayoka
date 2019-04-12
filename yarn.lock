@@ -2866,6 +2866,13 @@
     text-table "^0.2.0"
     webpack-log "^1.1.2"
 
+"@xstate/react@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@xstate/react/-/react-0.2.0.tgz#3332a9b2b031278da20705ea9533dee5a9a6c372"
+  integrity sha512-ECBqknnibDc01JeC+ftz0NGAQkIyT0ZM9Zk/t+haYNItAaQamDjeG6qG47j3V59VZZYpRTPYrxmmoPyDfaNSJg==
+  dependencies:
+    xstate "^4.4.0"
+
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@xtuc/ieee754/-/ieee754-1.2.0.tgz#eef014a3145ae477a1cbc00cd1e552336dceb790"
@@ -14327,10 +14334,10 @@ xml-name-validator@^3.0.0:
   resolved "https://registry.yarnpkg.com/xml-name-validator/-/xml-name-validator-3.0.0.tgz#6ae73e06de4d8c6e47f9fb181f78d648ad457c6a"
   integrity sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw==
 
-xstate@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.3.0.tgz#da7ce382a551d70038538beb7a017267e154f946"
-  integrity sha512-X0Oih8oFiXQGvxmA06kx/f3vQ/Gq5eZ1tbO56HLG0fiXvc+f/gpMTnEOKML0pI7fsiQm68JUoV5Z8N1VcvNVHw==
+xstate@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.4.0.tgz#0daedbdc49313357413546de04fafa0dba7aa0ce"
+  integrity sha512-MS638X5zCzEAZA/UOW9fUHSg4xAGfiHFkGMjtU5j/gmb1PtGBAVImv0iWqRZNwVqTALxxtQz655BVyNSNz2ThA==
 
 xtend@^4.0.0, xtend@^4.0.1, xtend@~4.0.0, xtend@~4.0.1:
   version "4.0.1"

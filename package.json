@@ -104,6 +104,7 @@
     "@types/styled-components": "^4.1.12",
     "@types/tough-cookie": "^2.3.5",
     "@types/validator": "^10.11.0",
+    "@xstate/react": "^0.2.0",
     "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
     "blueimp-load-image": "^2.20.1",
@@ -175,7 +176,7 @@
     "use-onclickoutside": "^0.2.2",
     "validator": "^10.11.0",
     "writable-async-iterable-stream": "^5.1.0",
-    "xstate": "^4.3.0"
+    "xstate": "^4.4.0"
   },
   "scripts": {
     "type-check": "tsc --noEmit",
