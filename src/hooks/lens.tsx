@@ -121,9 +121,9 @@ export class ReactiveLens<T> {
 
         return useObserver(
           edit.bind(undefined, [value, setValue], {
-            saveButtonProps: { primary: true, onClick: save },
+            saveButtonProps: { onClick: save },
             save,
-            cancelButtonProps: { plain: true, onClick: cancel },
+            cancelButtonProps: { onClick: cancel },
             cancel,
           })
         );

@@ -53,7 +53,7 @@ const StyledWrapper = styled(Wrapper)`
 
     > * {
       @import url('https://fonts.googleapis.com/css?family=Roboto:100,400');
-      border: 1px solid lightgrey;
+      /* border: 1px solid lightgrey; */
       overflow: hidden;
       color: rgb(66, 66, 66);
       font-family: 'Roboto', sans-serif;

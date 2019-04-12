@@ -5,7 +5,7 @@ export const TextButton: React.FunctionComponent<ButtonProps> = ({
   children,
   ...props
 }) => (
-  <Button plain style={{ color: 'blue' }} {...props}>
+  <Button plain hoverIndicator style={{ color: 'blue' }} {...props}>
     {children}
   </Button>
 );

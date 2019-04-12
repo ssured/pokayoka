@@ -17,6 +17,7 @@ import {
 import { setSubject } from '../../model/base';
 import { KeysOfType } from '../../utils/typescript';
 import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
+import { Map, TileLayer, Marker } from 'react-leaflet';
 
 export const ProjectPage: React.FunctionComponent<
   RouteComponentProps<{ projectCode: string }> & {}
@@ -131,7 +132,12 @@ const PageSection: React.FunctionComponent<{
   heading: string;
   action?: ReactNode;
 }> = ({ heading, action }) => (
-  <Box direction="row" justify="between" border="bottom">
+  <Box
+    direction="row"
+    justify="between"
+    border="bottom"
+    margin={{ bottom: 'medium' }}
+  >
     <Heading level="3" margin={{ bottom: 'xsmall' }}>
       {heading}
     </Heading>
@@ -149,10 +155,12 @@ const ProjectShow: React.FunctionComponent<{
   return (
     <>
       <Box direction="row" justify="between">
-        <Grid columns={['flex', 'auto']} gap="medium">
-          <EditInlineStringProp subject={project} prop="name" />
-          <EditInlineStringProp subject={project} prop="code" />
-        </Grid>
+        <Box>
+          <Grid columns={['flex', 'auto']} gap="medium">
+            <EditInlineStringProp subject={project} prop="name" />
+            <EditInlineStringProp subject={project} prop="code" />
+          </Grid>
+        </Box>
         <Grid columns={['flex', 'auto']} gap="medium" align="end" justify="end">
           <EditInlineStringProp
             subject={project}
@@ -188,6 +196,43 @@ const ProjectShow: React.FunctionComponent<{
           </TextButton>
         }
       />
+
+      <Grid columns={['1/3', '1/3', '1/3']} gap="medium">
+        {Object.entries(project.sites || {}).map(
+          ([key, site]) =>
+            site && (
+              <Box direction="column" align="center">
+                <Box
+                  fill="horizontal"
+                  height="small"
+                  style={{ position: 'relative' }}
+                >
+                  <Map
+                    center={[52.2975, 6.318611]}
+                    zoom={14}
+                    zoomControl={false}
+                    attributionControl={false}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                    />
+                    <Marker position={[52.2975, 6.318611]} />
+                  </Map>
+                </Box>
+                <Text>{site.name}</Text>
+              </Box>
+            )
+        )}
+      </Grid>
     </>
   );
 });
