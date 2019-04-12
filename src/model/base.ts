@@ -4,6 +4,7 @@ import { primitive, SPOShape, subj, objt, pred } from '../utils/spo';
 import { nothing } from '../utils/maybe';
 import { ReactElement } from 'react';
 import { object } from 'prop-types';
+import { KeysOfType } from '../utils/typescript';
 
 export type Dictionary<T> = Record<string, T>;
 export type Many<T extends SPOShape> = Dictionary<T>;
@@ -29,10 +30,6 @@ export const tMany = t.record(t.string, tGraphableObject);
 export abstract class Model<T extends SPOShape> {
   constructor(protected serialized: Serialized<T>) {}
 }
-
-export type KeysOfType<A extends object, B> = {
-  [K in keyof A]-?: A[K] extends B ? K : never
-}[keyof A];
 
 export type AsyncPropertiesOf<T extends SPOShape> = {
   [K in keyof T]: T[K] extends Many<infer U> | undefined

@@ -10,6 +10,21 @@ export type Lens<T> = {
   setter: (value: T) => void | Promise<void>;
 };
 
+export type LensShowComponent<T> = (
+  value: T,
+  actions: { editButtonProps: ButtonProps; edit: () => void }
+) => ReactNode;
+
+export type LensEditComponent<T> = (
+  state: [T, (value: T) => void],
+  actions: {
+    saveButtonProps: ButtonProps;
+    save: () => void;
+    cancelButtonProps: ButtonProps;
+    cancel: () => void;
+  }
+) => ReactNode;
+
 export class ReactiveLens<T> {
   @observable
   public state = 'loading' as
@@ -63,19 +78,8 @@ export class ReactiveLens<T> {
       reset: () => void,
       retry: () => void
     ) => ReactNode;
-    show: (
-      value: T,
-      actions: { editButtonProps: ButtonProps; edit: () => void }
-    ) => ReactNode;
-    edit: (
-      state: [T, (value: T) => void],
-      actions: {
-        saveButtonProps: ButtonProps;
-        save: () => void;
-        cancelButtonProps: ButtonProps;
-        cancel: () => void;
-      }
-    ) => ReactNode;
+    show: LensShowComponent<T>;
+    edit: LensEditComponent<T>;
   }): ReactNode {
     switch (this.state) {
       case 'loading':
@@ -104,7 +108,7 @@ export class ReactiveLens<T> {
         const edit = this.edit.bind(this);
         return useObserver(
           show.bind(undefined, this.value as T, {
-            editButtonProps: { onClick: edit },
+            editButtonProps: { plain: true, onClick: edit },
             edit,
           })
         );
@@ -117,9 +121,9 @@ export class ReactiveLens<T> {
 
         return useObserver(
           edit.bind(undefined, [value, setValue], {
-            saveButtonProps: { onClick: save },
+            saveButtonProps: { primary: true, onClick: save },
             save,
-            cancelButtonProps: { onClick: cancel },
+            cancelButtonProps: { plain: true, onClick: cancel },
             cancel,
           })
         );
@@ -239,6 +243,6 @@ export class ReactiveLens<T> {
   }
 }
 
-export function useLens<T>(lens: Lens<T>) {
-  return useMemo(() => new ReactiveLens(lens), []);
+export function useLens<T>(lens: Lens<T>, deps: any[] = []) {
+  return useMemo(() => new ReactiveLens(lens), deps);
 }

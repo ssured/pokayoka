@@ -18,7 +18,6 @@ import { observable, onBecomeObserved, runInAction } from 'mobx';
 import { recursiveDeepObserve, IDisposer } from './mobx-deep-observe';
 import { SPOHub } from './spo-hub';
 import { ham } from './ham';
-import { Many, Dictionary } from '../model/base';
 
 const shapeStates = new WeakMap<SPOShape, { [key: string]: string }>();
 

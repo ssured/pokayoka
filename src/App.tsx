@@ -24,6 +24,7 @@ import { Sheet } from './routes/Sheets/Sheet/index';
 import { Sync } from './routes/Sync/index';
 import { Tree } from './routes/Tree/index';
 import { Columns } from './routes/Columns/index';
+import { ProjectPage } from './routes/Paged/ProjectPage';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -319,6 +320,7 @@ export const App: React.FunctionComponent<{}> = () => {
 
                     <Tree path="tree" />
                     <Columns path="columns/:projectCode" />
+                    <ProjectPage path="paged/:projectCode" />
 
                     <NotFound default />
                     {/* <User path=":userId">

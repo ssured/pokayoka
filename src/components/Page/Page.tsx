@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Box, Heading, Grid } from 'grommet';
 import { navigate } from '@reach/router';
 
@@ -76,7 +76,8 @@ const Tab: React.FunctionComponent<{
 
 export const Page: React.FunctionComponent<{
   titles: [string, string?][];
-}> = ({ titles, children }) => {
+  right?: ReactNode;
+}> = ({ titles, children, right }) => {
   const border: Border = {
     color: 'border',
     size: 'xsmall',
@@ -112,7 +113,15 @@ export const Page: React.FunctionComponent<{
       </Box>
 
       <Box gridArea="left-of-title" border={{ ...border, side: 'bottom' }} />
-      <Box gridArea="right-of-title" border={{ ...border, side: 'bottom' }} />
+      <Box
+        gridArea="right-of-title"
+        border={{ ...border, side: 'bottom' }}
+        align="end"
+        justify="end"
+        pad="xsmall"
+      >
+        {right}
+      </Box>
       <Box gridArea="below-content" border={{ ...border, side: 'top' }} />
     </Grid>
   );
