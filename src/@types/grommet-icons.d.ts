@@ -4,7 +4,7 @@ declare module 'grommet-icons' {
   export interface IconProps {
     a11yTitle?: string;
     size?: 'small' | 'medium' | 'large' | 'xlarge' | string;
-    color?: 'string';
+    color?: string;
   }
 
   export type Icon = React.ComponentType<

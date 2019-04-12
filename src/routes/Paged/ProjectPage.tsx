@@ -1,8 +1,8 @@
 import { RouteComponentProps } from '@reach/router';
-import { Text, Button, Box, Grid, TextInput, Image } from 'grommet';
-import { Image as ImageIcon } from 'grommet-icons';
+import { Text, Box, Grid, TextInput, Image, Heading } from 'grommet';
+import { Image as ImageIcon, Add } from 'grommet-icons';
 import { observer, useObserver } from 'mobx-react-lite';
-import React, { useContext } from 'react';
+import React, { useContext, ReactNode } from 'react';
 import { useQuery, SPOContext } from '../../contexts/spo-hub';
 import { PartialProject } from '../../model/Project/model';
 import { subj, SPOShape } from '../../utils/spo';
@@ -53,6 +53,10 @@ export const ProjectPage: React.FunctionComponent<
   return <div>Loading project</div>;
 });
 
+const TextInputStatic: React.FunctionComponent<{}> = ({ children }) => (
+  <Text truncate>{children}</Text>
+);
+
 interface EditInlineStringPropProps<T extends SPOShape> {
   subject: UndefinedOrPartialSPO<T>;
   prop: KeysOfType<Required<T>, string>;
@@ -60,10 +64,6 @@ interface EditInlineStringPropProps<T extends SPOShape> {
   show?: LensShowComponent<string | undefined>;
   edit?: LensEditComponent<string | undefined>;
 }
-
-const TextInputStatic: React.FunctionComponent<{}> = ({ children }) => (
-  <Text truncate>{children}</Text>
-);
 
 function EditInlineStringProp<T extends SPOShape>({
   subject,
@@ -102,12 +102,12 @@ function EditInlineStringProp<T extends SPOShape>({
         {lens.fold({
           busy: () => null,
           show: (_, { editButtonProps }) => (
-            <Button {...editButtonProps} label="Edit" />
+            <TextButton {...editButtonProps} label="Edit" />
           ),
           edit: (_, { saveButtonProps, cancelButtonProps }) => (
             <Box direction="row" gap="medium">
-              <Button {...saveButtonProps} label="Save" />
-              <Button {...cancelButtonProps} label="Cancel" />
+              <TextButton {...saveButtonProps} label="Save" />
+              <TextButton {...cancelButtonProps} label="Cancel" />
             </Box>
           ),
         })}
@@ -126,6 +126,22 @@ function EditInlineStringProp<T extends SPOShape>({
     );
   });
 }
+
+const PageSection: React.FunctionComponent<{
+  heading: string;
+  action?: ReactNode;
+}> = ({ heading, action }) => (
+  <Box direction="row" justify="between" border="bottom">
+    <Heading level="3" margin={{ bottom: 'xsmall' }}>
+      {heading}
+    </Heading>
+    {action && (
+      <Box direction="row" align="end" margin={{ bottom: 'xsmall' }}>
+        {action}
+      </Box>
+    )}
+  </Box>
+);
 
 const ProjectShow: React.FunctionComponent<{
   project: PartialProject;
@@ -154,6 +170,24 @@ const ProjectShow: React.FunctionComponent<{
           />
         </Grid>
       </Box>
+
+      <PageSection
+        heading="Contactpersonen"
+        action={
+          <TextButton>
+            <Add size="small" color="currentColor" /> contactpersoon
+          </TextButton>
+        }
+      />
+
+      <PageSection
+        heading="Locaties"
+        action={
+          <TextButton>
+            <Add size="small" color="currentColor" /> locatie
+          </TextButton>
+        }
+      />
     </>
   );
 });

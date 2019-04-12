@@ -34,7 +34,7 @@ index 8b55b87..841e93d 100644
    size?: "xsmall" | "small" | "medium" | "large" | "xlarge" | "xxlarge" | string;
    as?: PolymorphicType;
 diff --git a/node_modules/grommet/components/Button/index.d.ts b/node_modules/grommet/components/Button/index.d.ts
-index 70508ba..2651134 100644
+index 70508ba..251486a 100644
 --- a/node_modules/grommet/components/Button/index.d.ts
 +++ b/node_modules/grommet/components/Button/index.d.ts
 @@ -15,7 +15,7 @@ export interface ButtonProps {
@@ -42,7 +42,7 @@ index 70508ba..2651134 100644
    icon?: JSX.Element;
    label?: React.ReactNode;
 -  onClick?: ((...args: any[]) => any);
-+  // onClick?: ((...args: any[]) => any);
++  onClick?: ((event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void);
    plain?: boolean;
    primary?: boolean;
    reverse?: boolean;
