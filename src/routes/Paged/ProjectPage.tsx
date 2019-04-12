@@ -1,5 +1,14 @@
 import { RouteComponentProps, navigate } from '@reach/router';
-import { Text, Box, Grid, TextInput, Image, Heading, Stack } from 'grommet';
+import {
+  Text,
+  Box,
+  Grid,
+  TextInput,
+  Image,
+  Heading,
+  Stack,
+  Keyboard,
+} from 'grommet';
 import { Image as ImageIcon, Add } from 'grommet-icons';
 import { observer, useObserver } from 'mobx-react-lite';
 import React, { useContext, ReactNode } from 'react';
@@ -71,13 +80,15 @@ function EditInlineStringProp<T extends SPOShape>({
   prop,
   rtl,
   show = value => <TextInputStatic>{value}</TextInputStatic>,
-  edit = ([value, setValue]) => (
-    <TextInput
-      value={value || ''}
-      onChange={e => {
-        setValue(e.target.value);
-      }}
-    />
+  edit = ([value, setValue], { cancel, save }) => (
+    <Keyboard onEsc={cancel} onEnter={save}>
+      <TextInput
+        value={value || ''}
+        onChange={e => {
+          setValue(e.target.value);
+        }}
+      />
+    </Keyboard>
   ),
 }: EditInlineStringPropProps<T>): ReturnType<
   React.FunctionComponent<EditInlineStringPropProps<T>>
