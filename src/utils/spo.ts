@@ -6,9 +6,10 @@ export type pred = string;
 export type objt = primitive | subj;
 export type state = string;
 export type Tuple = [subj, pred, objt, state];
-export type SPOShape = { [K in string]: primitive | SPOShape };
+export type SPOShape = { [K in string]: primitive | SPOShape }; // links are hydrated
+export type RawSPOShape = { [K in string]: objt | RawSPOShape }; // links are expressed as subj
 
-const objToSubj = new WeakMap<SPOShape, subj>();
+const objToSubj = new WeakMap<RawSPOShape, subj>();
 
 function subjsAreEqual(a: subj, b: subj) {
   if (a.length !== b.length) return false;
@@ -97,7 +98,7 @@ export function set(
 
 export function* spoInObject(
   subj: subj,
-  obj: SPOShape,
+  obj: RawSPOShape,
   state: state
 ): Iterable<Tuple> {
   if (objToSubj.has(obj)) {
