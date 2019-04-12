@@ -44,7 +44,7 @@ export const ProjectPage: React.FunctionComponent<
     return (
       <Page
         titles={[[project.name || '', `/paged/${projectCode}`]]}
-        right={
+        rightOfTitle={
           <TextButton
             label={showEdit ? 'verwijder project' : 'wijzig project'}
             onClick={() => toggleEdit()}
@@ -208,11 +208,12 @@ const ProjectShow: React.FunctionComponent<{
         }
       />
 
-      <Grid columns={['1/3', '1/3', '1/3']} rows={['small']} gap="medium">
+      <Grid columns={['1/3']} rows={['small']} gap="medium">
         {Object.entries(project.sites || {}).map(
           ([key, site]) =>
             site && (
               <Box
+                key={key}
                 direction="column"
                 align="center"
                 style={{ cursor: 'pointer' }}
@@ -245,10 +246,12 @@ const ProjectShow: React.FunctionComponent<{
                     align="center"
                     justify="end"
                   >
-                    <Text>{site.name}</Text>
+                    <Text size="large">{site.name}</Text>
                   </Box>
                 </Stack>
-                <Text>{site.name}</Text>
+                {/* <Box direction="row">
+                  <EditInlineStringProp subject={site} prop="name" />
+                </Box> */}
               </Box>
             )
         )}

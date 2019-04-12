@@ -76,8 +76,8 @@ const Tab: React.FunctionComponent<{
 
 export const Page: React.FunctionComponent<{
   titles: [string, string?][];
-  right?: ReactNode;
-}> = ({ titles, children, right }) => {
+  rightOfTitle?: ReactNode;
+}> = ({ titles, children, rightOfTitle }) => {
   const border: Border = {
     color: 'border',
     size: 'xsmall',
@@ -120,7 +120,7 @@ export const Page: React.FunctionComponent<{
         justify="end"
         pad="xsmall"
       >
-        {right}
+        {rightOfTitle}
       </Box>
       <Box gridArea="below-content" border={{ ...border, side: 'top' }} />
     </Grid>
