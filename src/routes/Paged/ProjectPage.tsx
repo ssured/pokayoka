@@ -1,5 +1,5 @@
-import { RouteComponentProps } from '@reach/router';
-import { Text, Box, Grid, TextInput, Image, Heading } from 'grommet';
+import { RouteComponentProps, navigate } from '@reach/router';
+import { Text, Box, Grid, TextInput, Image, Heading, Stack } from 'grommet';
 import { Image as ImageIcon, Add } from 'grommet-icons';
 import { observer, useObserver } from 'mobx-react-lite';
 import React, { useContext, ReactNode } from 'react';
@@ -197,16 +197,17 @@ const ProjectShow: React.FunctionComponent<{
         }
       />
 
-      <Grid columns={['1/3', '1/3', '1/3']} gap="medium">
+      <Grid columns={['1/3', '1/3', '1/3']} rows={['small']} gap="medium">
         {Object.entries(project.sites || {}).map(
           ([key, site]) =>
             site && (
-              <Box direction="column" align="center">
-                <Box
-                  fill="horizontal"
-                  height="small"
-                  style={{ position: 'relative' }}
-                >
+              <Box
+                direction="column"
+                align="center"
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate(`/paged/${project.code!}/${site.name}`)}
+              >
+                <Stack fill>
                   <Map
                     center={[52.2975, 6.318611]}
                     zoom={14}
@@ -218,7 +219,7 @@ const ProjectShow: React.FunctionComponent<{
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      pointerEvents: 'none',
+                      zIndex: 0,
                     }}
                   >
                     <TileLayer
@@ -227,7 +228,15 @@ const ProjectShow: React.FunctionComponent<{
                     />
                     <Marker position={[52.2975, 6.318611]} />
                   </Map>
-                </Box>
+                  <Box
+                    fill
+                    style={{ zIndex: 1, pointerEvents: 'none' }}
+                    align="center"
+                    justify="end"
+                  >
+                    <Text>{site.name}</Text>
+                  </Box>
+                </Stack>
                 <Text>{site.name}</Text>
               </Box>
             )
