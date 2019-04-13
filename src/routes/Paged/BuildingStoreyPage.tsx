@@ -123,10 +123,10 @@ const BuildingStoreyShow: React.FunctionComponent<{
       </Box>
 
       <PageSection
-        heading="Gebouwen"
+        heading="Plattegronden"
         action={
           <TextButton>
-            <Add size="small" color="currentColor" /> gebouw
+            <Add size="small" color="currentColor" /> plattegrond
           </TextButton>
         }
       />
