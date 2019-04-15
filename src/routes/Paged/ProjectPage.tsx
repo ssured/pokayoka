@@ -13,6 +13,7 @@ import { SPOContext, useQuery } from '../../contexts/spo-hub';
 import { PartialProject } from '../../model/Project/model';
 import { subj } from '../../utils/spo';
 import { SitePage } from './SitePage';
+import { AddContactPerson } from './AddContactPerson';
 
 export const ProjectPage: React.FunctionComponent<
   RouteComponentProps<{ projectCode: string }> & {}
@@ -30,6 +31,7 @@ export const ProjectPage: React.FunctionComponent<
       <PageTitle title={project.name} href={`/paged/${projectCode}`}>
         <Router>
           <ProjectFrame path="/" {...{ project }} />
+          <AddContactPerson path="/add-contact" />
           <SitePage path="/:siteKey/*" projectCode={projectCode!} />
         </Router>
       </PageTitle>
@@ -97,7 +99,11 @@ const ProjectShow: React.FunctionComponent<{
       <PageSection
         heading="Contactpersonen"
         action={
-          <TextButton>
+          <TextButton
+            onClick={() =>
+              navigate([window.location.pathname, 'add-contact'].join('/'))
+            }
+          >
             <Add size="small" color="currentColor" /> contactpersoon
           </TextButton>
         }
