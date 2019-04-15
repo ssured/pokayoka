@@ -3,7 +3,10 @@
 // and makes you totally reliant on the Typescript typings.
 
 export type Nothing = { [key: string]: Nothing };
-export type Maybe<T> = Nothing | T;
+export type Maybe<T> = T extends object
+  ? { [K in keyof Required<T>]?: Maybe<Required<T>[K]> }
+  : T | Nothing | undefined;
+
 export const nothing: Nothing = new Proxy<Nothing>(
   {},
   {
@@ -11,19 +14,19 @@ export const nothing: Nothing = new Proxy<Nothing>(
       if (typeof prop === 'symbol') {
         if (prop === Symbol.toPrimitive) {
           return (hint: 'number' | 'string' | 'default') =>
-            hint === 'number' ? 0 : '[object Unknown]';
+            hint === 'number' ? 0 : '[object Nothing]';
         }
         // @ts-ignore
         return {}[prop];
       }
       if (prop === 'toString') {
-        return () => '[object Unknown]';
+        return () => '[object Nothing]';
       }
       if (prop === 'valueOf') {
         return () => {
           const obj = {};
           // @ts-ignore
-          obj[Symbol.toStringTag] = 'Unknown';
+          obj[Symbol.toStringTag] = 'Nothing';
           return obj;
         };
       }
@@ -31,5 +34,13 @@ export const nothing: Nothing = new Proxy<Nothing>(
     },
   }
 );
+
+// @ts-ignore
 export const isNothing = <T>(v: Maybe<T>): v is Nothing => v === nothing;
+
+// @ts-ignore
 export const isSomething = <T>(v: Maybe<T>): v is T => v !== nothing;
+
+export const m = <T>(v: Maybe<T>): T | undefined =>
+  // @ts-ignore
+  v === nothing ? undefined : v;

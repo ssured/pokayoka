@@ -1,7 +1,11 @@
 import { One } from './base';
+import * as yup from 'yup';
+import { generateId } from '../utils/id';
+import { personSchema } from './Person';
+import { Omit } from '../utils/typescript';
 
 declare global {
-  type Role = Partial<{
+  type Role = {
     '@type': 'Role';
     identifier: string;
     /**
@@ -9,20 +13,38 @@ declare global {
      */
     roleName: string;
 
-    member: One<Person>;
+    member?: One<Person>;
 
     /**
      * The start date and time of the item (in ISO 8601 date format).
      */
-    startDate: string;
+    startDate?: string;
     /**
      * The end date and time of the item (in ISO 8601 date format).
      */
-    endDate: string;
+    endDate?: string;
 
     /**
      * A description of the item.
      */
-    description: string;
-  }>;
+    description?: string;
+  };
 }
+
+export const roleSchema = yup.object<Role>().shape({
+  '@type': yup.string().oneOf(['Role']) as yup.Schema<'Role'>,
+  identifier: yup.string().required(),
+  roleName: yup.string().required(),
+  member: personSchema.required(),
+  startDate: yup.date(),
+  endDate: yup.date(),
+  description: yup.string(),
+});
+
+export const isRole = (v: unknown): v is Role => roleSchema.isValidSync(v);
+
+export const newRole = (required: { roleName: string }): Role => ({
+  '@type': 'Role',
+  identifier: generateId(),
+  ...required,
+});

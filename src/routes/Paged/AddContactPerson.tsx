@@ -15,6 +15,7 @@ import {
 import { Save } from 'grommet-icons';
 import { Formik, FormikProps, useField } from 'formik';
 import * as yup from 'yup';
+import { newRole, roleSchema } from '../../model/Role';
 
 const validationSchema = yup.object<Role>().shape({
   roleName: yup.string().required(),
@@ -28,17 +29,6 @@ const validationSchema = yup.object<Role>().shape({
     // role: yup.string().required(),
   }),
 });
-
-type MyFormValues = Role;
-
-const initialValues: Role = {
-  roleName: 'uitvoerder',
-  // member: {
-  //   givenName: 'Tony',
-  //   familyName: 'Stark',
-  //   email: 'ironman@avengers.io',
-  // },
-};
 
 const TextField: React.FunctionComponent<
   TextInputProps & { name: string; label: string; placeholder?: string }
@@ -54,15 +44,18 @@ const TextField: React.FunctionComponent<
 };
 
 export const AddContactPerson: React.FunctionComponent<
-  RouteComponentProps<{}> & {}
-> = observer(({}) => {
+  RouteComponentProps<{}> & {
+    initialValues?: Role;
+  }
+> = observer(({ initialValues = newRole({ roleName: '' }) }) => {
   const [submitted, setSubmitted] = useState(false);
 
   return (
     <PageTitle title="Contactpersoon toevoegen" href={`./add-contact`}>
       <Page>
         <Formik
-          {...{ initialValues, validationSchema }}
+          initialValues={initialValues}
+          validationSchema={roleSchema}
           validateOnBlur={submitted}
           validateOnChange={submitted}
           onSubmit={(values, helpers) => {
@@ -70,10 +63,7 @@ export const AddContactPerson: React.FunctionComponent<
             alert(JSON.stringify(values, null, 2));
             helpers.setSubmitting(false);
           }}
-          render={({
-            handleSubmit,
-            isSubmitting,
-          }: FormikProps<MyFormValues>) => (
+          render={({ handleSubmit, isSubmitting }) => (
             <form
               onSubmit={e => {
                 e.preventDefault();
@@ -139,19 +129,6 @@ export const AddContactPerson: React.FunctionComponent<
                   <TextField label="Rol" name="roleName" />
                 </Box>
               </Grid>
-              {/* <Field name="lastName">
-            {({
-              field, // { name, value, onChange, onBlur }
-              form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-              meta,
-            }) => (
-              <div>
-                <input type="text" placeholder="Email" {...field} />
-                {meta.touched &&
-                  meta.error && <div className="error">{meta.error}</div>}
-              </div>
-            )}
-          </Field> */}
             </form>
           )}
         />
