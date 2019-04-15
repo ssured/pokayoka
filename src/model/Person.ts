@@ -38,8 +38,8 @@ declare global {
 }
 
 export const personSchema = yup.object<Person>().shape({
-  '@type': yup.string().oneOf(['Person']) as yup.Schema<'Person'>,
-  identifier: yup.string().required(),
+  // '@type': yup.string().oneOf(['Person']) as yup.Schema<'Person'>,
+  // identifier: yup.string().required(),
   familyName: yup.string().required(),
   givenName: yup.string(),
   additionalName: yup.string(),

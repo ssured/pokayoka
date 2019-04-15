@@ -8,6 +8,7 @@ import { setSubject } from '../model/base';
 import { SPOShape } from '../utils/spo';
 import { UndefinedOrPartialSPO } from '../utils/spo-observable';
 import { KeysOfType } from '../utils/typescript';
+import { when } from 'mobx';
 
 const TextInputStatic: React.FunctionComponent<{}> = ({ children }) => (
   <Text truncate>{children}</Text>
@@ -41,7 +42,10 @@ export function EditInlineStringProp<T extends SPOShape>({
 > {
   const lens = useLens(
     {
-      getter: () => subject[prop] as string | undefined,
+      getter: () =>
+        when(() => !!subject[prop]).then(() => subject[prop]) as Promise<
+          string | undefined
+        >,
       setter: value => setSubject(subject, prop, value as any),
     },
     [subject, prop]

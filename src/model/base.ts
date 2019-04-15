@@ -90,6 +90,28 @@ export function setSubject<
   });
 }
 
+export function setSubjectMany<
+  T extends SPOShape,
+  P extends keyof T,
+  O extends Required<T>[P] extends Record<string, infer U> ? U : never
+>(obj: T, pred: P, index: string, objt: O) {
+  runInAction(() => {
+    if (objt == null) {
+      if (obj[pred] != null) {
+        // @ts-ignore
+        delete obj[pred][index];
+      }
+    } else {
+      if (obj[pred] == null) {
+        // @ts-ignore
+        obj[pred] = {};
+      }
+      // @ts-ignore
+      obj[pred][index] = objt;
+    }
+  });
+}
+
 export class WrapAsync<T extends SPOShape, U> {
   @computed
   get decoded() {

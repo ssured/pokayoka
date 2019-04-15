@@ -13,22 +13,8 @@ import {
   Select,
 } from 'grommet';
 import { Save } from 'grommet-icons';
-import { Formik, FormikProps, useField } from 'formik';
-import * as yup from 'yup';
+import { Formik, useField } from 'formik';
 import { newRole, roleSchema } from '../../model/Role';
-
-const validationSchema = yup.object<Role>().shape({
-  roleName: yup.string().required(),
-  member: yup.object().shape({
-    givenName: yup.string(),
-    additionalName: yup.string(),
-    familyName: yup.string().required(),
-    email: yup.string().email(),
-    telephone: yup.string(),
-    description: yup.string(),
-    // role: yup.string().required(),
-  }),
-});
 
 const TextField: React.FunctionComponent<
   TextInputProps & { name: string; label: string; placeholder?: string }
@@ -46,8 +32,9 @@ const TextField: React.FunctionComponent<
 export const AddContactPerson: React.FunctionComponent<
   RouteComponentProps<{}> & {
     initialValues?: Role;
+    onSubmit: (role: Role) => Promise<void>;
   }
-> = observer(({ initialValues = newRole({ roleName: '' }) }) => {
+> = observer(({ initialValues = newRole({ roleName: '' }), onSubmit }) => {
   const [submitted, setSubmitted] = useState(false);
 
   return (
@@ -58,10 +45,12 @@ export const AddContactPerson: React.FunctionComponent<
           validationSchema={roleSchema}
           validateOnBlur={submitted}
           validateOnChange={submitted}
-          onSubmit={(values, helpers) => {
-            console.log({ values, actions: helpers });
-            alert(JSON.stringify(values, null, 2));
-            helpers.setSubmitting(false);
+          onSubmit={async (values, helpers) => {
+            try {
+              await onSubmit(values);
+            } finally {
+              helpers.setSubmitting(false);
+            }
           }}
           render={({ handleSubmit, isSubmitting }) => (
             <form

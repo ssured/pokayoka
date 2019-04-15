@@ -106,8 +106,9 @@ export class ReactiveLens<T> {
         );
       case 'showing': {
         const edit = this.edit.bind(this);
+        const value = this.value as T;
         return useObserver(
-          show.bind(undefined, this.value as T, {
+          show.bind(undefined, value, {
             editButtonProps: { plain: true, onClick: edit },
             edit,
           })
@@ -216,6 +217,7 @@ export class ReactiveLens<T> {
     if (this.state === 'loading') {
       this.state = 'showing';
       this.value = value;
+      console.log('value=', value);
     } else {
       throw new Error(`ReactiveLens: wrong state ${this.state}`);
     }

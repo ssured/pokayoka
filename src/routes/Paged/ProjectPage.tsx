@@ -14,6 +14,7 @@ import { PartialProject } from '../../model/Project/model';
 import { subj } from '../../utils/spo';
 import { SitePage } from './SitePage';
 import { AddContactPerson } from './AddContactPerson';
+import { setSubjectMany } from '../../model/base';
 
 export const ProjectPage: React.FunctionComponent<
   RouteComponentProps<{ projectCode: string }> & {}
@@ -31,7 +32,13 @@ export const ProjectPage: React.FunctionComponent<
       <PageTitle title={project.name} href={`/paged/${projectCode}`}>
         <Router>
           <ProjectFrame path="/" {...{ project }} />
-          <AddContactPerson path="/add-contact" />
+          <AddContactPerson
+            path="/add-contact"
+            onSubmit={async role => {
+              setSubjectMany(project, 'roles', role.identifier, role);
+              navigate(`/paged/${projectCode}`);
+            }}
+          />
           <SitePage path="/:siteKey/*" projectCode={projectCode!} />
         </Router>
       </PageTitle>
@@ -108,6 +115,14 @@ const ProjectShow: React.FunctionComponent<{
           </TextButton>
         }
       />
+      {Object.entries(project.roles || {}).map(
+        ([key, role]) =>
+          role && (
+            <Box key={key} direction="column" align="center">
+              {role.roleName} {role.member && role.member.familyName}
+            </Box>
+          )
+      )}
 
       <PageSection
         heading="Locaties"

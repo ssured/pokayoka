@@ -2,7 +2,6 @@ import { One } from './base';
 import * as yup from 'yup';
 import { generateId } from '../utils/id';
 import { personSchema } from './Person';
-import { Omit } from '../utils/typescript';
 
 declare global {
   type Role = {
@@ -32,8 +31,8 @@ declare global {
 }
 
 export const roleSchema = yup.object<Role>().shape({
-  '@type': yup.string().oneOf(['Role']) as yup.Schema<'Role'>,
-  identifier: yup.string().required(),
+  // '@type': yup.string().oneOf(['Role']) as yup.Schema<'Role'>,
+  // identifier: yup.string().required(),
   roleName: yup.string().required(),
   member: personSchema.required(),
   startDate: yup.date(),

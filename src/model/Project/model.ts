@@ -10,6 +10,7 @@ declare global {
     name: string;
     sites: Many<Site>;
     $image: string;
+    roles: Many<Role>;
   }>;
 }
 
