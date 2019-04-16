@@ -1,4 +1,10 @@
-import { observable, onBecomeObserved, runInAction } from 'mobx';
+import {
+  observable,
+  onBecomeObserved,
+  runInAction,
+  onBecomeUnobserved,
+  getAtom,
+} from 'mobx';
 import { SPOShape, primitive } from './spo';
 import { nothing, Nothing } from './maybe';
 
@@ -14,15 +20,21 @@ type ThunkTo<T extends SPOShape> = { (): { [K in keyof T]: Maybe<T[K]> } } & {
     : never
 };
 
-const core = observable<SPOShape>({});
-
 export const m = <T>(v: Maybe<T>): T | undefined =>
   // @ts-ignore
   v === nothing ? undefined : v;
 
+type NodeBehaviour = {
+  initialValue: SPOShape;
+  onActive?: () => void;
+  onInactive?: () => void;
+};
+
 export const createUniverse = <T extends SPOShape>(
-  resolve: (path: string[]) => Promise<SPOShape>
+  resolve: (path: string[]) => Promise<NodeBehaviour>
 ): ThunkTo<T> => {
+  const core = observable<SPOShape>({});
+
   const createPathProxy = (path: string[] = []): ThunkTo<T> => {
     const proxy = new Proxy(
       () => {
@@ -31,16 +43,27 @@ export const createUniverse = <T extends SPOShape>(
         if (core[key] == null) {
           core[key] = nothing;
 
-          let isResolving = false;
           const disposer = onBecomeObserved(core, key, async () => {
-            if (isResolving) return;
-            try {
-              isResolving = true;
-              const value = await resolve(path);
-              runInAction(() => (core[key] = value));
-              disposer();
-            } finally {
-              isResolving = false;
+            disposer();
+            const { initialValue, onActive, onInactive } = await resolve(path);
+
+            // set the value
+            runInAction(() => (core[key] = initialValue));
+
+            // attach listeners
+            if (onActive) {
+              onBecomeObserved(core, key, onActive);
+              // run listener immediately if it's already observed
+              const atom = getAtom(core, key);
+              if (
+                atom.observing &&
+                atom.observing.find(observable => observable.isBeingObserved)
+              ) {
+                onActive();
+              }
+            }
+            if (onInactive) {
+              onBecomeUnobserved(core, key, onInactive);
             }
           });
         }

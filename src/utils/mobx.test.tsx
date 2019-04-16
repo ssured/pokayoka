@@ -1,5 +1,5 @@
 import React from 'react';
-import { observable, onBecomeObserved, when } from 'mobx';
+import { observable, onBecomeObserved, when, autorun } from 'mobx';
 import { createUniverse, m } from './path-proxy';
 import { nothing, isSomething } from './maybe';
 import console = require('console');
@@ -61,20 +61,33 @@ type Shape = Record<string, U>;
 
 describe('pathproxy for ids', () => {
   test('types propagate', async () => {
+    let activeCount = 0;
     const s = createUniverse<Shape>(async path => {
       console.log(path.join(','));
       switch (path.join(',')) {
         case 'sjoerd':
           return {
-            is: { '@': 'M', familyName: 'de Jong', givenName: 'Sjoerd' },
+            initialValue: {
+              is: { '@': 'M', familyName: 'de Jong', givenName: 'Sjoerd' },
+            },
+            onActive: () => (activeCount += 1),
+            onInactive: () => (activeCount -= 1),
           };
       }
-      return {};
+      return { initialValue: {} };
     });
 
-    const sjoerd = s['sjoerd']();
+    const user = s['sjoerd'];
+    const sjoerd = user();
 
     await when(() => isSomething(sjoerd.is.givenName));
+
+    const disposer = autorun(() => {
+      if (sjoerd.is.givenName === 'Sjoerd') {
+        console.log(activeCount);
+        disposer();
+      }
+    });
 
     expect(s['sjoerd']().is.givenName).toBe('Sjoerd');
     expect(sjoerd.is.givenName).toBe('Sjoerd');
