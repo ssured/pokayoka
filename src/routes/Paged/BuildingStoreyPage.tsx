@@ -1,5 +1,5 @@
 import { RouteComponentProps, Router, navigate } from '@reach/router';
-import { Box, Grid, Text, Stack, Image } from 'grommet';
+import { Box, Grid, Text, Stack, Image, ResponsiveContext } from 'grommet';
 import { Add } from 'grommet-icons';
 import { observer } from 'mobx-react-lite';
 import React, { useContext } from 'react';
@@ -12,6 +12,8 @@ import { SPOContext, useQuery } from '../../contexts/spo-hub';
 import { PartialBuildingStorey } from '../../model/BuildingStorey/model';
 import { subj } from '../../utils/spo';
 import { Map, TileLayer, Marker } from 'react-leaflet';
+import { AddSheet } from './AddSheet';
+import { setSubjectMany } from '../../model/base';
 
 export const BuildingStoreyPage: React.FunctionComponent<
   RouteComponentProps<{ buildingStoreyKey: string }> & {
@@ -44,6 +46,13 @@ export const BuildingStoreyPage: React.FunctionComponent<
       <PageTitle title={buildingStorey.name} href={`./${buildingStoreyKey}`}>
         <Router>
           <BuildingStoreyFrame path="/" {...{ buildingStorey }} />
+          <AddSheet
+            path="/add-sheet"
+            onSubmit={async sheet => {
+              setSubjectMany(buildingStorey, 'sheets', sheet.identifier, sheet);
+              navigate(`.`);
+            }}
+          />
         </Router>
       </PageTitle>
     );
@@ -80,6 +89,7 @@ const BuildingStoreyFrame: React.FunctionComponent<
 const BuildingStoreyShow: React.FunctionComponent<{
   buildingStorey: PartialBuildingStorey;
 }> = observer(({ buildingStorey }) => {
+  const size = useContext(ResponsiveContext);
   return (
     <>
       <Box direction="row" justify="between">
@@ -125,13 +135,23 @@ const BuildingStoreyShow: React.FunctionComponent<{
       <PageSection
         heading="Plattegronden"
         action={
-          <TextButton>
+          <TextButton
+            onClick={() =>
+              navigate([window.location.pathname, 'add-sheet'].join('/'))
+            }
+          >
             <Add size="small" color="currentColor" /> plattegrond
           </TextButton>
         }
       />
 
-      <Grid columns={['1/3']} rows={['small']} gap="medium">
+      <Grid
+        align="start"
+        columns={
+          size === 'small' ? undefined : { count: 'fill', size: 'medium' }
+        }
+        gap="medium"
+      >
         {Object.entries(buildingStorey.sheets || {}).map(
           ([key, sheet]) =>
             sheet && (

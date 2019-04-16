@@ -1,3 +1,6 @@
+import { SPOShape, primitive } from './spo';
+import { Maybe } from './maybe';
+
 // export const createPathProxy: <T extends { [key: string]: any }>(
 //   mapper?: (
 //     path: string[],
@@ -34,8 +37,12 @@ type unwrap<T extends (path: string[]) => any> = (T extends (
 //     ? never
 //     : { [P in keyof defaultProxyType]: unwrap<defaultProxyType[P]> });
 
-export const createPathProxy: <
-  T extends (path: string[]) => any = defaultProxyType
->(
-  mapper?: T
-) => unwrap<T>;
+type ThunkTo<T extends SPOShape> = { (): Maybe<T> } & {
+  [K in keyof T]: T[K] extends primitive
+    ? T[K]
+    : T[K] extends SPOShape
+    ? ThunkTo<T[K]>
+    : never
+};
+
+export const createPathProxy: <T extends SPOShape>() => ThunkTo<T>;

@@ -39,7 +39,8 @@ export const nothing: Nothing = new Proxy<Nothing>(
 export const isNothing = <T>(v: Maybe<T>): v is Nothing => v === nothing;
 
 // @ts-ignore
-export const isSomething = <T>(v: Maybe<T>): v is T => v !== nothing;
+export const isSomething = <T>(v: Maybe<T>): v is T | undefined =>
+  v !== nothing;
 
 export const m = <T>(v: Maybe<T>): T | undefined =>
   // @ts-ignore

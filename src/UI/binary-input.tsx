@@ -68,19 +68,8 @@ function blobToDataURL(blob: Blob): Promise<string> {
   });
 }
 
-export type PDFData = {
-  name: string;
-  width: number;
-  height: number;
-  $thumb: string;
-  images: {
-    [key: string]: Tile;
-  };
-  $source: string;
-};
-
 export const PDFInput: FunctionComponent<{
-  onChange: (data: PDFData | null) => void;
+  onChange: (data: Sheet | null) => void;
   value: string | null;
 }> = ({ onChange, value: hash }) => {
   const [progress, setProgress] = useState(-1);
@@ -100,6 +89,8 @@ export const PDFInput: FunctionComponent<{
     const cdnCache = await window.caches.open('cdn');
     await cdnCache.put(`/cdn/${$source}`, response);
 
+    const identifier = generateId();
+
     const ws = new WebSocket('wss://app.snagtracker.com/wstiler');
     try {
       const dataURL = await blobToDataURL(file);
@@ -111,7 +102,7 @@ export const PDFInput: FunctionComponent<{
             name: file.name,
             contentType: 'application/pdf',
             size: Math.floor((dataURL.length / 4) * 3),
-            uuid: generateId(),
+            uuid: identifier,
           })
         );
       });
@@ -129,7 +120,9 @@ export const PDFInput: FunctionComponent<{
         if (info.progress === 1) {
           ws.close();
 
-          const sheet: PDFData = {
+          const sheet: Sheet = {
+            '@type': 'Sheet',
+            identifier,
             name: info.pdfInfo.name.replace(/\.pdf$/i, ''),
             width: info.pdfInfo._width as number,
             height: info.pdfInfo._height as number,
@@ -157,8 +150,7 @@ export const PDFInput: FunctionComponent<{
               sheet.$thumb = hash;
             } else {
               const [zyx] = name.split('.');
-              const [z, y, x] = zyx.split('/').map(n => parseInt(n, 10));
-              sheet.images[zyx] = { x, y, z, $hash: hash };
+              sheet.images[`$${zyx}`] = hash;
             }
           }
 

@@ -125,10 +125,10 @@ const BuildingShow: React.FunctionComponent<{
       </Box>
 
       <PageSection
-        heading="Gebouwen"
+        heading="Verdiepingen"
         action={
           <TextButton>
-            <Add size="small" color="currentColor" /> gebouw
+            <Add size="small" color="currentColor" /> verdieping
           </TextButton>
         }
       />
