@@ -121,7 +121,7 @@ const SiteShow: React.FunctionComponent<{
         }
       />
 
-      <Grid columns={['1/3']} rows={['small']} gap="medium">
+      <Grid fill="horizontal" columns={['1/3']} rows={['small']} gap="medium">
         {Object.entries(site.buildings || {}).map(
           ([key, building]) =>
             building && (

@@ -33,6 +33,7 @@ import { Tree } from './routes/Tree/index';
 import { Columns } from './routes/Columns/index';
 import { ProjectPage } from './routes/Paged/ProjectPage';
 import { Sidebar, SidebarMenuItem } from './layout/Sidebar';
+import { GunComponent } from './routes/Gun';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
@@ -375,6 +376,7 @@ export const App: React.FunctionComponent<{}> = () => {
                 {/* <Tree path="tree" /> */}
                 {/* <Columns path="columns/:projectCode" /> */}
                 <ProjectPage path="paged/:projectCode/*" />
+                <GunComponent path="gun" />
 
                 {/* <NotFound default /> */}
                 {/* <User path=":userId">

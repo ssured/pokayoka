@@ -2281,6 +2281,11 @@
     "@types/node" "*"
     "@types/tough-cookie" "*"
 
+"@types/gun@^0.9.1":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@types/gun/-/gun-0.9.1.tgz#00ce80f50305e9583f807e750275547aaeb4737d"
+  integrity sha512-frQF4+FbyG70MhfNmY3jPhXA5nRA+145B5QcXk2mo+n3qpxLhO28YEET/gjH0lxxqQQrHPKjLMt1yEtaIErtgw==
+
 "@types/history@*":
   version "4.7.2"
   resolved "https://registry.yarnpkg.com/@types/history/-/history-4.7.2.tgz#0e670ea254d559241b6eeb3894f8754991e73220"
@@ -7003,6 +7008,16 @@ gud@^1.0.0:
   resolved "https://registry.yarnpkg.com/gud/-/gud-1.0.0.tgz#a489581b17e6a70beca9abe3ae57de7a499852c0"
   integrity sha512-zGEOVKFM5sVPPrYs7J5/hYEw2Pof8KCyOwyhG8sAF26mCAeUFAcYPu1mwB7hhpIP29zOIBaDqwuHdLp0jvZXjw==
 
+gun@^0.2019.413:
+  version "0.2019.413"
+  resolved "https://registry.yarnpkg.com/gun/-/gun-0.2019.413.tgz#4d6311f3714f8a3e3f32516dd01f3e9d5b1cff06"
+  integrity sha512-rPvbVhCdUdu4W4eet4S2m57P/veA5+abjHDggCMRnmbbp+6GT4uaqunznhLbKZvYkTM6FzAiL2PZ4v2H2wqvEg==
+  dependencies:
+    ws "~>5.2.0"
+  optionalDependencies:
+    node-webcrypto-ossl "^1.0.39"
+    text-encoding "^0.7.0"
+
 gzip-size@5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/gzip-size/-/gzip-size-5.0.0.tgz#a55ecd99222f4c48fd8c01c625ce3b349d0a0e80"
@@ -9699,6 +9714,11 @@ mute-stream@0.0.7:
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.7.tgz#3075ce93bc21b8fab43e1bc4da7e8115ed1e7bab"
   integrity sha1-MHXOk7whuPq0PhvE2n6BFe0ee6s=
 
+nan@^2.12.1:
+  version "2.13.2"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.13.2.tgz#f51dc7ae66ba7d5d55e1e6d4d8092e802c9aefe7"
+  integrity sha512-TghvYc72wlMGMVMluVo9WRJc0mB8KxxF/gZ4YYFy7V2ZQX9l7rgbPg7vjS9mt6U5HXODVFVI2bOduCzwOMv/lw==
+
 nan@^2.9.2:
   version "2.12.1"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.12.1.tgz#7b1aa193e9aa86057e3c7bbd0ac448e770925552"
@@ -9928,6 +9948,16 @@ node-version@^1.0.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/node-version/-/node-version-1.2.0.tgz#34fde3ffa8e1149bd323983479dda620e1b5060d"
   integrity sha512-ma6oU4Sk0qOoKEAymVoTvk8EdXEobdS7m/mAGhDJ8Rouugho48crHBORAmy5BoOcv8wraPM6xumapQp5hl4iIQ==
+
+node-webcrypto-ossl@^1.0.39:
+  version "1.0.43"
+  resolved "https://registry.yarnpkg.com/node-webcrypto-ossl/-/node-webcrypto-ossl-1.0.43.tgz#51ac6a411725d78eaf935fb727ec848b6478235b"
+  integrity sha512-AavMGbUB2MaTzli0+swjSAr4aLqf9M5jHIrs5VP9EUDXyEaIOyyio3H1z3pZCxKpaDD9coKWD3bWAiaIBuN8wg==
+  dependencies:
+    mkdirp "^0.5.1"
+    nan "^2.12.1"
+    tslib "^1.9.3"
+    webcrypto-core "^0.1.26"
 
 nopt@^4.0.1, nopt@~4.0.1:
   version "4.0.1"
@@ -13080,6 +13110,11 @@ test-exclude@^5.0.0:
     read-pkg-up "^4.0.0"
     require-main-filename "^1.0.1"
 
+text-encoding@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/text-encoding/-/text-encoding-0.7.0.tgz#f895e836e45990624086601798ea98e8f36ee643"
+  integrity sha512-oJQ3f1hrOnbRLOcwKz0Liq2IcrvDeZRHXhd9RgLrsT+DjWY/nty1Hi7v3dtkaEYbPYe0mUoOfzRrMwfXXwgPUA==
+
 text-table@0.2.0, text-table@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
@@ -13950,6 +13985,13 @@ web-namespaces@^1.1.2:
   resolved "https://registry.yarnpkg.com/web-namespaces/-/web-namespaces-1.1.2.tgz#c8dc267ab639505276bae19e129dbd6ae72b22b4"
   integrity sha512-II+n2ms4mPxK+RnIxRPOw3zwF2jRscdJIUE9BfkKHm4FYEg9+biIoTMnaZF5MpemE3T+VhMLrhbyD4ilkPCSbg==
 
+webcrypto-core@^0.1.26:
+  version "0.1.26"
+  resolved "https://registry.yarnpkg.com/webcrypto-core/-/webcrypto-core-0.1.26.tgz#977e5cdd9173db6ac8b18414d66ee3759a8b1024"
+  integrity sha512-BZVgJZkkHyuz8loKvsaOKiBDXDpmMZf5xG4QAOlSeYdXlFUl9c1FRrVnAXcOdb4fTHMG+TRu81odJwwSfKnWTA==
+  dependencies:
+    tslib "^1.7.1"
+
 webidl-conversions@^4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/webidl-conversions/-/webidl-conversions-4.0.2.tgz#a855980b1f0b6b359ba1d5d9fb39ae941faa63ad"
@@ -14335,7 +14377,7 @@ write-file-atomic@^2.0.0, write-file-atomic@^2.1.0:
     imurmurhash "^0.1.4"
     signal-exit "^3.0.2"
 
-ws@^5.2.0:
+ws@^5.2.0, ws@~>5.2.0:
   version "5.2.2"
   resolved "https://registry.yarnpkg.com/ws/-/ws-5.2.2.tgz#dffef14866b8e8dc9133582514d1befaf96e980f"
   integrity sha512-jaHFD6PFv6UgoIVda6qZllptQsMlDEJkTQcybzzXDYM1XO9Y8em691FGMPmM46WGyLU4z9KMgQN+qrux/nhlHA==

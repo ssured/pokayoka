@@ -86,6 +86,10 @@ describe('pathproxy for ids', () => {
         }
         return {};
       },
+      updateListener: (path, value) => {
+        console.log(path);
+        console.log(value);
+      },
     });
 
     const user = s['sjoerd'];

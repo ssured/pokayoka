@@ -137,7 +137,7 @@ const BuildingShow: React.FunctionComponent<{
         }
       />
 
-      <Grid columns={['1/3']} rows={['small']} gap="medium">
+      <Grid fill="horizontal" columns={['1/3']} rows={['small']} gap="medium">
         {Object.entries(building.buildingStoreys || {}).map(
           ([key, buildingStorey]) =>
             buildingStorey && (

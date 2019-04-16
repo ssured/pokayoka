@@ -1,10 +1,9 @@
 import { Many } from './base';
 
 declare global {
-  type User = {
+  type User = Partial<{
     '@type': 'PYUser';
     identifier: string;
-  } & Partial<{
     /**
      * Name of the user
      */
