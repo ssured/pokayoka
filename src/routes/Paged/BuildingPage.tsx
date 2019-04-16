@@ -39,7 +39,11 @@ export const BuildingPage: React.FunctionComponent<
 
   if (building) {
     return (
-      <PageTitle title={building.name} href={`./${buildingKey}`}>
+      <PageTitle
+        prefix="gebouw"
+        title={building.name}
+        href={`./${buildingKey}`}
+      >
         <Router>
           <BuildingFrame path="/" {...{ building }} />
           <BuildingStoreyPage

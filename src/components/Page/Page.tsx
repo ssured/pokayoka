@@ -1,35 +1,19 @@
-import React, { ReactNode, useContext } from 'react';
-import { Box, Heading, Grid } from 'grommet';
 import { navigate } from '@reach/router';
+import { Box, Grid, Heading, ResponsiveContext } from 'grommet';
+import React, { ReactNode, useContext } from 'react';
 import { UI_EMPTY_STRING } from '../../constants';
+import { colorsLightToDark, sizesSmallToBig } from '../../theme';
 
-const colorsLightToDark = [
-  'white',
-  'light-1',
-  'light-2',
-  'light-3',
-  'light-4',
-  'dark-4',
-  'dark-3',
-  'dark-2',
-  'dark-1',
-  'black',
-];
-
-const sizesSmallToBig = [
-  'none',
-  'xsmall',
-  'small',
-  'medium',
-  'large',
-  'xlarge',
-];
-
-const PageTitlesContext = React.createContext<[string, string | undefined][]>(
-  []
-);
+const PageTitlesContext = React.createContext<
+  [ReactNode, string | undefined][]
+>([]);
 
 export const PageTitle: React.FunctionComponent<{
+  /**
+   * prefix, only shown if screen wider than small
+   */
+  prefix: string | undefined;
+
   /**
    * title of the page, if undefined defaults to UI_EMTPY_STRING constant
    */
@@ -39,8 +23,9 @@ export const PageTitle: React.FunctionComponent<{
    * absolute link, or relative when starting with './'
    */
   href: string | undefined;
-}> = ({ title, href, children }) => {
+}> = ({ prefix, title, href, children }) => {
   const current = useContext(PageTitlesContext);
+  const size = useContext(ResponsiveContext);
 
   // parse relative links, which start with './'
   const link =
@@ -48,7 +33,19 @@ export const PageTitle: React.FunctionComponent<{
 
   return (
     <PageTitlesContext.Provider
-      value={[[title || UI_EMPTY_STRING, link], ...current]}
+      value={[
+        [
+          size !== 'small' && prefix ? (
+            <>
+              <small>{prefix}:</small> {title || UI_EMPTY_STRING}
+            </>
+          ) : (
+            title || UI_EMPTY_STRING
+          ),
+          link,
+        ],
+        ...current,
+      ]}
     >
       {children}
     </PageTitlesContext.Provider>
@@ -67,7 +64,7 @@ interface Border {
 const Tab: React.FunctionComponent<{
   border: Border;
   depth?: number;
-  titles: [string, string?][];
+  titles: [ReactNode, string?][];
   totalHeight?: number;
 }> = ({ border, titles = [], depth = 0, totalHeight = titles.length }) => {
   const [title, href] = titles[0];
@@ -85,28 +82,31 @@ const Tab: React.FunctionComponent<{
         )}
       </Box>
       <Box
-        as="a"
-        align="center"
         border={{ ...border, side: 'vertical' }}
-        pad={{ horizontal: 'medium' }}
-        onClick={href == null ? undefined : () => navigate(href)}
-        style={{ cursor: 'pointer' }}
-        background={colorsLightToDark[depth]}
         elevation={sizesSmallToBig[totalHeight - depth]}
       >
-        <Heading
-          level={depth === 0 ? '1' : '3'}
-          margin={{ horizontal: 'medium', vertical: 'xsmall' }}
+        <Box
+          as="a"
+          align="center"
+          pad={{ horizontal: 'medium' }}
+          onClick={href == null ? undefined : () => navigate(href)}
+          style={{ cursor: 'pointer', zIndex: 1 }}
+          background={colorsLightToDark[depth]}
         >
-          {title}
-        </Heading>
+          <Heading
+            level={depth === 0 ? '2' : '3'}
+            margin={{ horizontal: 'medium', vertical: 'xsmall' }}
+          >
+            {title}
+          </Heading>
+        </Box>
       </Box>
     </Box>
   );
 };
 
 export const Page: React.FunctionComponent<{
-  titles?: [string, string?][];
+  titles?: [ReactNode, string?][];
   rightOfTitle?: ReactNode;
 }> = ({ titles = useContext(PageTitlesContext), children, rightOfTitle }) => {
   const border: Border = {

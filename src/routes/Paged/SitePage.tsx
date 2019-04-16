@@ -31,7 +31,7 @@ export const SitePage: React.FunctionComponent<
 
   if (site) {
     return (
-      <PageTitle title={site.name} href={`./${siteKey}`}>
+      <PageTitle prefix="locatie" title={site.name} href={`./${siteKey}`}>
         <Router>
           <SiteFrame path="/" {...{ site }} />
           <BuildingPage

@@ -41,9 +41,15 @@ export const ProjectPage: React.FunctionComponent<
       ? (get(q[0].variables.s as subj) as PartialProject)
       : undefined;
 
+  console.log(projectCode, JSON.stringify(q));
+
   if (project) {
     return (
-      <PageTitle title={project.name} href={`/paged/${projectCode}`}>
+      <PageTitle
+        prefix="project"
+        title={project.name}
+        href={`/paged/${projectCode}`}
+      >
         <Router>
           <ProjectFrame path="/" {...{ project }} />
           <AddContactPerson

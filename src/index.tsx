@@ -1,16 +1,14 @@
-import React from 'react'; // tslint:disable-line import-name
-import { render } from 'react-dom';
-
-import { App } from './App';
-
-import { configure } from 'mobx';
-
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/markdown/markdown';
+import { Grommet } from 'grommet';
 import 'leaflet/dist/leaflet.css';
-
+import { configure } from 'mobx';
+import React from 'react'; // tslint:disable-line import-name
+import { render } from 'react-dom';
 import { IconContext } from 'react-icons';
+import { App } from './App';
 import { AuthenticationContainer } from './contexts/authentication';
+import { theme } from './theme';
 
 // fix marker urls
 // https://github.com/PaulLeCam/react-leaflet/issues/255#issuecomment-261904061
@@ -46,7 +44,9 @@ function renderApp() {
   render(
     <IconContext.Provider value={{ style: { verticalAlign: 'middle' } }}>
       <AuthenticationContainer.Provider>
-        <App />
+        <Grommet theme={theme} full>
+          <App />
+        </Grommet>
       </AuthenticationContainer.Provider>
     </IconContext.Provider>,
     document.getElementById('root')

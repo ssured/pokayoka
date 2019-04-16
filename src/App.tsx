@@ -1,9 +1,16 @@
 import React, { useContext } from 'react';
-import { Grommet, Button } from 'grommet';
-import { grommet } from 'grommet/themes';
+import { Grid, Button, ResponsiveContext, Box, Heading, Text } from 'grommet';
+import { theme } from './theme';
 
 import styled from 'styled-components';
-import * as Icons from 'grommet-icons';
+import {
+  Menu,
+  Close,
+  Disc,
+  Projects as ProjectsIcon,
+  Book,
+  Home as HomeIcon,
+} from 'grommet-icons';
 
 import { Router, navigate, RouteComponentProps } from '@reach/router';
 
@@ -25,12 +32,11 @@ import { Sync } from './routes/Sync/index';
 import { Tree } from './routes/Tree/index';
 import { Columns } from './routes/Columns/index';
 import { ProjectPage } from './routes/Paged/ProjectPage';
+import { Sidebar, SidebarMenuItem } from './layout/Sidebar';
 
 const NotFound: React.FunctionComponent<RouteComponentProps<{}>> = () => {
   return <p>Not Found</p>;
 };
-
-const { Menu, Close } = Icons;
 
 const SidebarContext = React.createContext<boolean>(false);
 
@@ -280,6 +286,24 @@ const StyledRouter = styled(Router)`
   }
 `;
 
+const items: SidebarMenuItem[] = [
+  { icon: <HomeIcon />, onClick: () => navigate('/'), label: 'Beginscherm' },
+  {
+    icon: <ProjectsIcon />,
+    onClick: () => {
+      navigate('/projects');
+    },
+    label: 'Projecten',
+  },
+  {
+    icon: <Book />,
+    onClick: () => {
+      alert('Verwerkingsinstructies');
+    },
+    label: 'Verwerkingsinstructies',
+  },
+];
+
 export const App: React.FunctionComponent<{}> = () => {
   const {
     isAuthenticated,
@@ -291,75 +315,142 @@ export const App: React.FunctionComponent<{}> = () => {
     navContext: { label: 'Home', path: '/' },
   });
 
-  const [isSidebarOpen, toggleSidebar] = useToggle(false);
+  const size = useContext(ResponsiveContext);
+  const [showSidebar, toggleSidebar] = useToggle(false);
   const UI = useUIContext();
 
   return (
     <newUIContext.Provider>
-      <Grommet theme={grommet}>
-        <CapabilitiesCheck>
-          {!isAuthenticated ? (
-            <LoginForm
-              onAuthentication={(name, roles) =>
-                login({ ok: true, name, roles })
-              }
-            />
-          ) : (
-            <StyledWrapper>
-              <SidebarContext.Provider value={isSidebarOpen}>
-                <Content>
-                  <StyledRouter>
-                    <Home path="/" />
-                    {/* <Debug path="debug" /> */}
-                    <Sync path="sync" />
-                    <Projects path="projects/*" />
-                    <Site path="sites/:siteId/*" />
-                    <Building path="buildings/:buildingId/*" />
-                    <BuildingStorey path="buildingStoreys/:buildingStoreyId/*" />
-                    <Sheet path="sheets/:sheetId/*" />
+      <CapabilitiesCheck>
+        {!isAuthenticated ? (
+          <LoginForm
+            onAuthentication={(name, roles) => login({ ok: true, name, roles })}
+          />
+        ) : (
+          <Grid
+            fill="horizontal"
+            style={{ minHeight: '100%' }}
+            columns={['flex', 'auto']}
+            rows={['auto', 'flex', 'auto']}
+            areas={[
+              { name: 'header', start: [0, 0], end: [1, 0] },
+              { name: 'content', start: [0, 1], end: [0, 1] },
+              { name: 'footer', start: [0, 2], end: [0, 2] },
+              { name: 'nav', start: [1, 1], end: [1, 2] },
+            ]}
+          >
+            <Box
+              gridArea="header"
+              direction="row"
+              justify="between"
+              align="center"
+              background="neutral-2"
+            >
+              <Box direction="row" justify="center" margin={{ left: 'small' }}>
+                <Disc />
+                <Box pad={{ left: 'small' }}>
+                  <Text weight="bold">Pokayoka</Text>
+                </Box>
+              </Box>
+              <Button
+                gridArea="burger"
+                icon={showSidebar ? <Close /> : <Menu />}
+                onClick={() => toggleSidebar()}
+              />
+            </Box>
+            <Box
+              gridArea="content"
+              pad={size === 'small' ? undefined : 'medium'}
+              // overflow={{ vertical: 'scroll' }}
+            >
+              <StyledRouter>
+                {/* <Home path="/" /> */}
+                {/* <Sync path="sync" /> */}
+                {/* <Projects path="projects/*" />
+              <Site path="sites/:siteId/*" />
+              <Building path="buildings/:buildingId/*" />
+              <BuildingStorey path="buildingStoreys/:buildingStoreyId/*" />
+              <Sheet path="sheets/:sheetId/*" /> */}
 
-                    <Tree path="tree" />
-                    <Columns path="columns/:projectCode" />
-                    <ProjectPage path="paged/:projectCode/*" />
+                {/* <Tree path="tree" /> */}
+                {/* <Columns path="columns/:projectCode" /> */}
+                <ProjectPage path="paged/:projectCode/*" />
 
-                    <NotFound default />
-                    {/* <User path=":userId">
+                {/* <NotFound default /> */}
+                {/* <User path=":userId">
                   <Project path=":projectId" />
-                </User> */}
-                  </StyledRouter>
-                </Content>
-                <MainNav
-                  toggleSidebar={toggleSidebar}
-                  isSidebarOpen={isSidebarOpen}
-                >
-                  <MenuItemButton
-                    icon={Icons.Home}
-                    actionFn={() => navigate('/')}
-                    label="Beginscherm"
-                  />
-                  <MenuItemButton
-                    icon={Icons.Projects}
-                    actionFn={() => {
-                      navigate('/projects');
-                    }}
-                    label="Projecten"
-                  />
-                  <MenuItemButton
-                    icon={Icons.Book}
-                    actionFn={() => {
-                      alert('Verwerkingsinstructies');
-                    }}
-                    label="Verwerkingsinstructies"
-                  />
-                  <div className="context-menu-items">
-                    <UI.ContextSubMenu />
-                  </div>
-                </MainNav>
-              </SidebarContext.Provider>
-            </StyledWrapper>
-          )}
-        </CapabilitiesCheck>
-      </Grommet>
+                </User>  */}
+              </StyledRouter>
+            </Box>
+            <Box gridArea="footer">footer</Box>
+
+            <Box gridArea="nav">
+              {showSidebar && (
+                <Sidebar
+                  items={items}
+                  onToggleSidebar={() => toggleSidebar()}
+                />
+              )}
+            </Box>
+          </Grid>
+        )}
+      </CapabilitiesCheck>
     </newUIContext.Provider>
   );
 };
+
+/*
+          <StyledWrapper>
+            <SidebarContext.Provider value={isSidebarOpen}>
+              <Content>
+                <StyledRouter>
+                  <Home path="/" />
+                  <Sync path="sync" />
+                  <Projects path="projects/*" />
+                  <Site path="sites/:siteId/*" />
+                  <Building path="buildings/:buildingId/*" />
+                  <BuildingStorey path="buildingStoreys/:buildingStoreyId/*" />
+                  <Sheet path="sheets/:sheetId/*" />
+
+                  <Tree path="tree" />
+                  <Columns path="columns/:projectCode" />
+                  <ProjectPage path="paged/:projectCode/*" />
+
+                  <NotFound default />
+                  <User path=":userId">
+                  <Project path=":projectId" />
+                </User> 
+                </StyledRouter>
+              </Content>
+              <MainNav
+                toggleSidebar={toggleSidebar}
+                isSidebarOpen={isSidebarOpen}
+              >
+                <MenuItemButton
+                  icon={Icons.Home}
+                  actionFn={() => navigate('/')}
+                  label="Beginscherm"
+                />
+                <MenuItemButton
+                  icon={Icons.Projects}
+                  actionFn={() => {
+                    navigate('/projects');
+                  }}
+                  label="Projecten"
+                />
+                <MenuItemButton
+                  icon={Icons.Book}
+                  actionFn={() => {
+                    alert('Verwerkingsinstructies');
+                  }}
+                  label="Verwerkingsinstructies"
+                />
+                <div className="context-menu-items">
+                  <UI.ContextSubMenu />
+                </div>
+              </MainNav>
+            </SidebarContext.Provider>
+          </StyledWrapper>
+
+
+*/

@@ -43,7 +43,11 @@ export const BuildingStoreyPage: React.FunctionComponent<
 
   if (buildingStorey) {
     return (
-      <PageTitle title={buildingStorey.name} href={`./${buildingStoreyKey}`}>
+      <PageTitle
+        prefix="verdieping"
+        title={buildingStorey.name}
+        href={`./${buildingStoreyKey}`}
+      >
         <Router>
           <BuildingStoreyFrame path="/" {...{ buildingStorey }} />
           <AddSheet
@@ -92,13 +96,17 @@ const BuildingStoreyShow: React.FunctionComponent<{
   const size = useContext(ResponsiveContext);
   return (
     <>
-      <Box direction="row" justify="between">
-        <Box>
-          <Grid columns={['flex', 'auto']} gap="medium">
-            <EditInlineStringProp subject={buildingStorey} prop="name" />
-          </Grid>
-        </Box>
-        <Box width="medium" height="small">
+      <Grid
+        align="start"
+        columns={
+          size === 'small' ? undefined : { count: 'fill', size: 'medium' }
+        }
+        gap="medium"
+      >
+        <Grid columns={['flex', 'auto']} gap="medium">
+          <EditInlineStringProp subject={buildingStorey} prop="name" />
+        </Grid>
+        <Box height="small">
           <Stack fill>
             <Map
               center={[52.2975, 6.318611]}
@@ -130,7 +138,7 @@ const BuildingStoreyShow: React.FunctionComponent<{
             </Box>
           </Stack>
         </Box>
-      </Box>
+      </Grid>
 
       <PageSection
         heading="Plattegronden"
