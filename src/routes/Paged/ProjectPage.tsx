@@ -1,6 +1,15 @@
 import { navigate, RouteComponentProps, Router } from '@reach/router';
-import { Box, Grid, Image, Stack, Text } from 'grommet';
-import { Add, Image as ImageIcon } from 'grommet-icons';
+import {
+  Box,
+  Grid,
+  Image,
+  ResponsiveContext,
+  Stack,
+  Text,
+  Button,
+} from 'grommet';
+import { Add, Image as ImageIcon, Trash } from 'grommet-icons';
+import { groupBy, filter } from 'lodash';
 import { observer } from 'mobx-react-lite';
 import React, { useContext } from 'react';
 import { Map, Marker, TileLayer } from 'react-leaflet';
@@ -10,11 +19,16 @@ import { Page, PageTitle } from '../../components/Page/Page';
 import { PageSection } from '../../components/Page/PageSection';
 import { TextButton } from '../../components/TextButton';
 import { SPOContext, useQuery } from '../../contexts/spo-hub';
-import { PartialProject } from '../../model/Project/model';
-import { subj } from '../../utils/spo';
-import { SitePage } from './SitePage';
-import { AddContactPerson } from './AddContactPerson';
 import { setSubjectMany } from '../../model/base';
+import {
+  PartialProject,
+  projectRemoveRole,
+  isProject,
+} from '../../model/Project/model';
+import { subj } from '../../utils/spo';
+import { AddContactPerson } from './AddContactPerson';
+import { SitePage } from './SitePage';
+import { isRole } from '../../model/Role';
 
 export const ProjectPage: React.FunctionComponent<
   RouteComponentProps<{ projectCode: string }> & {}
@@ -76,6 +90,7 @@ const ProjectFrame: React.FunctionComponent<
 const ProjectShow: React.FunctionComponent<{
   project: PartialProject;
 }> = observer(({ project }) => {
+  const size = useContext(ResponsiveContext);
   return (
     <>
       <Box direction="row" justify="between">
@@ -115,14 +130,39 @@ const ProjectShow: React.FunctionComponent<{
           </TextButton>
         }
       />
-      {Object.entries(project.roles || {}).map(
-        ([key, role]) =>
-          role && (
-            <Box key={key} direction="column" align="center">
-              {role.roleName} {role.member && role.member.familyName}
-            </Box>
+
+      <Grid
+        align="start"
+        columns={
+          size === 'small' ? undefined : { count: 'fill', size: 'small' }
+        }
+        gap="medium"
+      >
+        {Object.entries(
+          groupBy(
+            filter(project.roles || {}, role => !!(role && role.roleName)),
+            role => role && role.roleName
           )
-      )}
+        ).map(([roleName, roles]) => (
+          <Box key={roleName} direction="column">
+            <Text weight="bold">{roleName}</Text>
+            <Box as="ul" margin={{ left: 'medium' }}>
+              {roles.map((role, i) => (
+                <Text key={i} as="li">
+                  {role && role.member && role.member.familyName}
+                  {isRole(role) && isProject(project) && (
+                    <Button
+                      plain
+                      icon={<Trash color="blue" />}
+                      onClick={() => projectRemoveRole(project, role)}
+                    />
+                  )}
+                </Text>
+              ))}
+            </Box>
+          </Box>
+        ))}
+      </Grid>
 
       <PageSection
         heading="Locaties"

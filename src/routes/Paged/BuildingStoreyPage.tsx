@@ -166,7 +166,7 @@ const BuildingStoreyShow: React.FunctionComponent<{
               >
                 {sheet.$thumb && (
                   <Box fill>
-                    <Image src={`/cdn/${sheet.$thumb}`} fit="cover" />
+                    <Image src={`/cdn/${sheet.$thumb}`} fit="contain" />
                   </Box>
                 )}
                 <Text size="large" truncate>

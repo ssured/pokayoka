@@ -1,6 +1,8 @@
 import { Many } from '../base';
+import * as yup from 'yup';
 
 import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
+import { runInAction } from 'mobx';
 
 declare global {
   type IFCProject = Partial<{
@@ -15,3 +17,23 @@ declare global {
 }
 
 export type PartialProject = UndefinedOrPartialSPO<IFCProject>;
+
+export const projectSchema = yup.object<Person>().shape({
+  // '@type': yup.string().oneOf(['Project']) as yup.Schema<'Project'>,
+  // identifier: yup.string().required(),
+  code: yup.string(),
+  name: yup.string().required(),
+  sites: yup.object(),
+  $image: yup.string(),
+  roles: yup.object(),
+});
+
+export const isProject = (v: unknown): v is IFCProject =>
+  projectSchema.isValidSync(v);
+
+export const projectRemoveRole = (project: IFCProject, role: Role) =>
+  runInAction(() => {
+    Object.entries(project.roles || {})
+      .filter(([, projectRole]) => projectRole.identifier === role.identifier)
+      .forEach(([key]) => delete project.roles![key]);
+  });
