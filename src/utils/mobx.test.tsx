@@ -1,7 +1,6 @@
 import React from 'react';
-import { observable, onBecomeObserved, when, autorun } from 'mobx';
-import { createUniverse, m } from './path-proxy';
-import { nothing, isSomething } from './maybe';
+import { observable, onBecomeObserved, when, reaction } from 'mobx';
+import { createUniverse } from './path-proxy';
 import console = require('console');
 
 describe('linking observables', () => {
@@ -62,37 +61,57 @@ type Shape = Record<string, U>;
 describe('pathproxy for ids', () => {
   test('types propagate', async () => {
     let activeCount = 0;
-    const s = createUniverse<Shape>(async path => {
-      console.log(path.join(','));
-      switch (path.join(',')) {
-        case 'sjoerd':
-          return {
-            initialValue: {
-              is: { '@': 'M', familyName: 'de Jong', givenName: 'Sjoerd' },
-            },
-            onActive: () => (activeCount += 1),
-            onInactive: () => (activeCount -= 1),
-          };
-      }
-      return { initialValue: {} };
+    const s = createUniverse<Shape>({
+      resolve: (path, setValue) => {
+        console.log(path.join(','));
+        switch (path.join(',')) {
+          case 'sjoerd':
+            (async () => {
+              await new Promise(res => setTimeout(res, 10));
+              setValue({
+                is: { '@': 'M', familyName: 'de Jong', givenName: 'Sjoerd' },
+              });
+            })();
+
+            return {
+              onActive: () => (activeCount += 1),
+              onInactive: () => (activeCount -= 1),
+            };
+          case 'sander':
+            setValue({
+              is: ['sjoerd', 'is'],
+            });
+
+            return {};
+        }
+        return {};
+      },
     });
 
     const user = s['sjoerd'];
     const sjoerd = user();
 
-    await when(() => isSomething(sjoerd.is.givenName));
+    const disposer = reaction(() => sjoerd.is.givenName, () => {});
+    await new Promise(res => setTimeout(res, 20));
+    expect(activeCount).toBe(1);
+    disposer();
+    expect(activeCount).toBe(0);
 
-    const disposer = autorun(() => {
-      if (sjoerd.is.givenName === 'Sjoerd') {
-        console.log(activeCount);
-        disposer();
-      }
-    });
-
-    expect(s['sjoerd']().is.givenName).toBe('Sjoerd');
+    // expect(s['sjoerd']().is.givenName).not.toBe('Sjoerd');
+    await when(() => sjoerd.is.givenName === 'Sjoerd');
     expect(sjoerd.is.givenName).toBe('Sjoerd');
+    expect(s['sjoerd']().is.givenName).toBe('Sjoerd');
+    expect(s['sjoerd'].is().givenName).toBe('Sjoerd');
 
-    const rendered = <span>{m(sjoerd.is.givenName)}</span>;
+    const sander = s['sander']();
+    await when(() => sander.is.givenName === 'Sjoerd');
+    expect(sander.is.givenName).toBe('Sjoerd');
+    expect(s['sander']().is.givenName).toBe('Sjoerd');
+    expect(s['sander'].is().givenName).toBe('Sjoerd');
+
+    sander.is.givenName = 'Sander';
+    expect(sander.is.givenName).toBe('Sander');
+    expect(sjoerd.is.givenName).toBe('Sander');
 
     // const maybeName = sjoerd.is.familyName;
     // const name = m(maybeName);

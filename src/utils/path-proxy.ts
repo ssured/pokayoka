@@ -3,10 +3,10 @@ import {
   onBecomeObserved,
   runInAction,
   onBecomeUnobserved,
-  getAtom,
 } from 'mobx';
-import { SPOShape, primitive } from './spo';
+import { SPOShape, primitive, RawSPOShape } from './spo';
 import { nothing, Nothing } from './maybe';
+import console = require('console');
 
 type Maybe<T> = T extends object
   ? { [K in keyof T]: Maybe<T[K]> }
@@ -25,64 +25,103 @@ export const m = <T>(v: Maybe<T>): T | undefined =>
   v === nothing ? undefined : v;
 
 type NodeBehaviour = {
-  initialValue: SPOShape;
   onActive?: () => void;
   onInactive?: () => void;
 };
 
-export const createUniverse = <T extends SPOShape>(
-  resolve: (path: string[]) => Promise<NodeBehaviour>
-): ThunkTo<T> => {
-  const core = observable<SPOShape>({});
+export const createUniverse = <T extends SPOShape>({
+  resolve,
+  pathToKey = JSON.stringify,
+}: {
+  resolve: (
+    path: string[],
+    setValue: (value: RawSPOShape) => void
+  ) => void | NodeBehaviour;
+  pathToKey?: (path: string[]) => string;
+}): ThunkTo<T> => {
+  const core = observable<SPOShape>({}, {}, { deep: false });
+
+  const publicGet = (path: string[]): Maybe<SPOShape> => {
+    const key = pathToKey(path);
+
+    if (!core[key]) {
+      core[key] = new Proxy(
+        {},
+        {
+          get(source, subkey) {
+            if (typeof subkey === 'string') {
+              // access core[key] to trigger mobx observable tracking
+              core[key]; // this is not a no-op!
+              return core[pathToKey(path.concat(subkey))] || nothing;
+            }
+          },
+          set(source, subkey, value) {
+            if (typeof subkey === 'string') {
+              publicSet(path.concat(subkey), value);
+              return true;
+            }
+            return false;
+          },
+        }
+      );
+
+      const unregister = onBecomeObserved(core, key, () => {
+        unregister();
+
+        const { onActive, onInactive } =
+          resolve(path, publicSet.bind(null, path)) || ({} as NodeBehaviour);
+
+        // attach listeners
+        if (onActive) {
+          onBecomeObserved(core, key, onActive);
+          onActive();
+        }
+        if (onInactive) {
+          onBecomeUnobserved(core, key, onInactive);
+        }
+      });
+    }
+
+    return core[key] as any;
+  };
+
+  const publicSet = (path: string[], value: RawSPOShape[string]) => {
+    runInAction(() => {
+      if (value && typeof value === 'object') {
+        Object.entries(value).forEach(([key, value]) => {
+          if (value && typeof value === 'object') {
+            if (Array.isArray(value)) {
+              core[pathToKey(path.concat(key))] = publicGet(value);
+            } else {
+              publicSet(path.concat(key), value);
+              publicGet(path.concat(key)); // make sure the object is linked
+            }
+          } else {
+            if (value == null) {
+              delete core[pathToKey(path.concat(key))];
+            } else {
+              core[pathToKey(path.concat(key))] = value;
+            }
+          }
+        });
+      } else {
+        if (path.length >= 2) {
+          publicSet(path.slice(0, -1), { [path[path.length - 1]]: value });
+        }
+      }
+    });
+  };
 
   const createPathProxy = (path: string[] = []): ThunkTo<T> => {
     const proxy = new Proxy(
       () => {
-        const key = JSON.stringify(path);
-
-        if (core[key] == null) {
-          core[key] = nothing;
-
-          const disposer = onBecomeObserved(core, key, async () => {
-            disposer();
-            const { initialValue, onActive, onInactive } = await resolve(path);
-
-            // set the value
-            runInAction(() => (core[key] = initialValue));
-
-            // attach listeners
-            if (onActive) {
-              onBecomeObserved(core, key, onActive);
-              // run listener immediately if it's already observed
-              const atom = getAtom(core, key);
-              if (
-                atom.observing &&
-                atom.observing.find(observable => observable.isBeingObserved)
-              ) {
-                onActive();
-              }
-            }
-            if (onInactive) {
-              onBecomeUnobserved(core, key, onInactive);
-            }
-          });
-        }
-
-        // return getter for mobx observability
-        return new Proxy(
-          {},
-          {
-            get(source, subkey) {
-              // @ts-ignore
-              return core[key][subkey] || nothing;
-            },
-          }
-        );
+        return publicGet(path);
       },
       {
         get(source, key) {
-          if (typeof key !== 'string') return undefined;
-          return createPathProxy(path.concat(key));
+          if (typeof key === 'string') {
+            return createPathProxy(path.concat(key));
+          }
         },
       }
     );
