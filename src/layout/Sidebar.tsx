@@ -1,17 +1,22 @@
 import { Box, Button, Layer, ResponsiveContext } from 'grommet';
 import { Close } from 'grommet-icons';
-import React, { useContext, ReactNode } from 'react';
+import React, { useContext } from 'react';
 import { MenuButton } from './MenuButton';
 
 type PropsOf<
   T extends React.FunctionComponent<any>
 > = T extends React.FunctionComponent<infer P> ? P : never;
 
-export type SidebarMenuItem = ReactNode;
+export type SidebarMenuItem = Pick<
+  PropsOf<typeof MenuButton>,
+  'icon' | 'route' | 'label'
+>;
 
 export const Sidebar: React.FunctionComponent<{
+  children?: undefined;
+  items: SidebarMenuItem[];
   onToggleSidebar: () => void;
-}> = ({ onToggleSidebar, children, ...rest }) => {
+}> = ({ onToggleSidebar, items, ...rest }) => {
   const size = useContext(ResponsiveContext);
   const SidebarComponent = size === 'small' ? Layer : Box;
   const sidebarProps =
@@ -30,7 +35,9 @@ export const Sidebar: React.FunctionComponent<{
           <Button icon={<Close />} onClick={onToggleSidebar} />
         </Box>
       )}
-      {children}
+      {items.map(item => (
+        <MenuButton key={item.label} {...item} />
+      ))}
     </SidebarComponent>
   );
 };

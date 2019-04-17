@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, ReactNode } from 'react';
 import { Grid, Button, ResponsiveContext, Box, Heading, Text } from 'grommet';
 
 import styled from 'styled-components';
@@ -32,10 +32,11 @@ import { ProjectPage } from './routes/Paged/ProjectPage';
 import { Sidebar, SidebarMenuItem } from './layout/Sidebar';
 import { GunComponent } from './routes/Gun';
 
-import { RouteMatch, Router } from 'boring-router';
+import { Router, RouteMatch } from 'boring-router';
 import { createBrowserHistory } from 'history';
 import { Link, Route, NavLink } from 'boring-router-react';
 import { observer } from 'mobx-react-lite';
+import { RoutedButton } from './layout/RoutedButton';
 
 const history = createBrowserHistory();
 
@@ -45,6 +46,14 @@ export const router = Router.create(
       $match: '',
     },
     gun: true,
+    projects: {
+      $exact: true,
+      $children: {
+        id: {
+          $match: RouteMatch.segment,
+        },
+      },
+    },
     notFound: {
       $match: RouteMatch.rest,
     },
@@ -60,41 +69,6 @@ const NotFound: React.FunctionComponent<{}> = () => {
     </>
   );
 };
-
-const items: SidebarMenuItem[] = [
-  {
-    icon: (
-      <Box as={props => <NavLink to={router.home} {...props} />}>
-        <HomeIcon />
-      </Box>
-    ),
-    onClick: () => {},
-    label: 'Beginscherm',
-  },
-  {
-    icon: (
-      <NavLink to={router.gun}>
-        <HomeIcon />
-      </NavLink>
-    ),
-    onClick: () => {},
-    label: 'Gun',
-  },
-  // {
-  //   icon: <ProjectsIcon />,
-  //   onClick: () => {
-  //     navigate('/projects');
-  //   },
-  //   label: 'Projecten',
-  // },
-  // {
-  //   icon: <Book />,
-  //   onClick: () => {
-  //     alert('Verwerkingsinstructies');
-  //   },
-  //   label: 'Verwerkingsinstructies',
-  // },
-];
 
 export const App: React.FunctionComponent<{}> = observer(() => {
   const {
@@ -157,6 +131,7 @@ export const App: React.FunctionComponent<{}> = observer(() => {
             >
               <Route match={router.home}>
                 <h1>HOME sweet home</h1>
+                <Link to={router.projects}>Accounts</Link>
               </Route>
               {/* <Home path="/" /> */}
               {/* <Sync path="sync" /> */}
@@ -174,10 +149,29 @@ export const App: React.FunctionComponent<{}> = observer(() => {
                 <GunComponent />
               </Route>
 
+              <Route match={router.projects} exact>
+                <p>Account page</p>
+                <Link to={router.home}>Home</Link>
+                <Link to={router.projects.id} params={{ id: '123' }}>
+                  Account 123
+                </Link>
+
+                <RoutedButton to={router.projects}>TEST</RoutedButton>
+
+                <RoutedButton
+                  to={router.projects.id}
+                  params={{ id: '123' }}
+                  label="TEST"
+                />
+              </Route>
+
+              <Route match={router.projects.id}>
+                <p>Account {router.projects.id.$params.id} details page</p>
+              </Route>
+
               <Route match={router.notFound}>
                 <NotFound />
               </Route>
-
               {/* <NotFound default /> */}
               {/* <User path=":userId">
                   <Project path=":projectId" />
@@ -187,42 +181,21 @@ export const App: React.FunctionComponent<{}> = observer(() => {
 
             <Box gridArea="nav">
               {showSidebar && (
-                <Sidebar onToggleSidebar={() => toggleSidebar()}>
-                  <Button
-                    plain
-                    hoverIndicator="light-4"
-                    label={
-                      <NavLink to={router.home}>
-                        <Box
-                          pad="small"
-                          gap="xsmall"
-                          justify="start"
-                          direction="row"
-                        >
-                          <HomeIcon />
-                          <Text>Home</Text>
-                        </Box>
-                      </NavLink>
-                    }
-                  />
-                  <Button
-                    plain
-                    hoverIndicator="light-4"
-                    label={
-                      <NavLink to={router.gun}>
-                        <Box
-                          pad="small"
-                          gap="xsmall"
-                          justify="start"
-                          direction="row"
-                        >
-                          <HomeIcon />
-                          <Text>Gun</Text>
-                        </Box>
-                      </NavLink>
-                    }
-                  />
-                </Sidebar>
+                <Sidebar
+                  onToggleSidebar={() => toggleSidebar()}
+                  items={[
+                    {
+                      icon: <HomeIcon />,
+                      route: router.home,
+                      label: 'Home',
+                    },
+                    {
+                      icon: <ProjectsIcon />,
+                      route: router.projects,
+                      label: 'Projecten',
+                    },
+                  ]}
+                />
               )}
             </Box>
           </Grid>
