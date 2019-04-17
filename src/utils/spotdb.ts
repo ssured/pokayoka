@@ -69,7 +69,7 @@ export class SpotDB {
     public readonly dbState: () => string = mlts()
   ) {
     this.db = openDB(name, 10, {
-      upgrade: (db, oldVersion, newVersion, transaction) => {
+      upgrade: (db /*, oldVersion, newVersion, transaction*/) => {
         if ((db.objectStoreNames as any).contains(this.objectStoreName)) {
           db.deleteObjectStore(this.objectStoreName);
         }

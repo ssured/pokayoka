@@ -67,7 +67,7 @@ export const GunComponent: React.FunctionComponent<{}> = observer(({}) => {
   const [submitted, setSubmitted] = useState(false);
 
   return (
-    <Box border>
+    <Box>
       <Heading>YO</Heading>
       <ul>
         {/* <li>id: {m(user.identifier)}</li> */}

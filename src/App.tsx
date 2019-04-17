@@ -9,6 +9,7 @@ import {
   Projects as ProjectsIcon,
   Book,
   Home as HomeIcon,
+  Gremlin,
 } from 'grommet-icons';
 
 import { Home } from './routes/Home';
@@ -193,6 +194,11 @@ export const App: React.FunctionComponent<{}> = observer(() => {
                       icon: <ProjectsIcon />,
                       route: router.projects,
                       label: 'Projecten',
+                    },
+                    {
+                      icon: <Gremlin />,
+                      route: router.gun,
+                      label: 'Gun',
                     },
                   ]}
                 />
