@@ -6,14 +6,16 @@ import { observer } from 'mobx-react-lite';
 import {
   Heading,
   Box,
-  Form,
   FormField,
   Button,
   TextInput,
+  TextInputProps,
   Grid,
 } from 'grommet';
+import { Formik, useField } from 'formik';
+import { Save } from 'grommet-icons';
 
-const gun = Gun<{ [key: string]: any }>();
+const gun = Gun<{ [key: string]: any }>('http://localhost:8080/gun');
 
 const universe = createUniverse<{ [key: string]: User }>({
   resolve: (path, setValue) => {
@@ -48,10 +50,6 @@ window.gun = gun;
 window.universe = universe;
 
 const user = universe['sjoerd@weett.nl']();
-
-import { Formik, useField } from 'formik';
-import { TextInputProps } from 'react-native';
-import { Save } from 'grommet-icons';
 
 const TextField: React.FunctionComponent<
   TextInputProps & { name: string; label: string; placeholder?: string }
@@ -94,7 +92,7 @@ export const GunComponent: React.FunctionComponent<
         validateOnChange={submitted}
         onSubmit={async (values, helpers) => {
           try {
-            universe()['sjoerd@weett.nl'] = values;
+            Object.assign(user, values);
           } finally {
             helpers.setSubmitting(false);
           }
