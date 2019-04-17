@@ -4029,6 +4029,22 @@ boolbase@^1.0.0, boolbase@~1.0.0:
   resolved "https://registry.yarnpkg.com/boolbase/-/boolbase-1.0.0.tgz#68dff5fbe60c51eb37725ea9e3ed310dcc1e776e"
   integrity sha1-aN/1++YMUes3cl6p4+0xDcwed24=
 
+boring-router-react@^0.3.0-alpha.30:
+  version "0.3.0-alpha.30"
+  resolved "https://registry.yarnpkg.com/boring-router-react/-/boring-router-react-0.3.0-alpha.30.tgz#ce99a7c6dd7a2effb8d9aad3a57d5825f0120fdd"
+  integrity sha512-sdLN7hJxM+0vGTCszZBqU0pD9t68GSMfP/iCPNzfxQ3XrkL3Jqpx0f/vCx20Xnbhc5m9r8hXWTxRjOyvulUgFg==
+  dependencies:
+    classnames "^2.2.6"
+    tslang "^0.1.13"
+
+boring-router@^0.3.0-alpha.30:
+  version "0.3.0-alpha.30"
+  resolved "https://registry.yarnpkg.com/boring-router/-/boring-router-0.3.0-alpha.30.tgz#2c640b237edc350544588d254a1aee9ac5a7784f"
+  integrity sha512-QHYd5tNSfz/aH26ZrBnSJJQ0Q+ddN6CiKbG9r7vVQcoR7Ri/kUE+F77sNnSnEt4ckD/4gmTD9J3qZlPT07DPGg==
+  dependencies:
+    hyphenate "^0.2.4"
+    tslang "^0.1.13"
+
 bowser@^1.7.3:
   version "1.9.4"
   resolved "https://registry.yarnpkg.com/bowser/-/bowser-1.9.4.tgz#890c58a2813a9d3243704334fa81b96a5c150c9a"
@@ -4564,7 +4580,7 @@ class-utils@^0.3.5:
     isobject "^3.0.0"
     static-extend "^0.1.1"
 
-classnames@^2.2.5:
+classnames@^2.2.5, classnames@^2.2.6:
   version "2.2.6"
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.2.6.tgz#43935bffdd291f326dad0a205309b38d00f650ce"
   integrity sha512-JR/iSQOSt+LQIWwrwEzJ9uk0xfN3mTVYMwt1Ir5mUcSN6pU+V4zQFFaJsclJbPuAUQH+yfWef6tm7l1quW3C8Q==
@@ -7172,7 +7188,7 @@ highlight.js@~9.12.0:
   resolved "https://registry.yarnpkg.com/highlight.js/-/highlight.js-9.12.0.tgz#e6d9dbe57cbefe60751f02af336195870c90c01e"
   integrity sha1-5tnb5Xy+/mB1HwKvM2GVhwyQwB4=
 
-history@^4.7.2:
+history@^4.7.2, history@^4.9.0:
   version "4.9.0"
   resolved "https://registry.yarnpkg.com/history/-/history-4.9.0.tgz#84587c2068039ead8af769e9d6a6860a14fa1bca"
   integrity sha512-H2DkjCjXf0Op9OAr6nJ56fcRkTSNrUiv41vNJ6IswJjif6wlpZK0BTfFbi7qK9dXLSYZxkq5lBsj3vUjlYBYZA==
@@ -7381,6 +7397,11 @@ hyphenate-style-name@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/hyphenate-style-name/-/hyphenate-style-name-1.0.2.tgz#31160a36930adaf1fc04c6074f7eb41465d4ec4b"
   integrity sha1-MRYKNpMK2vH8BMYHT360FGXU7Es=
+
+hyphenate@^0.2.4:
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/hyphenate/-/hyphenate-0.2.4.tgz#5c1a99cebef6fe889744cdc339beb60865e12438"
+  integrity sha512-COZPA5RLSvGJDlWrbMcKF16tKcfCaNNh63yA7QldGz6i/BVJAeYCXPQAiXUzS0y2pxY7c8VId0CPvxm2Rbisqw==
 
 iconv-lite@0.4.23:
   version "0.4.23"
@@ -13373,6 +13394,11 @@ tsconfig@^7.0.0:
     "@types/strip-json-comments" "0.0.30"
     strip-bom "^3.0.0"
     strip-json-comments "^2.0.0"
+
+tslang@^0.1.13:
+  version "0.1.13"
+  resolved "https://registry.yarnpkg.com/tslang/-/tslang-0.1.13.tgz#e7536722bcb9675ff309c7046384901348dbeefd"
+  integrity sha512-aEe+OkMJSWVD/wPxHlBT015ATp6K2FJuy4QoTWDFWRg386srcPgOWOiLqknauojdysnZdaO7u0Gmm1JZajor7A==
 
 tslib@1.9.0:
   version "1.9.0"

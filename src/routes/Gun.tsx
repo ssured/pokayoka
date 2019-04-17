@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Gun from 'gun';
-import { RouteComponentProps } from '@reach/router';
 import { createUniverse } from '../utils/universe';
 import { observer } from 'mobx-react-lite';
 import {
@@ -64,9 +63,7 @@ const TextField: React.FunctionComponent<
   );
 };
 
-export const GunComponent: React.FunctionComponent<
-  RouteComponentProps<{}> & {}
-> = observer(({}) => {
+export const GunComponent: React.FunctionComponent<{}> = observer(({}) => {
   const [submitted, setSubmitted] = useState(false);
 
   return (
