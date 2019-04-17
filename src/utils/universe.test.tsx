@@ -1,6 +1,6 @@
 import React from 'react';
 import { observable, onBecomeObserved, when, reaction } from 'mobx';
-import { createUniverse } from './path-proxy';
+import { createUniverse } from './universe';
 import console = require('console');
 
 describe('linking observables', () => {

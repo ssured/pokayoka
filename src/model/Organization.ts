@@ -1,7 +1,7 @@
 import { Many } from './base';
 
 declare global {
-  type Organization = Partial<{
+  type Organization = {
     '@type': 'Organization';
     identifier: string;
 
@@ -15,6 +15,6 @@ declare global {
     /**
      * A description of the item.
      */
-    description: string;
-  }>;
+    description?: string;
+  };
 }

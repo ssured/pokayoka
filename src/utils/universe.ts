@@ -41,7 +41,8 @@ export const createUniverse = <T extends SPOShape>({
   pathToKey?: (path: string[]) => string;
 }): ThunkTo<T> => {
   const core = observable<SPOShape>({}, {}, { deep: false });
-  const keysForProxy = new WeakMap<object, Set<string>>();
+  const keysForProxy = new WeakMap<SPOShape, Set<string>>();
+  const pathsForProxy = new WeakMap<RawSPOShape, string[]>();
 
   const publicGet = (path: string[]): Maybe<SPOShape> => {
     const key = pathToKey(path);
@@ -86,6 +87,7 @@ export const createUniverse = <T extends SPOShape>({
 
       core[key] = proxy;
       keysForProxy.set(proxy, new Set());
+      pathsForProxy.set(proxy, path);
 
       const unregister = onBecomeObserved(core, key, () => {
         unregister();
@@ -133,9 +135,15 @@ export const createUniverse = <T extends SPOShape>({
             if (Array.isArray(value)) {
               core[pathToKey(path.concat(key))] = publicGet(value);
             } else {
-              publicSet(path.concat(key), emitValues, value);
-              publicGet(path.concat(key)); // make sure the object is linked
+              if (pathsForProxy.has(value)) {
+                core[pathToKey(path.concat(key))] = publicGet(
+                  pathsForProxy.get(value)!
+                );
+              } else {
+                publicSet(path.concat(key), emitValues, value);
+              }
             }
+            publicGet(path.concat(key)); // make sure the object is linked
           } else {
             if (value == null) {
               delete core[pathToKey(path.concat(key))];

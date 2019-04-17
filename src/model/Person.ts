@@ -1,7 +1,6 @@
 import { Many } from './base';
 import * as yup from 'yup';
 import { generateId } from '../utils/id';
-import { roleSchema } from './Role';
 
 declare global {
   type Person = {
@@ -33,7 +32,7 @@ declare global {
      */
     description?: string;
 
-    worksFor?: Many<Organization>;
+    worksFor: Many<Organization>;
   };
 }
 
@@ -52,8 +51,9 @@ export const personSchema = yup.object<Person>().shape({
 export const isPerson = (v: unknown): v is Person =>
   personSchema.isValidSync(v);
 
-export const newPerson = (required: { familyName: string }): Person => ({
+export const newPerson = (required: Pick<Person, 'familyName'>): Person => ({
   '@type': 'Person',
   identifier: generateId(),
+  worksFor: {},
   ...required,
 });

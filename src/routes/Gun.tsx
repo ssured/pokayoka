@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Gun from 'gun';
 import { RouteComponentProps } from '@reach/router';
-import { createUniverse } from '../utils/path-proxy';
+import { createUniverse } from '../utils/universe';
 import { observer } from 'mobx-react-lite';
 import {
   Heading,
@@ -14,20 +14,19 @@ import {
 } from 'grommet';
 import { Formik, useField } from 'formik';
 import { Save } from 'grommet-icons';
+import charwise from 'charwise';
 
 const gun = Gun<{ [key: string]: any }>('http://localhost:8080/gun');
 
 const universe = createUniverse<{ [key: string]: User }>({
   resolve: (path, setValue) => {
-    const key = JSON.stringify(path);
+    const key = charwise.encode(path);
     return {
       onActive: () => {
         console.log(`activate ${key}`);
-        gun.get(key).on(data => {
+        gun.get(key).on(({ _, ...data }) => {
           console.log(`Set ${key} to ${JSON.stringify(data)}`);
-          const copy = JSON.parse(JSON.stringify(data));
-          delete copy._;
-          setValue(copy);
+          setValue(data);
         }, true);
       },
       onInactive: () => {
@@ -38,10 +37,11 @@ const universe = createUniverse<{ [key: string]: User }>({
   },
   updateListener: (path, value) => {
     console.log(`update ${path.join(',')} to ${JSON.stringify(value)}`);
-    const key = JSON.stringify(path);
+    const key = charwise.encode(path);
     // @ts-ignore
     gun.get(key).put(value);
   },
+  pathToKey: charwise.encode,
 });
 
 // @ts-ignore
