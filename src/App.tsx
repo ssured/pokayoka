@@ -31,13 +31,14 @@ import { Tree } from './routes/Tree/index';
 import { Columns } from './routes/Columns/index';
 import { ProjectPage } from './routes/Paged/ProjectPage';
 import { Sidebar, SidebarMenuItem } from './layout/Sidebar';
-import { GunComponent } from './routes/Gun';
 
 import { Router, RouteMatch } from 'boring-router';
 import { createBrowserHistory } from 'history';
 import { Link, Route, NavLink } from 'boring-router-react';
 import { observer } from 'mobx-react-lite';
 import { RoutedButton } from './layout/RoutedButton';
+import { UserSettings } from 'grommet-icons';
+import { User } from './routes/User';
 
 const history = createBrowserHistory();
 
@@ -80,7 +81,6 @@ export const router = Router.create(
     home: {
       $match: '',
     },
-    gun: true,
     projects: {
       $exact: true,
       $children: {
@@ -89,6 +89,7 @@ export const router = Router.create(
         },
       },
     },
+    account: true,
     notFound: {
       $match: RouteMatch.rest,
     },
@@ -180,8 +181,8 @@ export const App: React.FunctionComponent<{}> = observer(() => {
               {/* <Columns path="columns/:projectCode" /> */}
               {/* <ProjectPage path="paged/:projectCode/*" /> */}
 
-              <Route match={router.gun}>
-                <GunComponent />
+              <Route match={router.account}>
+                <User />
               </Route>
 
               <Route match={router.projects} exact>
@@ -230,9 +231,9 @@ export const App: React.FunctionComponent<{}> = observer(() => {
                       label: 'Projecten',
                     },
                     {
-                      icon: <Gremlin />,
-                      route: router.gun,
-                      label: 'Gun',
+                      icon: <UserSettings />,
+                      route: router.account,
+                      label: 'Account',
                     },
                   ]}
                 />

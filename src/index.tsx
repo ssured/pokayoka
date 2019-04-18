@@ -15,9 +15,9 @@ import { theme } from './theme';
 const L = require('leaflet');
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require('./marker-icon-2x.png'),
-  iconUrl: require('./marker-icon.png'),
-  shadowUrl: require('./marker-shadow.png'),
+  iconRetinaUrl: require('./assets/marker-icon-2x.png'),
+  iconUrl: require('./assets/marker-icon.png'),
+  shadowUrl: require('./assets/marker-shadow.png'),
 });
 
 if (

@@ -31,13 +31,13 @@ function whenMainThreadAvailable(effect: () => void) {
 
 export class SPOHub {
   protected listeners: Set<Listener> = new Set();
-  protected sources: WeakMap<Listener, any> = new WeakMap();
+  protected sources: WeakMap<Listener, unknown> = new WeakMap();
 
   public getCurrentState() {
     return getLocalState();
   }
 
-  public register(source: any, listener: Listener) {
+  public register(source: unknown, listener: Listener) {
     this.listeners.add(listener);
     this.sources.set(listener, source);
 
@@ -46,7 +46,7 @@ export class SPOHub {
     };
   }
 
-  protected fire(outMsg: OutMessage, skipSource?: any) {
+  protected fire(outMsg: OutMessage, skipSource?: unknown) {
     whenMainThreadAvailable(() => {
       // console.log('Hub fires', JSON.stringify(outMsg));
 
@@ -58,7 +58,7 @@ export class SPOHub {
     });
   }
 
-  public put(msg: PutMessage, skipSource?: any) {
+  public put(msg: PutMessage, skipSource?: unknown) {
     this.fire(
       { ...msg, type: 'put', localState: getLocalState() } as StampedPutMessage,
       skipSource

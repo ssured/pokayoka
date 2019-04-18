@@ -11,7 +11,9 @@ type Maybe<T> = T extends object
   ? { [K in keyof T]: Maybe<T[K]> }
   : T | Nothing;
 
-type ThunkTo<T extends SPOShape> = { (): { [K in keyof T]: Maybe<T[K]> } } & {
+export type ThunkTo<T extends SPOShape> = {
+  (): { [K in keyof T]: Maybe<T[K]> };
+} & {
   [K in keyof T]: T[K] extends primitive
     ? T[K]
     : Required<T>[K] extends SPOShape
@@ -22,6 +24,21 @@ type ThunkTo<T extends SPOShape> = { (): { [K in keyof T]: Maybe<T[K]> } } & {
 export const m = <T>(v: Maybe<T>): T | undefined =>
   // @ts-ignore
   v === nothing ? undefined : v;
+
+export const deepM = <T>(v: Maybe<T>): T | undefined =>
+  // @ts-ignore
+  v === nothing
+    ? undefined
+    : v && typeof v === 'object' && !Array.isArray(v)
+    ? Object.entries(v).reduce(
+        (v, [key, value]) => {
+          // @ts-ignore
+          v[key] = deepM(value);
+          return v;
+        },
+        {} as T
+      )
+    : v;
 
 type NodeBehaviour = {
   onActive?: () => void;

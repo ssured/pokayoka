@@ -1,4 +1,6 @@
 import { Many } from './base';
+import * as yup from 'yup';
+import { generateId } from '../utils/id';
 
 declare global {
   type User = {
@@ -15,3 +17,21 @@ declare global {
     projects: Many<IFCProject>;
   };
 }
+
+export const userSchema = yup.object<User>().shape({
+  '@type': yup
+    .string()
+    .oneOf(['PYUser'])
+    .required(),
+  identifier: yup.string().required(),
+  name: yup.string(),
+  projects: yup.object(),
+});
+
+export const isUser = (v: unknown): v is User => userSchema.isValidSync(v);
+
+export const newUser = (): User => ({
+  '@type': 'PYUser',
+  identifier: generateId(),
+  projects: {},
+});

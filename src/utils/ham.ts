@@ -54,3 +54,76 @@ export function ham(
     `Invalid CRDT Data ${incomingValue} to ${currentValue} at ${incomingState} to ${currentState}!`
   );
 }
+
+// same function as above, except that it enforces all event handlers to exist
+export const createConvergeFunction = <
+  StateType = string,
+  DataType extends JsonEntry | undefined = JsonEntry | undefined,
+  MetaType = undefined
+>(
+  getMachineState: (meta: MetaType) => StateType,
+  sideEffects: {
+    saveFuture: (tuple: [StateType, DataType], meta: MetaType) => void;
+    saveHistorical: (tuple: [StateType, DataType], meta: MetaType) => void;
+    saveNow: (tuple: [StateType, DataType], meta: MetaType) => void;
+    updateLowerBoundary?: (state: StateType, meta: MetaType) => void;
+    noop?: (meta: MetaType) => void;
+    saveBelowBoundary?: (data: DataType, meta: MetaType) => void;
+  },
+  lex: (value: DataType) => string = v => JSON.stringify(v) || ''
+) =>
+  function converge(
+    current: [StateType, DataType],
+    incoming: [StateType, DataType],
+    meta: MetaType
+  ): [StateType, DataType] {
+    const {
+      saveFuture,
+      saveHistorical,
+      saveNow,
+      updateLowerBoundary,
+      noop,
+      saveBelowBoundary,
+    } = Object.assign(
+      {
+        updateLowerBoundary: () => {},
+        noop: () => {},
+        saveBelowBoundary: () => {},
+      },
+      sideEffects
+    );
+
+    const Sm = getMachineState(meta);
+
+    const [Sc, Dc] = current;
+    const [Si, Di] = incoming;
+    switch (true) {
+      case Sm < Si:
+        saveFuture(incoming, meta);
+        return [Sc, Dc];
+      case Si < Sc:
+        saveHistorical(incoming, meta);
+        return [Sc, Dc];
+      case Sc < Si:
+        saveNow(incoming, meta);
+        updateLowerBoundary(Si, meta);
+        return [Si, Di];
+      case Sc === Si:
+        const Lc = lex(Dc);
+        const Li = lex(Di);
+
+        switch (true) {
+          case Li === Lc:
+            noop(meta);
+            return [Sc, Dc];
+          case Li < Lc:
+            saveBelowBoundary(Di, meta);
+            return [Sc, Dc];
+          case Lc < Li:
+            saveNow(incoming, meta);
+            saveBelowBoundary(Dc, meta);
+            return [Si, Di];
+        }
+    }
+    throw new Error(`Converge error: invalid state`);
+  };

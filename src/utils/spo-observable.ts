@@ -1,218 +1,104 @@
-import {
-  SPOShape,
-  newRoot,
-  subj,
-  set as nonSafeSet,
-  get as nonSafeGet,
-  isLink,
-  Tuple,
-  isObjt,
-  isSPOShape,
-  spoInObject,
-  pred,
-  objt,
-  getSubj,
-  primitive,
-} from './spo';
-import { observable, onBecomeObserved, runInAction } from 'mobx';
-import { recursiveDeepObserve, IDisposer } from './mobx-deep-observe';
+import charwise from 'charwise';
+import dlv from 'dlv';
+import { createConvergeFunction } from './ham';
+import { ensureNever } from './index';
+import { isObjt, objt, pred, RawSPOShape, SPOShape, subj } from './spo';
 import { SPOHub } from './spo-hub';
-import { ham } from './ham';
+import { createUniverse, m, ThunkTo } from './universe';
 
-const shapeStates = new WeakMap<SPOShape, { [key: string]: string }>();
-
-function keyFromSubjPred(subj: subj, pred: pred) {
-  return JSON.stringify([subj, pred]);
-}
-
-function updateState(root: SPOShape, tuple: Tuple) {
-  const [subj, pred, objt, state] = tuple;
-
-  if (!shapeStates.has(root)) {
-    shapeStates.set(root, {});
-  }
-
-  shapeStates.get(root)![keyFromSubjPred(subj, pred)] = state;
-}
-
-function getState(root: SPOShape, subj: subj, pred: pred) {
-  const states = shapeStates.get(root);
-  return (states && states[keyFromSubjPred(subj, pred)]) || '';
-}
-
-function set(root: SPOShape, tuple: Tuple) {
-  updateState(root, tuple);
-  const [subj, pred, objt, state] = tuple;
-  return runInAction(() => nonSafeSet(root, subj, pred, objt));
-}
-
-function get<P>(
-  root: SPOShape,
-  subj: subj,
-  pred?: P
-): P extends pred ? objt | SPOShape : SPOShape {
-  return runInAction(() => nonSafeGet(root, subj, pred));
-}
-
-export type UndefinedOrPartialSPO<T extends SPOShape> = {
-  [K in keyof T]?: T[K] extends primitive
-    ? T[K] // : T[K] extends Many<infer U> // ? undefined | Dictionary<undefined | UndefinedOrPartialSPO<U>>
-    : T[K] extends SPOShape | undefined
-    ?
-        | undefined
-        | UndefinedOrPartialSPO<
-            Required<T>[K] extends SPOShape ? Required<T>[K] : never
-          > // ? undefined | Dictionary<undefined | UndefinedOrPartialSPO<U>>
-    : T[K] extends SPOShape
-    ? UndefinedOrPartialSPO<T[K]>
-    : never
-};
+const pathToKey = charwise.encode;
 
 export function createObservable<T extends SPOShape = SPOShape>(
   hub: SPOHub
-): {
-  root: UndefinedOrPartialSPO<T>;
-  get: (subj: subj) => any;
-  destroy: () => void;
-} {
-  let isUpdating = 0;
-
-  const root = observable(newRoot());
-
-  const disposers: { [key: string]: IDisposer } = {};
-
-  function applyTuple(tuple: Tuple) {
-    const [subj, pred, objt, state] = tuple;
-    if (!(subj[0] in root)) return;
-    // console.log('applyTyple', isUpdating, subj, pred, objt);
-    try {
-      isUpdating += 1;
-
-      let currentValue = get(root, subj, pred);
-      if (isSPOShape(currentValue)) {
-        currentValue = getSubj(currentValue);
-        if (currentValue === undefined) {
-          throw new Error('subj not found for value');
-        }
-      }
-
-      let doMerge = false;
-      if (currentValue === undefined) {
-        doMerge = true;
-      } else {
-        const machineState = hub.getCurrentState();
-        const currentState = getState(root, subj, pred);
-        const result = ham(
-          machineState,
-          state,
-          currentState,
-          objt,
-          currentValue
-        );
-        doMerge = result.resolution === 'merge' && result.incoming;
-      }
-
-      if (doMerge) {
-        const key = keyFromSubjPred(subj, pred);
-        set(root, tuple);
-
-        if (isLink(objt)) {
-          // console.log('applyTuple', key);
-          if (disposers[key]) disposers[key]();
-          disposers[key] = onBecomeObserved(get(root, subj), pred, () => {
-            // console.log('onBecomeobserved');
-            loadObject(objt);
-            disposers[key]();
-            delete disposers[key];
-          });
-        }
-      }
-    } finally {
-      isUpdating -= 1;
-    }
-  }
-
-  function loadObject(subj: subj): SPOShape {
-    if (subj.length === 0) throw new Error(`subj cannot be empty`);
-    hub.get({ subj }, root);
-    try {
-      isUpdating += 1;
-      return get(root, subj);
-    } finally {
-      isUpdating -= 1;
-    }
-  }
-
-  function commit(tuple: Tuple) {
-    hub.put({ tuple }, root);
-  }
-
-  const subscription = hub.register(root, msg => {
-    // console.log('subscr', msg);
-    switch (msg.type) {
-      case 'get':
-        return;
-      case 'put':
-        applyTuple(msg.tuple);
-    }
-  });
-
-  recursiveDeepObserve(root, (change, subj) => {
-    if (isUpdating > 0) return; // do not track own changes
-    const pred = change.name;
-    const state = hub.getCurrentState();
-
-    switch (change.type) {
-      case 'remove':
-        commit([subj, pred, null, state]);
-        break;
-      default:
-        const objt = change.newValue as unknown;
-        if (isObjt(objt)) {
-          commit([subj, pred, objt, state]);
-        } else if (isSPOShape(objt)) {
-          for (const tuple of spoInObject(subj.concat(pred), objt, state)) {
-            commit(tuple);
-            // applyTuple(tuple); // ? not needed?
-          }
-        }
-    }
-  });
-
-  return {
-    root: root as any,
-    get: loadObject,
-    destroy: () => {
-      subscription();
-      Object.values(disposers).forEach(dispose => dispose());
-    },
+): ThunkTo<T> {
+  type state = string;
+  type SubjMeta = {
+    states: Record<string, state>;
+    setValue: (value: RawSPOShape) => void;
   };
+
+  const inSync = false;
+
+  const subjMeta: Record<string, SubjMeta> = {};
+
+  // merge data into this observable, respecting HAM
+  const mergeTuple = ([Si, Di]: [state, objt], [subj, pred]: [subj, pred]) => {
+    const meta = subjMeta[pathToKey(subj)];
+    if (meta == null) return; // ignore because we do not know this subject
+
+    const Sc = meta.states[pred] || '';
+
+    // FIXME: expose current value as helper function of universe library
+    const Dc = (m(dlv<any>(root(), subj)) || {})[pred] || null;
+
+    converge([Sc, Dc], [Si, Di], [subj, pred]);
+  };
+
+  const converge = createConvergeFunction<state, objt, [subj, pred]>(
+    hub.getCurrentState,
+    {
+      saveFuture: (incoming, meta) => {
+        const waitMs = 5000; // FIXME implement calculation msFromNow(incomingState)
+        setTimeout(() => mergeTuple(incoming, meta), waitMs);
+      },
+      saveHistorical: () => {},
+      saveNow: ([state, data], [subj, pred]) => {
+        const meta = subjMeta[pathToKey(subj)];
+        if (meta == null) throw new Error('no meta available');
+        meta.states[pred] = state;
+        meta.setValue({ [pred]: data });
+      },
+    }
+  );
+
+  // create the main root
+  const root = createUniverse<T>({
+    resolve: (subj, setValue) => {
+      console.log('resolve', subj);
+      subjMeta[pathToKey(subj)] = { states: {}, setValue };
+
+      return {
+        onActive: () => {
+          if (!inSync) {
+            hub.get({ subj }, root);
+          }
+        },
+      };
+    },
+    updateListener: function updateListener(subj, value) {
+      const meta = subjMeta[pathToKey(subj)];
+      if (meta == null) throw new Error('no meta available');
+
+      for (const [pred, objt] of Object.entries(value)) {
+        if (isObjt(objt)) {
+          const state = hub.getCurrentState();
+          meta.states[pred] = state;
+          hub.put({ tuple: [subj, pred, objt, state] }, root);
+        } else {
+          updateListener(subj.concat(pred), objt);
+        }
+      }
+    },
+    pathToKey,
+  });
+
+  hub.register(root, async msg => {
+    switch (msg.type) {
+      case 'put': {
+        const {
+          tuple: [subj, pred, Di, Si],
+        } = msg;
+        mergeTuple([Si, Di], [subj, pred]);
+        break;
+      }
+      case 'get': {
+        // ignored as runtime is not a data store
+        break;
+      }
+      default:
+        ensureNever(msg);
+    }
+  });
+
+  return root;
 }
-
-// public async commit(data: Map<subj, SPOShape | [SPOShape, state]>) {
-//     const tx = (await this.db).transaction(this.objectStoreName, 'readwrite');
-//    const tuples: Tuple[] = [];
-
-//   for (const [subj, objOrObjWithState] of data.entries()) {
-//     let obj: SPOShape;
-//     let state: state;
-//     if (Array.isArray(objOrObjWithState)) {
-//       [obj, state] = objOrObjWithState;
-//     } else {
-//       obj = objOrObjWithState;
-//       state = this.dbState();
-//     }
-//     for (const tuple of spoInObject(subj, obj)) {
-//       tuples.push(tuple);
-//       const object = objectFromTuple(tuple, state, this.dbState());
-//       tx.store.put(object);
-//     }
-//   }
-
-//   await tx.done;
-
-//   // expose all written tuples to live listeners
-//   this.committedTuples.fire(tuples);
-
-//   return;
-// }
