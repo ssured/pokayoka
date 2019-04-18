@@ -166,8 +166,7 @@ export const App: React.FunctionComponent<{}> = observer(() => {
               // overflow={{ vertical: 'scroll' }}
             >
               <Route match={router.home}>
-                <h1>HOME sweet home</h1>
-                <Link to={router.projects}>Accounts</Link>
+                <Home />
               </Route>
               {/* <Home path="/" /> */}
               {/* <Sync path="sync" /> */}

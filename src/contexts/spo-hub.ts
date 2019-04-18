@@ -1,17 +1,11 @@
-import { createContext, useContext, useMemo } from 'react';
-import { SpotDB } from '../utils/spotdb';
-import { SPOHub } from '../utils/spo-hub';
-import { SPOStorage } from '../utils/spo-storage';
+import { createContext, useContext } from 'react';
 import ReconnectingWebSocket from 'reconnecting-websocket';
+import { SPOHub } from '../utils/spo-hub';
+import { createObservable } from '../utils/spo-observable';
+import { SPOStorage } from '../utils/spo-storage';
 import { SPOWs } from '../utils/spo-ws';
-import { WrapAsync } from '../model/base';
-import { subj, SPOShape } from '../utils/spo';
-import {
-  createObservable,
-  UndefinedOrPartialSPO,
-} from '../utils/spo-observable';
+import { SpotDB } from '../utils/spotdb';
 import { useAuthentication } from './authentication';
-import { observable, runInAction } from 'mobx';
 
 const spotDb = new SpotDB('pokayoka');
 
