@@ -12,7 +12,7 @@ import {
 import { Formik, useField } from 'formik';
 import { Save } from 'grommet-icons';
 import { useRoot } from '../contexts/spo-hub';
-import { m } from '../utils/universe';
+import { ifExists } from '../utils/universe';
 import { isUser } from '../model/User';
 
 const TextField: React.FunctionComponent<
@@ -22,7 +22,10 @@ const TextField: React.FunctionComponent<
   return (
     <>
       <FormField {...{ label, error: meta.touched ? meta.error : undefined }}>
-        <TextInput {...{ ...field, value: m(field.value) || '' }} {...props} />
+        <TextInput
+          {...{ ...field, value: ifExists(field.value) || '' }}
+          {...props}
+        />
       </FormField>
     </>
   );
