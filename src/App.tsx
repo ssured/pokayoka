@@ -41,6 +41,40 @@ import { RoutedButton } from './layout/RoutedButton';
 
 const history = createBrowserHistory();
 
+/*
+Router:
+
+/
+  = Home
+  - Toont lijst van projecten voor ingelogde gebruiker
+/user/:userId -> gebruikersinformatie
+/company/:companyId -> bedrijfsinformatie
+
+/:projectIdOrSlug --> kan eventueel publiek toegankelijk zijn
+  = Beginscherm project
+  - dashboard
+
+/:projectIdOrSlug/plan voor planning (post mvp)
+/:projectIdOrSlug/guide voor checklists en installatie
+  
+/:projectIdOrSlug/observations voor vastgelegde punten 
+Parameters:
+- filter: status, label, hierarchie, nlsfb element, verantwoordelijke, eindverantwoordelijk, datum
+- sort: datum nieuw, datum laatste aanpassing, doeldatum taak, vrij gesorteerd + asc/desc
+
+automatische forward van index weergave
+/:projectIdOrSlug/observations => /:projectIdOrSlug/observations/(=projectId)/list
+
+/:projectIdOrSlug/observations/:hierarchyId/map/:sheetId
+/:projectIdOrSlug/observations/:hierarchyId/list
+Parameters:
+- selected?: observationId
+
+/:projectIdOrSlug/observations/:hierarchyId/new
+/:projectIdOrSlug/observation/:observationId
+
+*/
+
 export const router = Router.create(
   {
     home: {
