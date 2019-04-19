@@ -7,8 +7,8 @@ storiesOf('Page', module)
   .add('context', () => (
     <Grommet full plain>
       <Box fill pad="medium">
-        <PageTitle title="Molukkenstraat" href="/hello">
-          <PageTitle title="Groningen" href="/hello/grunn">
+        <PageTitle prefix="Project" title="Molukkenstraat" href="/hello">
+          <PageTitle prefix="Locatie" title="Groningen" href="/hello/grunn">
             <Page>Content</Page>
           </PageTitle>
         </PageTitle>
