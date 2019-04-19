@@ -1,35 +1,12 @@
-import React, { useState } from 'react';
-import { observer } from 'mobx-react-lite';
-import {
-  Heading,
-  Box,
-  FormField,
-  Button,
-  TextInput,
-  TextInputProps,
-  Grid,
-} from 'grommet';
-import { Formik, useField } from 'formik';
+import { Formik } from 'formik';
+import { Box, Button, Grid, Heading } from 'grommet';
 import { Save } from 'grommet-icons';
+import { observer } from 'mobx-react-lite';
+import React, { useState } from 'react';
 import { useRoot } from '../contexts/spo-hub';
-import { ifExists } from '../utils/universe';
+import { TextField } from '../form/TextField';
+import { PageTitle } from '../layout/PageTitle';
 import { isUser } from '../model/User';
-
-const TextField: React.FunctionComponent<
-  TextInputProps & { name: string; label: string; placeholder?: string }
-> = ({ label, ...props }) => {
-  const [field, meta] = useField(props.name);
-  return (
-    <>
-      <FormField {...{ label, error: meta.touched ? meta.error : undefined }}>
-        <TextInput
-          {...{ ...field, value: ifExists(field.value) || '' }}
-          {...props}
-        />
-      </FormField>
-    </>
-  );
-};
 
 export const User: React.FunctionComponent<{}> = observer(({}) => {
   const [submitted, setSubmitted] = useState(false);
@@ -37,7 +14,7 @@ export const User: React.FunctionComponent<{}> = observer(({}) => {
 
   return (
     <Box>
-      <Heading>YO</Heading>
+      <PageTitle>Account</PageTitle>
       <ul>
         {/* <li>id: {m(user.identifier)}</li> */}
         {/* <li>name: {m(user.name)}</li> */}
