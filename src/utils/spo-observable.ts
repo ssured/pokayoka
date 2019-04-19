@@ -54,7 +54,6 @@ export function createObservable<T extends SPOShape = SPOShape>(
   // create the main root
   const root = createUniverse<T>({
     resolve: (subj, setValue) => {
-      console.log('resolve', subj);
       subjMeta[pathToKey(subj)] = { states: {}, setValue };
 
       return {

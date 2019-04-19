@@ -76,6 +76,7 @@ export class RoutedButton<TRouteMatch extends RouteMatch> extends Component<
         active={active}
         href={this.href}
         plain
+        hoverIndicator="light-4"
         onMouseEnter={composeEventHandler([onMouseEnter, this.onMouseEnter])}
         onFocus={composeEventHandler([onFocus, this.onFocus])}
         onClick={composeEventHandler([onClick, this.onClick], true)}

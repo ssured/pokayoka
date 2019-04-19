@@ -1,7 +1,6 @@
 import { Many } from '../base';
 import * as yup from 'yup';
 
-import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
 import { runInAction } from 'mobx';
 
 declare global {
@@ -16,11 +15,12 @@ declare global {
   }>;
 }
 
-export type PartialProject = UndefinedOrPartialSPO<IFCProject>;
-
 export const projectSchema = yup.object<Person>().shape({
-  // '@type': yup.string().oneOf(['Project']) as yup.Schema<'Project'>,
-  // identifier: yup.string().required(),
+  '@type': yup
+    .string()
+    .oneOf(['Project'])
+    .required() as yup.Schema<'Project'>,
+  identifier: yup.string().required(),
   code: yup.string(),
   name: yup.string().required(),
   sites: yup.object(),

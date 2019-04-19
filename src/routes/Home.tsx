@@ -1,16 +1,14 @@
-import { Box, Text, Menu, Heading, Button } from 'grommet';
+import { Box, Heading, Menu, Text } from 'grommet';
+import { Add, Logout, SettingsOption, User } from 'grommet-icons';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
+import { router } from '../App';
 import { useAuthentication } from '../contexts/authentication';
 import { useRoot } from '../contexts/spo-hub';
-import { Todo } from '../layout/Todo';
-import { Logout, User, Add } from 'grommet-icons';
-import { RoutedButton } from '../layout/RoutedButton';
-import { router } from '../App';
-import { UserSettings } from 'grommet-icons';
-import { SettingsOption } from 'grommet-icons';
-import { TileGrid } from '../layout/TileGrid';
 import { InfoNotification } from '../layout/Notifications';
+import { RoutedButton } from '../layout/RoutedButton';
+import { TileGrid } from '../layout/TileGrid';
+import { Todo } from '../layout/Todo';
 
 const AddProjectButton = () => (
   <RoutedButton
@@ -19,7 +17,7 @@ const AddProjectButton = () => (
         <Add /> <Text>Voeg project toe</Text>
       </Box>
     }
-    to={router.projects}
+    to={router.projects.new}
     plain={false}
   />
 );
@@ -55,7 +53,6 @@ export const Home: React.FunctionComponent<{}> = observer(({}) => {
                 to={router.account}
                 icon={<SettingsOption />}
                 label="Instellingen"
-                hoverIndicator="light-4"
                 plain={false}
               />
             </Box>

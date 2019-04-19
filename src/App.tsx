@@ -84,6 +84,7 @@ export const router = Router.create(
     projects: {
       $exact: true,
       $children: {
+        new: true,
         id: {
           $match: RouteMatch.segment,
         },
