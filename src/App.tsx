@@ -40,6 +40,8 @@ import { RoutedButton } from './layout/RoutedButton';
 import { UserSettings } from 'grommet-icons';
 import { User } from './routes/User';
 import { New as NewProject } from './routes/Projects/New';
+import { Detail } from './routes/Projects/Project/Detail';
+import { useRoot } from './contexts/spo-hub';
 
 const history = createBrowserHistory();
 
@@ -121,7 +123,8 @@ export const App: React.FunctionComponent<{}> = observer(() => {
 
   const size = useContext(ResponsiveContext);
   const [showSidebar, toggleSidebar] = useToggle(true);
-  const UI = useUIContext();
+
+  const user = useRoot();
 
   return (
     <newUIContext.Provider>
@@ -211,6 +214,11 @@ export const App: React.FunctionComponent<{}> = observer(() => {
               </Route>
 
               <Route match={router.projects.id}>
+                {router.projects.id.$params.id && (
+                  <Detail
+                    project={user.projects[router.projects.id.$params.id]()}
+                  />
+                )}
                 <p>Account {router.projects.id.$params.id} details page</p>
               </Route>
 

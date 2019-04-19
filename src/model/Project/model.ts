@@ -2,7 +2,9 @@ import { runInAction } from 'mobx';
 import * as yup from 'yup';
 import { generateId } from '../../utils/id';
 import { deepM } from '../../utils/universe';
-import { Many } from '../base';
+import { Many, RelationsOf, many } from '../base';
+import { siteRelations } from '../Site/model';
+import { roleRelations } from '../Role';
 
 declare global {
   type PProject = {
@@ -15,6 +17,11 @@ declare global {
     roles: Many<Role>;
   };
 }
+
+export const projectRelations: RelationsOf<PProject> = {
+  sites: many(siteRelations),
+  roles: many(roleRelations),
+};
 
 export const pProjectSchema = yup.object<PProject>().shape({
   '@type': yup

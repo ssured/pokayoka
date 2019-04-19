@@ -1,6 +1,7 @@
-import { Many } from './base';
+import { Many, RelationsOf, many } from './base';
 import * as yup from 'yup';
 import { generateId } from '../utils/id';
+import { organizationRelations } from './Organization';
 
 declare global {
   type Person = {
@@ -35,6 +36,10 @@ declare global {
     worksFor: Many<Organization>;
   };
 }
+
+export const personRelations: RelationsOf<Person> = {
+  worksFor: many(organizationRelations),
+};
 
 export const personSchema = yup.object<Person>().shape({
   // '@type': yup.string().oneOf(['Person']) as yup.Schema<'Person'>,

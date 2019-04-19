@@ -1,16 +1,15 @@
-import { Many } from '../base';
-import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
+import { Many, RelationsOf } from '../base';
 
 declare global {
-  type BuildingStorey = Partial<{
+  type PBuildingStorey = {
     '@type': 'BuildingStorey';
     identifier: string;
     name: string;
-    $image: string;
-    description: string;
-    tasks: Many<Task>;
-    sheets: Many<Sheet>;
-  }>;
+    $image?: string;
+    description?: string;
+    // tasks: Many<Task>;
+    // sheets: Many<Sheet>;
+  };
 }
 
-export type PartialBuildingStorey = UndefinedOrPartialSPO<BuildingStorey>;
+export const buildingStoreyRelations: RelationsOf<PBuildingStorey> = {};

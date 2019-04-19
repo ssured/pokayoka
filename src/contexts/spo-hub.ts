@@ -6,6 +6,8 @@ import { SPOStorage } from '../utils/spo-storage';
 import { SPOWs } from '../utils/spo-ws';
 import { SpotDB } from '../utils/spotdb';
 import { useAuthentication } from './authentication';
+import { many } from '../model/base';
+import { userRelations } from '../model/User';
 
 const spotDb = new SpotDB('pokayoka');
 
@@ -16,14 +18,17 @@ const server = new SPOWs(hub, ws);
 
 const spo = createObservable<{
   [key: string]: User;
-}>(hub);
+}>(hub, many(userRelations));
 
 const SPOContext = createContext(spo);
 
 export const useRoot = () => {
   const auth = useAuthentication();
   return useContext(SPOContext)[
-    (auth.authentication.ok && auth.authentication.name) || 'anonymous'
+    (auth.authentication &&
+      auth.authentication.ok &&
+      auth.authentication.name) ||
+      'anonymous'
   ];
 };
 

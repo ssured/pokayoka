@@ -1,6 +1,7 @@
-import { Many } from './base';
+import { Many, RelationsOf, many } from './base';
 import * as yup from 'yup';
 import { generateId } from '../utils/id';
+import { projectRelations } from './Project/model';
 
 declare global {
   type User = {
@@ -17,6 +18,12 @@ declare global {
     projects: Many<PProject>;
   };
 }
+
+// exposes a runtime crawlable model of all relations
+// this is needed in Universe to know if an object is a subobject or a primitive
+export const userRelations: RelationsOf<User> = {
+  projects: many(projectRelations),
+};
 
 export const userSchema = yup.object<User>().shape({
   '@type': yup

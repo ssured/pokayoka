@@ -5,11 +5,15 @@ import { ensureNever } from './index';
 import { isObjt, objt, pred, RawSPOShape, SPOShape, subj } from './spo';
 import { SPOHub } from './spo-hub';
 import { createUniverse, ifExists, ThunkTo, Maybe } from './universe';
+import { RelationsOf } from '../model/base';
 
 const pathToKey = charwise.encode;
+// @ts-ignore
+window.charwise = charwise;
 
 export function createObservable<T extends SPOShape = SPOShape>(
-  hub: SPOHub
+  hub: SPOHub,
+  runtimeShape: RelationsOf<T>
 ): ThunkTo<T> {
   type state = string;
   type SubjMeta = {
@@ -32,7 +36,9 @@ export function createObservable<T extends SPOShape = SPOShape>(
     const Dc = ((ifExists(dlv<Maybe<SPOShape>>(root(), subj)) || {})[pred] ||
       null) as objt;
 
-    converge([Sc, Dc], [Si, Di], [subj, pred]);
+    const result = converge([Sc, Dc], [Si, Di], [subj, pred]);
+
+    console.log('spo-observable merge', subj, pred, result);
   };
 
   const converge = createConvergeFunction<state, objt, [subj, pred]>(
@@ -54,6 +60,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
 
   // create the main root
   const root = createUniverse<T>({
+    runtimeShape,
     resolve: (subj, setValue) => {
       subjMeta[pathToKey(subj)] = {
         ...(subjMeta[pathToKey(subj)] || { states: {} }),
@@ -63,6 +70,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
       return {
         onActive: () => {
           if (!inSync) {
+            console.log('spo-observable get', subj);
             hub.get({ subj }, root);
           }
         },
@@ -88,6 +96,23 @@ export function createObservable<T extends SPOShape = SPOShape>(
           const state = hub.getCurrentState();
           meta.states[pred] = state;
           hub.put({ tuple: [subj, pred, objt, state] }, root);
+
+          // publish the path to this subject
+          // TODO this is really inefficient as it overwrites many times for each prop in an object
+          // Maybe the hub should filter these cases, maybe we should be more intelligent here
+          for (let i = 2; i < subj.length; i += 1) {
+            hub.put(
+              {
+                tuple: [
+                  subj.slice(0, i - 1),
+                  subj[i - 1],
+                  subj.slice(0, i),
+                  state,
+                ],
+              },
+              root
+            );
+          }
         } else {
           updateListener(subj.concat(pred), objt);
         }

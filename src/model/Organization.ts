@@ -1,4 +1,5 @@
-import { Many } from './base';
+import { Many, RelationsOf, many } from './base';
+import { roleRelations } from './Role';
 
 declare global {
   type Organization = {
@@ -18,3 +19,7 @@ declare global {
     description?: string;
   };
 }
+
+export const organizationRelations: RelationsOf<Organization> = {
+  member: many(roleRelations),
+};

@@ -6,6 +6,9 @@ import {
 } from 'mobx';
 import { SPOShape, primitive, RawSPOShape } from './spo';
 import { nothing, Nothing } from './maybe';
+import { userRelations } from '../model/User';
+import dlv from 'dlv';
+import { RelationsOf } from '../model/base';
 
 export type Maybe<T> = T extends object
   ? { [K in keyof T]: Maybe<T[K]> }
@@ -17,7 +20,13 @@ export type ThunkTo<T extends SPOShape> = {
   [K in keyof T]: T[K] extends primitive
     ? T[K]
     : Required<T>[K] extends SPOShape
-    ? ThunkTo<Required<T>[K]>
+    ? /*Required<T>[K] extends Many<infer U>
+      ? {
+          (): Maybe<Many<ThunkTo<U>>>;
+        } & Many<ThunkTo<U>>
+      : */ ThunkTo<
+        Required<T>[K]
+      >
     : never
 };
 
@@ -51,11 +60,15 @@ type NodeBehaviour = {
   onInactive?: () => void;
 };
 
+const expectObjectForProp = (key: string) => key.substr(-1) === 's';
+
 export const createUniverse = <T extends SPOShape>({
+  runtimeShape,
   resolve,
   updateListener,
   pathToKey = JSON.stringify,
 }: {
+  runtimeShape: RelationsOf<T>;
   resolve: (
     path: string[],
     setValue: (value: RawSPOShape) => void
@@ -76,7 +89,16 @@ export const createUniverse = <T extends SPOShape>({
           if (typeof subkey === 'string') {
             // access core[key] to trigger mobx observable tracking
             core[key]; // this is not a no-op!
-            return publicGet(path.concat(subkey));
+
+            const subPath = path.concat(subkey);
+
+            if (!core[pathToKey(subPath)]) {
+              console.log('rel', subPath, dlv(runtimeShape, subPath));
+            }
+
+            return !!dlv(runtimeShape, subPath)
+              ? publicGet(subPath)
+              : core[pathToKey(subPath)] || nothing;
           }
         },
         set(_, subkey, value) {

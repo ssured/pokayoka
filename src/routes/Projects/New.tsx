@@ -58,9 +58,9 @@ export const New: React.FunctionComponent<{
         validateOnChange={submitted}
         onSubmit={async (values, helpers) => {
           try {
-            // if (!ifExists(user.projects)) {
-            //   user.projects = {};
-            // }
+            if (!ifExists(user.projects)) {
+              user.projects = {};
+            }
             // await when(() => !!ifExists(user.projects));
 
             const newProject = newPProject(values.project);

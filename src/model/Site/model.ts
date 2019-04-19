@@ -1,8 +1,10 @@
-import { Many, One } from '../base';
+import { Many, One, RelationsOf, many } from '../base';
 import * as yup from 'yup';
 import { generateId } from '../../utils/id';
-import { pProjectSchema } from '../Project/model';
+// import { pProjectSchema } from '../Project/model';
 import { deepM } from '../../utils/universe';
+import { buildingRelations } from '../Building/model';
+import { projectRelations } from '../Project/model';
 
 declare global {
   type PSite = {
@@ -13,10 +15,15 @@ declare global {
     project: One<PProject>;
 
     description?: string;
-    buildings: Many<Building>;
-    tasks: Many<Task>;
+    buildings: Many<PBuilding>;
+    // tasks: Many<Task>;
   };
 }
+
+export const siteRelations: RelationsOf<PSite> = {
+  project: projectRelations,
+  buildings: many(buildingRelations),
+};
 
 export const pSiteSchema = yup.object<PSite>().shape({
   '@type': yup
@@ -25,7 +32,7 @@ export const pSiteSchema = yup.object<PSite>().shape({
     .required(),
   identifier: yup.string().required(),
   name: yup.string().required(),
-  project: pProjectSchema.required(),
+  project: yup.object().required(),
 
   description: yup.string(),
 
@@ -42,6 +49,6 @@ export const newPSite = (
   '@type': 'PSite',
   identifier: generateId(),
   buildings: {},
-  tasks: {},
+  // tasks: {},
   ...required,
 });
