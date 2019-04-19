@@ -85,12 +85,12 @@ lib
 # folder containing Webpack output
 dist
 
-couchdb
-github-repos
-assets
-cdn
-db
-server/localtunnel-name.txt
+/couchdb
+/github-repos
+/assets
+/cdn
+/db
+/server/localtunnel-name.txt
 
 .env
-pokayokadb
+/pokayokadb
