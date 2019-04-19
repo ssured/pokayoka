@@ -17,8 +17,8 @@ export const InfoNotification: React.FunctionComponent<{
       justify="between"
       pad="medium"
     >
-      <Box direction="row" gap="medium">
-        <Info />
+      <Box direction="row" gap="medium" align="center">
+        <Info size="medium" />
         <Text>{message}</Text>
       </Box>
 

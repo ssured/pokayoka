@@ -1,6 +1,13 @@
 import React from 'react';
-import { observable, onBecomeObserved, when, reaction } from 'mobx';
-import { createUniverse } from './universe';
+import {
+  observable,
+  onBecomeObserved,
+  when,
+  reaction,
+  runInAction,
+  autorun,
+} from 'mobx';
+import { createUniverse, ifExists } from './universe';
 import console = require('console');
 
 describe('linking observables', () => {
@@ -59,11 +66,49 @@ type U = {
 type Shape = Record<string, U>;
 
 describe('pathproxy for ids', () => {
+  test('nested objects', async () => {
+    const s = createUniverse<Shape>({
+      resolve: (path, setValue) => {
+        switch (path.join(',')) {
+          case 'sjoerd':
+            (async () => {
+              await new Promise(res => setTimeout(res, 10));
+              setValue({
+                is: { '@': 'M', familyName: 'de Jong', givenName: 'Sjoerd' },
+                project: {},
+              });
+            })();
+            break;
+          default:
+            console.log(path.join(','));
+            break;
+        }
+      },
+      updateListener: (path, value) => {
+        console.log(path);
+        console.log(value);
+      },
+    });
+
+    const user = s['sjoerd']();
+    await when(() => !!ifExists(user.project));
+
+    expect(Object.keys(user.project).length).toBe(0);
+
+    user.project['projectId'] = {
+      '@': 'P',
+      name: 'projectName',
+      roles: {},
+    };
+
+    expect(user.project['projectId'].name).toBe('projectName');
+  }, 100);
+
   test('types propagate', async () => {
     let activeCount = 0;
     const s = createUniverse<Shape>({
       resolve: (path, setValue) => {
-        console.log(path.join(','));
+        console.log(JSON.stringify(path));
         switch (path.join(',')) {
           case 'sjoerd':
             (async () => {

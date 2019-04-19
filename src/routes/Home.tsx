@@ -9,6 +9,7 @@ import { InfoNotification } from '../layout/Notifications';
 import { RoutedButton } from '../layout/RoutedButton';
 import { TileGrid } from '../layout/TileGrid';
 import { Todo } from '../layout/Todo';
+import { PageTitle } from '../layout/PageTitle';
 
 const AddProjectButton = () => (
   <RoutedButton
@@ -61,7 +62,7 @@ export const Home: React.FunctionComponent<{}> = observer(({}) => {
           <Text>Niet ingelogd</Text>
         )}
       </Box>
-      <Heading>Projecten</Heading>
+      <PageTitle>Projecten</PageTitle>
 
       {hasProjects ? (
         <Todo>

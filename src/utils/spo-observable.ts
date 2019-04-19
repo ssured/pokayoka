@@ -29,7 +29,8 @@ export function createObservable<T extends SPOShape = SPOShape>(
     const Sc = meta.states[pred] || '';
 
     // FIXME: expose current value as helper function of universe library
-    const Dc = ifExists(dlv<Maybe<SPOShape>>(root(), subj), {})[pred] || null;
+    const Dc = ((ifExists(dlv<Maybe<SPOShape>>(root(), subj)) || {})[pred] ||
+      null) as objt;
 
     converge([Sc, Dc], [Si, Di], [subj, pred]);
   };
@@ -44,7 +45,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
       saveHistorical: () => {},
       saveNow: ([state, data], [subj, pred]) => {
         const meta = subjMeta[pathToKey(subj)];
-        if (meta == null) throw new Error('no meta available');
+        if (meta == null) throw new Error('no meta available 1');
         meta.states[pred] = state;
         meta.setValue({ [pred]: data });
       },
@@ -54,7 +55,10 @@ export function createObservable<T extends SPOShape = SPOShape>(
   // create the main root
   const root = createUniverse<T>({
     resolve: (subj, setValue) => {
-      subjMeta[pathToKey(subj)] = { states: {}, setValue };
+      subjMeta[pathToKey(subj)] = {
+        ...(subjMeta[pathToKey(subj)] || { states: {} }),
+        setValue,
+      };
 
       return {
         onActive: () => {
@@ -65,8 +69,19 @@ export function createObservable<T extends SPOShape = SPOShape>(
       };
     },
     updateListener: function updateListener(subj, value) {
-      const meta = subjMeta[pathToKey(subj)];
-      if (meta == null) throw new Error('no meta available');
+      let meta = subjMeta[pathToKey(subj)];
+      if (meta == null) {
+        subjMeta[pathToKey(subj)] = {
+          states: {},
+          setValue: value => {
+            throw new Error('setValue not set yet');
+          },
+        };
+        meta = subjMeta[pathToKey(subj)];
+        // const error = { message: 'no meta available 2', subj, value };
+        // console.error(error);
+        // throw new Error(JSON.stringify(error));
+      }
 
       for (const [pred, objt] of Object.entries(value)) {
         if (isObjt(objt)) {

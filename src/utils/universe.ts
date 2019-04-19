@@ -27,20 +27,24 @@ export function ifExists<T, U>(maybe: Maybe<T>, otherwise?: U): T | U {
   return maybe === nothing ? otherwise : maybe;
 }
 
-// export const deepM = <T>(v: Maybe<T>): T | undefined =>
-//   // @ts-ignore
-//   v === nothing
-//     ? undefined
-//     : v && typeof v === 'object' && !Array.isArray(v)
-//     ? Object.entries(v).reduce(
-//         (v, [key, value]) => {
-//           // @ts-ignore
-//           v[key] = deepM(value);
-//           return v;
-//         },
-//         {} as T
-//       )
-//     : v;
+export const deepM = <T>(v: Maybe<T>): T | undefined =>
+  // @ts-ignore
+  v === nothing
+    ? undefined
+    : v && typeof v === 'object' && !Array.isArray(v)
+    ? Object.entries(v).reduce(
+        (v, [key, value]) => {
+          const sure = deepM(value);
+          if (sure !== undefined) {
+            const obj = v || {};
+            obj[key] = sure;
+            return obj;
+          }
+          return v;
+        },
+        undefined as Record<string, any> | undefined
+      )
+    : v;
 
 type NodeBehaviour = {
   onActive?: () => void;
@@ -72,11 +76,12 @@ export const createUniverse = <T extends SPOShape>({
           if (typeof subkey === 'string') {
             // access core[key] to trigger mobx observable tracking
             core[key]; // this is not a no-op!
-            return core[pathToKey(path.concat(subkey))] || nothing;
+            return publicGet(path.concat(subkey));
           }
         },
         set(_, subkey, value) {
           if (typeof subkey === 'string') {
+            console.log('publicSet', path.concat(subkey), true, value);
             publicSet(path.concat(subkey), true, value);
             return true;
           }

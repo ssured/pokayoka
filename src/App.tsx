@@ -39,6 +39,7 @@ import { observer } from 'mobx-react-lite';
 import { RoutedButton } from './layout/RoutedButton';
 import { UserSettings } from 'grommet-icons';
 import { User } from './routes/User';
+import { New as NewProject } from './routes/Projects/New';
 
 const history = createBrowserHistory();
 
@@ -198,6 +199,14 @@ export const App: React.FunctionComponent<{}> = observer(() => {
                   to={router.projects.id}
                   params={{ id: '123' }}
                   label="TEST"
+                />
+              </Route>
+
+              <Route match={router.projects.new} exact>
+                <NewProject
+                  afterCreate={project => {
+                    router.projects.id.$push({ id: project.identifier });
+                  }}
                 />
               </Route>
 

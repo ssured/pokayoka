@@ -23,7 +23,7 @@ import { setSubjectMany } from '../../model/base';
 import {
   PartialProject,
   projectRemoveRole,
-  isProject,
+  isPProject,
 } from '../../model/Project/model';
 import { subj } from '../../utils/spo';
 import { AddContactPerson } from './AddContactPerson';
@@ -156,7 +156,7 @@ const ProjectShow: React.FunctionComponent<{
               {roles.map((role, i) => (
                 <Text key={i} as="li">
                   {role && role.member && role.member.familyName}
-                  {isRole(role) && isProject(project) && (
+                  {isRole(role) && isPProject(project) && (
                     <Button
                       plain
                       icon={<Trash color="blue" />}

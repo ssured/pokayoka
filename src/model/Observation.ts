@@ -12,7 +12,7 @@ declare global {
       }
     | {
         locationType: 'element';
-        element: One<IFCProject | Site | Building | BuildingStorey>;
+        element: One<PProject | PSite | Building | BuildingStorey>;
       });
 
   type Observation = {

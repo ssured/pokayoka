@@ -14,7 +14,7 @@ declare global {
     /**
      * Projects this user has access to
      */
-    projects: Many<IFCProject>;
+    projects: Many<PProject>;
   };
 }
 
