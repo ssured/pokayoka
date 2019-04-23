@@ -1,21 +1,25 @@
-- [ ] Kerstverlichting Menno 2 strengen
+# development
+
+- [ ] mri regelen
+- [ ] liftoff actie uitschrijven
+- [ ] voorbereiden veronique
+- [ ] haakjes liesbeth uitzoeken
+- [ ] rapporteren mockups
+
+# business
+
 - [ ] achter geld aan jagen
 - [ ] 30 sec pitch
 - [ ] 2 min pitch
-- [ ] logo
-  - [x] studio kern
-  - [x] emotion
-  - [ ] studio wonder
-  - [ ] bestwerk?
-  - [ ] digilin
-  - [x] stellingwerf
-- [ ] Website teaser
-  - wix
 - [ ] contact leggen met 1 of meerdere opdrachtgevers
 - [ ] Installateurs via Marco
   - Megens Druten utiliteit armand van andel
   - Jan Willem Brinkman - Linthorst Techniek (linkedin invite gestuurd)
     Ago Groep Schaik
+
+# overig
+
+- [ ] Kerstverlichting Menno 2 strengen
 
 # Uitzoeken
 
