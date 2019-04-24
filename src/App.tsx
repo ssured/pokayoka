@@ -1,15 +1,13 @@
-import React, { useContext, ReactNode } from 'react';
-import { Grid, Button, ResponsiveContext, Box, Heading, Text } from 'grommet';
+import React, { useContext } from 'react';
+import { Grid, Button, ResponsiveContext, Box, Text } from 'grommet';
 
-import styled from 'styled-components';
 import {
   Menu,
   Close,
   Disc,
   Projects as ProjectsIcon,
-  Book,
   Home as HomeIcon,
-  Gremlin,
+  UserSettings,
 } from 'grommet-icons';
 
 import { Home } from './routes/Home';
@@ -32,18 +30,14 @@ import { Columns } from './routes/Columns/index';
 import { ProjectPage } from './routes/Paged/ProjectPage';
 import { Sidebar, SidebarMenuItem } from './layout/Sidebar';
 
-import { Router, RouteMatch } from 'boring-router';
-import { createBrowserHistory } from 'history';
-import { Link, Route, NavLink } from 'boring-router-react';
+import { Link, Route } from 'boring-router-react';
 import { observer } from 'mobx-react-lite';
 import { RoutedButton } from './layout/RoutedButton';
-import { UserSettings } from 'grommet-icons';
 import { User } from './routes/User';
 import { New as NewProject } from './routes/Projects/New';
 import { Detail } from './routes/Projects/Project/Detail';
 import { useRoot } from './contexts/spo-hub';
-
-const history = createBrowserHistory();
+import { router } from './router';
 
 /*
 Router:
@@ -78,28 +72,6 @@ Parameters:
 /:projectIdOrSlug/observation/:observationId
 
 */
-
-export const router = Router.create(
-  {
-    home: {
-      $match: '',
-    },
-    projects: {
-      $exact: true,
-      $children: {
-        new: true,
-        id: {
-          $match: RouteMatch.segment,
-        },
-      },
-    },
-    account: true,
-    notFound: {
-      $match: RouteMatch.rest,
-    },
-  },
-  history
-);
 
 const NotFound: React.FunctionComponent<{}> = () => {
   return (
@@ -192,7 +164,10 @@ export const App: React.FunctionComponent<{}> = observer(() => {
               <Route match={router.projects} exact>
                 <p>Account page</p>
                 <Link to={router.home}>Home</Link>
-                <Link to={router.projects.id} params={{ id: '123' }}>
+                <Link
+                  to={router.projects.projectId}
+                  params={{ projectId: '123' }}
+                >
                   Account 123
                 </Link>
 
@@ -208,18 +183,19 @@ export const App: React.FunctionComponent<{}> = observer(() => {
               <Route match={router.projects.new} exact>
                 <NewProject
                   afterCreate={project => {
-                    router.projects.id.$push({ id: project.identifier });
+                    router.projects.projectId.$push({
+                      projectId: project.identifier,
+                    });
                   }}
                 />
               </Route>
 
-              <Route match={router.projects.id}>
-                {router.projects.id.$params.id && (
-                  <Detail
-                    project={user.projects[router.projects.id.$params.id]()}
-                  />
-                )}
-                <p>Account {router.projects.id.$params.id} details page</p>
+              <Route match={router.projects.projectId}>
+                <Detail
+                  project={user.projects[
+                    router.projects.projectId.$params.projectId
+                  ]()}
+                />
               </Route>
 
               <Route match={router.notFound}>

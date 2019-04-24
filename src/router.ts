@@ -5,7 +5,24 @@ const history = createBrowserHistory();
 
 export const router = Router.create(
   {
-    gun: true,
+    home: {
+      $match: '',
+    },
+    projects: {
+      $exact: true,
+      $children: {
+        new: true,
+        projectId: {
+          $match: RouteMatch.segment,
+          $exact: true,
+          $children: {
+            settings: true,
+            snags: true,
+          },
+        },
+      },
+    },
+    account: true,
     notFound: {
       $match: RouteMatch.rest,
     },

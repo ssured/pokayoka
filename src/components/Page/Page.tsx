@@ -107,8 +107,14 @@ const Tab: React.FunctionComponent<{
 
 export const Page: React.FunctionComponent<{
   titles?: [ReactNode, string?][];
+  leftOfTitle?: ReactNode;
   rightOfTitle?: ReactNode;
-}> = ({ titles = useContext(PageTitlesContext), children, rightOfTitle }) => {
+}> = ({
+  titles = useContext(PageTitlesContext),
+  children,
+  rightOfTitle,
+  leftOfTitle,
+}) => {
   const border: Border = {
     color: 'border',
     size: 'xsmall',
@@ -143,7 +149,9 @@ export const Page: React.FunctionComponent<{
         {children}
       </Box>
 
-      <Box gridArea="left-of-title" border={{ ...border, side: 'bottom' }} />
+      <Box gridArea="left-of-title" border={{ ...border, side: 'bottom' }}>
+        {leftOfTitle}
+      </Box>
       <Box
         gridArea="right-of-title"
         border={{ ...border, side: 'bottom' }}

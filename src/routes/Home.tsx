@@ -1,8 +1,8 @@
-import { Box, Heading, Menu, Text } from 'grommet';
+import { Box, Menu, Text } from 'grommet';
 import { Add, Logout, SettingsOption, User } from 'grommet-icons';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
-import { router } from '../App';
+import { router } from '../router';
 import { useAuthentication } from '../contexts/authentication';
 import { useRoot } from '../contexts/spo-hub';
 import { InfoNotification } from '../layout/Notifications';
