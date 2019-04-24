@@ -62,7 +62,7 @@ export const Home: React.FunctionComponent<{}> = observer(({}) => {
           <Text>Niet ingelogd</Text>
         )}
       </Box>
-      <PageTitle>Projecten</PageTitle>
+      <PageTitle>Projecten [{Object.keys(projects).join('/')}]</PageTitle>
 
       {hasProjects ? (
         <Todo>

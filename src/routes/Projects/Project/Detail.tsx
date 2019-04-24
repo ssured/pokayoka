@@ -8,12 +8,12 @@ export const Detail: React.FunctionComponent<{
 }> = observer(({ project }) => {
   return (
     <>
-      <h1>Projectnaam: {project.name} </h1>
+      {/* <h1>Projectnaam: {project.name} </h1>
       <ul>
         {Object.entries(project.sites).map(([key, site]) => (
           <li key={key}>{site.name}</li>
         ))}
-      </ul>
+      </ul> */}
       <Hierarchy project={project} />
     </>
   );

@@ -66,7 +66,7 @@ export const getPath = (obj: SPOShape): string[] | undefined => {
 };
 
 const proxyKeysSymbol = Symbol('keys of proxy');
-export const getKeys = (obj: SPOShape): Set<string> | undefined => {
+const getKeys = (obj: SPOShape): Set<string> | undefined => {
   // @ts-ignore
   return obj[proxyKeysSymbol];
 };
@@ -93,7 +93,7 @@ export const createUniverse = <T extends SPOShape>({
   const core = observable<SPOShape>({}, {}, { deep: false });
 
   const publicGet = (path: string[]): Maybe<SPOShape> => {
-    const keys = new Set<string>();
+    const keys = observable.set<string>([], { deep: false });
     const key = pathToKey(path);
 
     if (!core[key]) {
