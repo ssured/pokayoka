@@ -9,6 +9,7 @@ import {
 } from 'mobx';
 import { createUniverse, ifExists } from './universe';
 import console = require('console');
+import { RelationsOf, many, Many } from '../model/base';
 
 describe('linking observables', () => {
   test('it works', async () => {
@@ -36,20 +37,6 @@ describe('linking observables', () => {
   });
 });
 
-type P = {
-  // project
-  '@': 'P';
-  name: string;
-  roles: Record<string, M>;
-};
-
-type R = {
-  // Role
-  '@': 'R';
-  roleName: string;
-  member: M;
-};
-
 type M = {
   // member / person
   '@': 'M';
@@ -57,23 +44,51 @@ type M = {
   givenName?: string;
 };
 
-type U = {
-  // user
-  project: Record<string, P>;
-  is: M;
+const mRels: RelationsOf<M> = {};
+
+type R = {
+  // Role
+  '@': 'R';
+  roleName: string;
+  member: M;
+};
+const rRels: RelationsOf<R> = {
+  member: mRels,
 };
 
-type Shape = Record<string, U>;
+type P = {
+  // project
+  '@': 'P';
+  name: string;
+  roles: Many<R>;
+};
+const pRels: RelationsOf<P> = {
+  roles: many(rRels),
+};
+
+type U = {
+  // user
+  project: Many<P>;
+  is: M;
+};
+const uRels: RelationsOf<U> = {
+  project: many(pRels),
+  is: mRels,
+};
+
+type Shape = { [key: string]: U };
+const runtimeShape: RelationsOf<Shape> = many(uRels);
 
 describe('pathproxy for ids', () => {
   test('nested objects', async () => {
-    const s = createUniverse<Shape>({
-      resolve: (path, setValue) => {
+    const { root: s, set } = createUniverse<Shape>({
+      runtimeShape,
+      resolve: path => {
         switch (path.join(',')) {
           case 'sjoerd':
             (async () => {
               await new Promise(res => setTimeout(res, 10));
-              setValue({
+              set(path, false, {
                 is: { '@': 'M', familyName: 'de Jong', givenName: 'Sjoerd' },
                 project: {},
               });
@@ -106,14 +121,15 @@ describe('pathproxy for ids', () => {
 
   test('types propagate', async () => {
     let activeCount = 0;
-    const s = createUniverse<Shape>({
-      resolve: (path, setValue) => {
+    const { root: s, set } = createUniverse<Shape>({
+      runtimeShape,
+      resolve: path => {
         console.log(JSON.stringify(path));
         switch (path.join(',')) {
           case 'sjoerd':
             (async () => {
               await new Promise(res => setTimeout(res, 10));
-              setValue({
+              set(path, false, {
                 is: { '@': 'M', familyName: 'de Jong', givenName: 'Sjoerd' },
               });
             })();
@@ -123,7 +139,7 @@ describe('pathproxy for ids', () => {
               onInactive: () => (activeCount -= 1),
             };
           case 'sander':
-            setValue({
+            set(path, false, {
               is: ['sjoerd', 'is'],
             });
 

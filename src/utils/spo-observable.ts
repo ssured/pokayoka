@@ -2,7 +2,7 @@ import charwise from 'charwise';
 import dlv from 'dlv';
 import { createConvergeFunction } from './ham';
 import { ensureNever } from './index';
-import { isObjt, objt, pred, RawSPOShape, SPOShape, subj } from './spo';
+import { isObjt, objt, pred, SPOShape, subj } from './spo';
 import { SPOHub } from './spo-hub';
 import { createUniverse, ifExists, ThunkTo, Maybe } from './universe';
 import { RelationsOf } from '../model/base';
@@ -16,21 +16,20 @@ export function createObservable<T extends SPOShape = SPOShape>(
   runtimeShape: RelationsOf<T>
 ): ThunkTo<T> {
   type state = string;
-  type SubjMeta = {
-    states: Record<string, state>;
-    setValue: (value: RawSPOShape) => void;
-  };
+  type SubjStateMap = Record<string, state>;
 
   const inSync = false;
 
-  const subjMeta: Record<string, SubjMeta> = {};
+  const subjStates: Record<string, SubjStateMap> = {};
+
+  const getStateMap = (subj: subj): SubjStateMap =>
+    subjStates[pathToKey(subj)] || (subjStates[pathToKey(subj)] = {});
 
   // merge data into this observable, respecting HAM
   const mergeTuple = ([Si, Di]: [state, objt], [subj, pred]: [subj, pred]) => {
-    const meta = subjMeta[pathToKey(subj)];
-    if (meta == null) return; // ignore because we do not know this subject
+    const states = getStateMap(subj);
 
-    const Sc = meta.states[pred] || '';
+    const Sc = states[pred] || '';
 
     // FIXME: expose current value as helper function of universe library
     const Dc = ((ifExists(dlv<Maybe<SPOShape>>(root(), subj)) || {})[pred] ||
@@ -38,7 +37,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
 
     const result = converge([Sc, Dc], [Si, Di], [subj, pred]);
 
-    console.log('spo-observable merge', subj, pred, result);
+    // console.log('spo-observable merge', subj, pred, result);
   };
 
   const converge = createConvergeFunction<state, objt, [subj, pred]>(
@@ -50,69 +49,61 @@ export function createObservable<T extends SPOShape = SPOShape>(
       },
       saveHistorical: () => {},
       saveNow: ([state, data], [subj, pred]) => {
-        const meta = subjMeta[pathToKey(subj)];
-        if (meta == null) throw new Error('no meta available 1');
-        meta.states[pred] = state;
-        meta.setValue({ [pred]: data });
+        const states = getStateMap(subj);
+        states[pred] = state;
+        // console.log(
+        //   `saveNow ${subj.join('/')} ${pred} = ${JSON.stringify(data)}`
+        // );
+        set(subj, true, { [pred]: data });
       },
     }
   );
 
   // create the main root
-  const root = createUniverse<T>({
+  const { root, set /*, get*/ } = createUniverse<T>({
     runtimeShape,
-    resolve: (subj, setValue) => {
-      subjMeta[pathToKey(subj)] = {
-        ...(subjMeta[pathToKey(subj)] || { states: {} }),
-        setValue,
+    resolve: subj => {
+      subjStates[pathToKey(subj)] = {
+        ...(subjStates[pathToKey(subj)] || { states: {} }),
       };
 
       return {
         onActive: () => {
           if (!inSync) {
-            console.log('spo-observable get', subj);
+            // console.log('spo-observable get', subj);
             hub.get({ subj }, root);
           }
         },
       };
     },
     updateListener: function updateListener(subj, value) {
-      let meta = subjMeta[pathToKey(subj)];
-      if (meta == null) {
-        subjMeta[pathToKey(subj)] = {
-          states: {},
-          setValue: value => {
-            throw new Error('setValue not set yet');
-          },
-        };
-        meta = subjMeta[pathToKey(subj)];
-        // const error = { message: 'no meta available 2', subj, value };
-        // console.error(error);
-        // throw new Error(JSON.stringify(error));
-      }
+      // console.log(
+      //   `updateListener ${subj.join('/')} = ${JSON.stringify(value)}`
+      // );
+      const states = getStateMap(subj);
 
       for (const [pred, objt] of Object.entries(value)) {
         if (isObjt(objt)) {
           const state = hub.getCurrentState();
-          meta.states[pred] = state;
+          states[pred] = state;
           hub.put({ tuple: [subj, pred, objt, state] }, root);
 
           // publish the path to this subject
           // TODO this is really inefficient as it overwrites many times for each prop in an object
           // Maybe the hub should filter these cases, maybe we should be more intelligent here
-          for (let i = 2; i < subj.length; i += 1) {
-            hub.put(
-              {
-                tuple: [
-                  subj.slice(0, i - 1),
-                  subj[i - 1],
-                  subj.slice(0, i),
-                  state,
-                ],
-              },
-              root
-            );
-          }
+          // for (let i = 2; i < subj.length; i += 1) {
+          //   hub.put(
+          //     {
+          //       tuple: [
+          //         subj.slice(0, i - 1),
+          //         subj[i - 1],
+          //         subj.slice(0, i),
+          //         state,
+          //       ],
+          //     },
+          //     root
+          //   );
+          // }
         } else {
           updateListener(subj.concat(pred), objt);
         }

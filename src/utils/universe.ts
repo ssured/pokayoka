@@ -6,7 +6,6 @@ import {
 } from 'mobx';
 import { SPOShape, primitive, RawSPOShape } from './spo';
 import { nothing, Nothing } from './maybe';
-import { userRelations } from '../model/User';
 import dlv from 'dlv';
 import { RelationsOf } from '../model/base';
 
@@ -60,7 +59,17 @@ type NodeBehaviour = {
   onInactive?: () => void;
 };
 
-const expectObjectForProp = (key: string) => key.substr(-1) === 's';
+const proxyPathSymbol = Symbol('path of proxy');
+export const getPath = (obj: SPOShape): string[] | undefined => {
+  // @ts-ignore
+  return obj[proxyPathSymbol];
+};
+
+const proxyKeysSymbol = Symbol('keys of proxy');
+export const getKeys = (obj: SPOShape): Set<string> | undefined => {
+  // @ts-ignore
+  return obj[proxyKeysSymbol];
+};
 
 export const createUniverse = <T extends SPOShape>({
   runtimeShape,
@@ -69,18 +78,22 @@ export const createUniverse = <T extends SPOShape>({
   pathToKey = JSON.stringify,
 }: {
   runtimeShape: RelationsOf<T>;
-  resolve: (
-    path: string[],
-    setValue: (value: RawSPOShape) => void
-  ) => void | NodeBehaviour;
+  resolve: (path: string[]) => void | NodeBehaviour;
   updateListener: (path: string[], value: RawSPOShape) => void;
   pathToKey?: (path: string[]) => string;
-}): ThunkTo<T> => {
+}): {
+  root: ThunkTo<T>;
+  get: (path: string[]) => Maybe<SPOShape>;
+  set: (
+    path: string[],
+    emitValues: boolean,
+    value: RawSPOShape[string]
+  ) => void;
+} => {
   const core = observable<SPOShape>({}, {}, { deep: false });
-  const keysForProxy = new WeakMap<SPOShape, Set<string>>();
-  const pathsForProxy = new WeakMap<RawSPOShape, string[]>();
 
   const publicGet = (path: string[]): Maybe<SPOShape> => {
+    const keys = new Set<string>();
     const key = pathToKey(path);
 
     if (!core[key]) {
@@ -92,18 +105,21 @@ export const createUniverse = <T extends SPOShape>({
 
             const subPath = path.concat(subkey);
 
-            if (!core[pathToKey(subPath)]) {
-              console.log('rel', subPath, dlv(runtimeShape, subPath));
-            }
-
+            // test if we expect a subject or a value at the path
             return !!dlv(runtimeShape, subPath)
               ? publicGet(subPath)
-              : core[pathToKey(subPath)] || nothing;
+              : core[pathToKey(subPath)];
+          }
+          switch (subkey) {
+            case proxyPathSymbol:
+              return path;
+            case proxyKeysSymbol:
+              return keys;
           }
         },
         set(_, subkey, value) {
           if (typeof subkey === 'string') {
-            console.log('publicSet', path.concat(subkey), true, value);
+            // console.log('publicSet', path.concat(subkey), true, value);
             publicSet(path.concat(subkey), true, value);
             return true;
           }
@@ -111,12 +127,12 @@ export const createUniverse = <T extends SPOShape>({
         },
         ownKeys() {
           core[key]; // this is not a no-op!
-          return [...keysForProxy.get(proxy)!];
+          return [...keys];
         },
         has(_, key) {
           if (typeof key === 'string') {
             core[key]; // this is not a no-op!
-            return keysForProxy.get(proxy)!.has(key);
+            return keys.has(key);
           }
           return false;
         },
@@ -132,15 +148,11 @@ export const createUniverse = <T extends SPOShape>({
       });
 
       core[key] = proxy;
-      keysForProxy.set(proxy, new Set());
-      pathsForProxy.set(proxy, path);
 
       const unregister = onBecomeObserved(core, key, () => {
         unregister();
 
-        const { onActive, onInactive } =
-          resolve(path, publicSet.bind(null, path, false)) ||
-          ({} as NodeBehaviour);
+        const { onActive, onInactive } = resolve(path) || ({} as NodeBehaviour);
 
         // attach listeners
         if (onActive) {
@@ -164,10 +176,16 @@ export const createUniverse = <T extends SPOShape>({
     runInAction(() => {
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         if (emitValues) {
+          // console.log('publicSet emits', path, value);
           updateListener(path, value);
         }
 
-        const keys = keysForProxy.get(publicGet(path))!;
+        // ensure the whole path is set by settings all keys of the subpath
+        for (const [i, part] of path.entries()) {
+          getKeys(publicGet(path.slice(0, i)))!.add(part);
+        }
+
+        const keys = getKeys(publicGet(path))!;
 
         Object.entries(value).forEach(([key, value]) => {
           // keep administration of all keys
@@ -177,24 +195,24 @@ export const createUniverse = <T extends SPOShape>({
             keys.add(key);
           }
 
+          const subPath = path.concat(key);
+          const subKey = pathToKey(subPath);
+
           if (value && typeof value === 'object') {
             if (Array.isArray(value)) {
-              core[pathToKey(path.concat(key))] = publicGet(value);
+              core[subKey] = publicGet(value);
             } else {
-              if (pathsForProxy.has(value)) {
-                core[pathToKey(path.concat(key))] = publicGet(
-                  pathsForProxy.get(value)!
-                );
+              if (getPath(value as SPOShape)) {
+                core[subKey] = publicGet(getPath(value as SPOShape)!);
               } else {
-                publicSet(path.concat(key), emitValues, value);
+                publicSet(subPath, emitValues, value);
               }
             }
-            publicGet(path.concat(key)); // make sure the object is linked
           } else {
             if (value == null) {
-              delete core[pathToKey(path.concat(key))];
+              delete core[subKey];
             } else {
-              core[pathToKey(path.concat(key))] = value;
+              core[subKey] = value;
             }
           }
         });
@@ -224,5 +242,5 @@ export const createUniverse = <T extends SPOShape>({
     return proxy as any;
   };
 
-  return createPathProxy();
+  return { root: createPathProxy(), set: publicSet, get: publicGet };
 };

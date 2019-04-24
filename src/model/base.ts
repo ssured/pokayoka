@@ -1,25 +1,32 @@
-import * as t from 'io-ts';
-import { computed, observable, ObservableMap, runInAction } from 'mobx';
 import { primitive, SPOShape, subj, objt, pred } from '../utils/spo';
-import { nothing } from '../utils/maybe';
-import { ReactElement } from 'react';
-import { object } from 'prop-types';
 import { KeysOfType } from '../utils/typescript';
 
 export type Dictionary<T> = Record<string, T>;
 export type Many<T extends SPOShape> = Dictionary<T>;
 export type One<T extends SPOShape> = T;
 
-export type RelationsOf<T extends object> = {
-  [K in KeysOfType<Required<T>, SPOShape>]: Required<T>[K] extends Many<infer U>
-    ? Record<string, RelationsOf<U>>
-    : Required<T>[K] extends object
-    ? RelationsOf<Required<T>[K]>
+export type RelationsOf<T extends SPOShape> = {
+  [K in KeysOfType<Required<T>, Many<SPOShape>>]: Required<T>[K] extends Many<
+    infer U
+  >
+    ? Many<RelationsOf<U>>
     : never
-};
+} &
+  {
+    [K in Exclude<
+      KeysOfType<Required<T>, SPOShape>,
+      KeysOfType<Required<T>, Many<SPOShape>>
+    >]: Required<T>[K] extends SPOShape ? RelationsOf<Required<T>[K]> : never
+  };
 
-export const many = <T extends RelationsOf<any>>(rels: T): Record<string, T> =>
-  new Proxy(
+const manyProxies = new WeakSet<any>();
+
+export const isManyProxy = (value: unknown) => manyProxies.has(value);
+
+export const many = <T extends RelationsOf<any>>(
+  rels: T
+): Record<string, T> => {
+  const proxy = new Proxy(
     {},
     {
       get() {
@@ -27,6 +34,9 @@ export const many = <T extends RelationsOf<any>>(rels: T): Record<string, T> =>
       },
     }
   );
+  manyProxies.add(proxy);
+  return proxy;
+};
 
 // type InnerSerialized<T> = T extends primitive | undefined
 //   ? T

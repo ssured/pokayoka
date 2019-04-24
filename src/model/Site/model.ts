@@ -4,7 +4,7 @@ import { generateId } from '../../utils/id';
 // import { pProjectSchema } from '../Project/model';
 import { deepM } from '../../utils/universe';
 import { buildingRelations } from '../Building/model';
-import { projectRelations } from '../Project/model';
+// import { projectRelations } from '../Project/model';
 
 declare global {
   type PSite = {
@@ -12,7 +12,7 @@ declare global {
     identifier: string;
     name: string;
 
-    project: One<PProject>;
+    // project: One<PProject>;
 
     description?: string;
     buildings: Many<PBuilding>;
@@ -21,7 +21,7 @@ declare global {
 }
 
 export const siteRelations: RelationsOf<PSite> = {
-  project: projectRelations,
+  // project: projectRelations,
   buildings: many(buildingRelations),
 };
 
@@ -32,7 +32,7 @@ export const pSiteSchema = yup.object<PSite>().shape({
     .required(),
   identifier: yup.string().required(),
   name: yup.string().required(),
-  project: yup.object().required(),
+  // project: yup.object().required(),
 
   description: yup.string(),
 
@@ -44,7 +44,7 @@ export const isPSite = (v: unknown): v is PSite =>
   pSiteSchema.isValidSync(deepM(v));
 
 export const newPSite = (
-  required: Partial<PSite> & Pick<PSite, 'name' | 'project'>
+  required: Partial<PSite> & Pick<PSite, 'name'>
 ): PSite => ({
   '@type': 'PSite',
   identifier: generateId(),

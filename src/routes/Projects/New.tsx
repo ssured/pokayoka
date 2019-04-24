@@ -16,10 +16,12 @@ import { isPSite, newPSite } from '../../model/Site/model';
 import { Omit } from '../../utils/typescript';
 import { when } from 'mobx';
 import { ifExists } from '../../utils/universe';
+import { newPBuilding, isPBuilding } from '../../model/Building/model';
 
 type NewProjectScaffold = {
   project: Parameters<typeof newPProject>[0];
-  site: Omit<Parameters<typeof newPSite>[0], 'project'>;
+  site: Parameters<typeof newPSite>[0];
+  building: Parameters<typeof newPBuilding>[0];
 };
 
 const validationSchema = yup.object({
@@ -29,6 +31,9 @@ const validationSchema = yup.object({
   }),
   site: yup.object({
     name: yup.string().required(),
+  }),
+  building: yup.object({
+    name: yup.string(),
   }),
 });
 
@@ -44,6 +49,9 @@ export const New: React.FunctionComponent<{
     },
     site: {
       name: 'Rolde',
+    },
+    building: {
+      name: '',
     },
   };
 
@@ -71,12 +79,23 @@ export const New: React.FunctionComponent<{
               throw new Error('Could not create Project');
             }
 
-            const newSite = newPSite({ ...values.site, project });
+            const newSite = newPSite({ ...values.site });
             project.sites[newSite.identifier] = newSite;
 
             const site = project.sites[newSite.identifier];
             if (!isPSite(site)) {
               throw new Error('Could not create Site');
+            }
+
+            const newBuilding = newPBuilding({
+              ...values.building,
+              name: values.building.name || project.name,
+            });
+            site.buildings[newBuilding.identifier] = newBuilding;
+
+            const building = site.buildings[newBuilding.identifier];
+            if (!isPBuilding(building)) {
+              throw new Error('Could not create Building');
             }
 
             afterCreate(project);
@@ -112,6 +131,11 @@ export const New: React.FunctionComponent<{
                 <TextField label="ID" name="identifier" /> */}
                 <TextField label="Projectnaam" name="project.name" required />
                 <TextField label="Projectcode" name="project.code" />
+                <TextField
+                  label="Gebouw naam"
+                  name="building.name"
+                  placeholder="Alleen invullen als anders dan projectnaam"
+                />
                 <TextField label="Plaatsnaam" name="site.name" required />
               </Box>
               <Box justify="end" direction="row" gap="medium" gridArea="below">

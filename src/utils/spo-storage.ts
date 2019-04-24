@@ -33,6 +33,11 @@ export class SPOStorage {
         o: v('o'),
       },
     ])) {
+      // console.log(
+      //   `spo-storage put ${result.tuples.length} ${JSON.stringify(
+      //     result.tuples[0]
+      //   )}`
+      // );
       this.hub.put({ tuple: result.tuples[0] }, this);
     }
   }
@@ -52,7 +57,7 @@ export class SPOStorage {
     );
 
     if (result.resolution === 'merge' && result.incoming) {
-      console.log('merge', msg);
+      // console.log('merge', msg);
       this.db.commit([msg.tuple]);
     }
   }
