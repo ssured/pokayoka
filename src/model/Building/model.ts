@@ -2,7 +2,6 @@ import { Many, RelationsOf, many } from '../base';
 import { buildingStoreyRelations } from '../BuildingStorey/model';
 import * as yup from 'yup';
 import { generateId } from '../../utils/id';
-import { deepM } from '../../utils/universe';
 
 declare global {
   type PBuilding = {
@@ -36,7 +35,7 @@ export const pBuildingSchema = yup.object<PBuilding>().shape({
 });
 
 export const isPBuilding = (v: unknown): v is PBuilding =>
-  pBuildingSchema.isValidSync(deepM(v));
+  pBuildingSchema.isValidSync(v);
 
 export const newPBuilding = (
   required: Partial<PBuilding> & Pick<PBuilding, 'name'>

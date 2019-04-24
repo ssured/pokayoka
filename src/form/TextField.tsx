@@ -1,7 +1,6 @@
 import { useField } from 'formik';
 import { FormField, TextInput, TextInputProps } from 'grommet';
 import React from 'react';
-import { ifExists } from '../utils/universe';
 
 export const TextField: React.FunctionComponent<
   TextInputProps & {
@@ -21,7 +20,7 @@ export const TextField: React.FunctionComponent<
     >
       <TextInput
         required={required}
-        {...{ ...field, value: ifExists(field.value) || '' }}
+        {...{ ...field, value: field.value || '' }}
         {...props}
       />
     </FormField>

@@ -7,7 +7,7 @@ import {
   runInAction,
   autorun,
 } from 'mobx';
-import { createUniverse, ifExists } from './universe';
+import { createUniverse } from './universe';
 import console = require('console');
 import { RelationsOf, many, Many } from '../model/base';
 
@@ -106,7 +106,7 @@ describe('pathproxy for ids', () => {
     });
 
     const user = s['sjoerd']();
-    await when(() => !!ifExists(user.project));
+    await when(() => !!user.project);
 
     expect(Object.keys(user.project).length).toBe(0);
 

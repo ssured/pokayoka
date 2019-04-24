@@ -62,23 +62,33 @@ export const Home: React.FunctionComponent<{}> = observer(({}) => {
           <Text>Niet ingelogd</Text>
         )}
       </Box>
-      <PageTitle>Projecten [{Object.keys(projects).join('/')}]</PageTitle>
+      <PageTitle>Projecten</PageTitle>
 
       {hasProjects ? (
-        <Todo>
-          <TileGrid>
+        <TileGrid>
+          {Object.entries(projects).map(([key, project]) => (
             <Box
+              key={key}
               fill
-              border
               align="center"
               justify="center"
-              direction="row"
-              gap="medium"
+              direction="column"
             >
-              <AddProjectButton />
+              <Box>plaatje</Box>
+              <RoutedButton
+                to={router.projects.id}
+                params={{ id: project.identifier }}
+                label={project.name}
+                plain={false}
+              />
             </Box>
-          </TileGrid>
-        </Todo>
+          ))}
+          <Box fill align="center" justify="center" pad="medium">
+            <Todo>
+              <AddProjectButton />
+            </Todo>
+          </Box>
+        </TileGrid>
       ) : (
         <InfoNotification
           message="Geen projecten gevonden"

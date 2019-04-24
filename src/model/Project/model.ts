@@ -1,7 +1,6 @@
 import { runInAction } from 'mobx';
 import * as yup from 'yup';
 import { generateId } from '../../utils/id';
-import { deepM } from '../../utils/universe';
 import { Many, RelationsOf, many } from '../base';
 import { siteRelations } from '../Site/model';
 import { roleRelations } from '../Role';
@@ -37,7 +36,7 @@ export const pProjectSchema = yup.object<PProject>().shape({
 });
 
 export const isPProject = (v: unknown): v is PProject =>
-  pProjectSchema.isValidSync(deepM(v));
+  pProjectSchema.isValidSync(v);
 
 export const newPProject = (
   required: Partial<PProject> & Pick<PProject, 'name'>

@@ -13,9 +13,6 @@ import { TextField } from '../../form/TextField';
 import { PageTitle } from '../../layout/PageTitle';
 import { isPProject, newPProject } from '../../model/Project/model';
 import { isPSite, newPSite } from '../../model/Site/model';
-import { Omit } from '../../utils/typescript';
-import { when } from 'mobx';
-import { ifExists } from '../../utils/universe';
 import { newPBuilding, isPBuilding } from '../../model/Building/model';
 
 type NewProjectScaffold = {
@@ -66,7 +63,8 @@ export const New: React.FunctionComponent<{
         validateOnChange={submitted}
         onSubmit={async (values, helpers) => {
           try {
-            if (!ifExists(user.projects)) {
+            if (!user.projects) {
+              debugger;
               user.projects = {};
             }
             // await when(() => !!ifExists(user.projects));

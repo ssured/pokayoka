@@ -11,6 +11,7 @@ export const TileGrid: React.FunctionComponent<
   return (
     <Grid
       align="start"
+      fill="horizontal"
       columns={size === 'small' ? undefined : { count: 'fill', size: tileSize }}
       rows={size === 'small' ? undefined : tileSize}
       gap="medium"

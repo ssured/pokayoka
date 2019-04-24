@@ -2,7 +2,6 @@ import { Many, One, RelationsOf, many } from '../base';
 import * as yup from 'yup';
 import { generateId } from '../../utils/id';
 // import { pProjectSchema } from '../Project/model';
-import { deepM } from '../../utils/universe';
 import { buildingRelations } from '../Building/model';
 // import { projectRelations } from '../Project/model';
 
@@ -40,8 +39,7 @@ export const pSiteSchema = yup.object<PSite>().shape({
   tasks: yup.object(),
 });
 
-export const isPSite = (v: unknown): v is PSite =>
-  pSiteSchema.isValidSync(deepM(v));
+export const isPSite = (v: unknown): v is PSite => pSiteSchema.isValidSync(v);
 
 export const newPSite = (
   required: Partial<PSite> & Pick<PSite, 'name'>

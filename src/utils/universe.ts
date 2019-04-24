@@ -5,13 +5,12 @@ import {
   onBecomeUnobserved,
 } from 'mobx';
 import { SPOShape, primitive, RawSPOShape } from './spo';
-import { nothing, Nothing } from './maybe';
 import dlv from 'dlv';
 import { RelationsOf } from '../model/base';
 
 export type Maybe<T> = T extends object
   ? { [K in keyof T]: Maybe<T[K]> }
-  : T | Nothing;
+  : T | undefined;
 
 export type ThunkTo<T extends SPOShape> = {
   (): { [K in keyof T]: Maybe<T[K]> };
@@ -19,40 +18,9 @@ export type ThunkTo<T extends SPOShape> = {
   [K in keyof T]: T[K] extends primitive
     ? T[K]
     : Required<T>[K] extends SPOShape
-    ? /*Required<T>[K] extends Many<infer U>
-      ? {
-          (): Maybe<Many<ThunkTo<U>>>;
-        } & Many<ThunkTo<U>>
-      : */ ThunkTo<
-        Required<T>[K]
-      >
+    ? ThunkTo<Required<T>[K]>
     : never
 };
-
-export function ifExists<T>(maybe: Maybe<T>): T | undefined;
-export function ifExists<T, U>(maybe: Maybe<T>, otherwise?: U): T | U {
-  // @ts-ignore
-  return maybe === nothing ? otherwise : maybe;
-}
-
-export const deepM = <T>(v: Maybe<T>): T | undefined =>
-  // @ts-ignore
-  v === nothing
-    ? undefined
-    : v && typeof v === 'object' && !Array.isArray(v)
-    ? Object.entries(v).reduce(
-        (v, [key, value]) => {
-          const sure = deepM(value);
-          if (sure !== undefined) {
-            const obj = v || {};
-            obj[key] = sure;
-            return obj;
-          }
-          return v;
-        },
-        undefined as Record<string, any> | undefined
-      )
-    : v;
 
 type NodeBehaviour = {
   onActive?: () => void;

@@ -4,7 +4,7 @@ import { createConvergeFunction } from './ham';
 import { ensureNever } from './index';
 import { isObjt, objt, pred, SPOShape, subj } from './spo';
 import { SPOHub } from './spo-hub';
-import { createUniverse, ifExists, ThunkTo, Maybe } from './universe';
+import { createUniverse, ThunkTo, Maybe } from './universe';
 import { RelationsOf } from '../model/base';
 
 const pathToKey = charwise.encode;
@@ -32,7 +32,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
     const Sc = states[pred] || '';
 
     // FIXME: expose current value as helper function of universe library
-    const Dc = ((ifExists(dlv<Maybe<SPOShape>>(root(), subj)) || {})[pred] ||
+    const Dc = ((dlv<Maybe<SPOShape>>(root(), subj) || {})[pred] ||
       null) as objt;
 
     const result = converge([Sc, Dc], [Si, Di], [subj, pred]);
