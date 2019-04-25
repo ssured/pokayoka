@@ -41,40 +41,29 @@ export const Settings: React.FunctionComponent<{
         }
       />
 
-      {/* <Grid
-          align="start"
-          columns={
-            size === 'small' ? undefined : { count: 'fill', size: 'medium' }
-          }
-          gap="medium"
-        >
-          {Object.entries(buildingStorey.sheets || {}).map(
-            ([key, sheet]) =>
-              sheet && (
-                <Box
-                  key={key}
-                  direction="column"
-                  align="center"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() =>
-                    navigate([window.location.pathname, key].join('/'))
-                  }
-                >
-                  {sheet.$thumb && (
-                    <Box fill>
-                      <Image src={`/cdn/${sheet.$thumb}`} fit="contain" />
-                    </Box>
-                  )}
-                  <Text size="large" truncate>
-                    {sheet.name}
-                  </Text>
-                   <Box direction="row">
-                    <EditInlineStringProp subject={buildingStorey} prop="name" />
-                  </Box> 
+      <Grid
+        align="start"
+        columns={
+          size === 'small' ? undefined : { count: 'fill', size: 'medium' }
+        }
+        gap="medium"
+      >
+        {Object.entries(buildingStorey.sheets).map(
+          ([key, sheet]) =>
+            sheet && (
+              <Box key={key} direction="column" align="center">
+                {sheet.$thumb && (
+                  <Box fill>
+                    <Image src={`/cdn/${sheet.$thumb}`} fit="contain" />
+                  </Box>
+                )}
+                <Box direction="row" gap="medium">
+                  <EditInlineStringProp subject={sheet} prop="name" />
                 </Box>
-              )
-          )}
-        </Grid> */}
+              </Box>
+            )
+        )}
+      </Grid>
     </>
   );
 });

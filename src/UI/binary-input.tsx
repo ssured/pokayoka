@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useState } from 'react';
-import { Box, Text, Image, Meter } from 'grommet';
+import { Box, Text, Image, Meter, Stack } from 'grommet';
 import { useDropzone } from 'react-dropzone';
 import { loadAsCanvas } from '../utils/image';
 import { CAMERA_JPEG_QUALITY, CAMERA_MAX_SIZE } from '../constants';
@@ -8,6 +8,7 @@ import { toHex } from '../utils/buffer';
 import { DocumentPdf } from 'grommet-icons';
 import { Tile } from '../model/Sheet/Tile';
 import { Image as ImageIcon } from 'grommet-icons';
+import { Checkmark } from 'grommet-icons';
 
 export const ImageInput: FunctionComponent<{
   onChange: (result: { value: string | null }) => void;
@@ -69,7 +70,7 @@ function blobToDataURL(blob: Blob): Promise<string> {
 }
 
 export const PDFInput: FunctionComponent<{
-  onChange: (data: Sheet | null) => void;
+  onChange: (data: PSheet | null) => void;
   value: string | null;
 }> = ({ onChange, value: hash }) => {
   const [progress, setProgress] = useState(-1);
@@ -120,8 +121,8 @@ export const PDFInput: FunctionComponent<{
         if (info.progress === 1) {
           ws.close();
 
-          const sheet: Sheet = {
-            '@type': 'Sheet',
+          const sheet: PSheet = {
+            '@type': 'PSheet',
             identifier,
             name: info.pdfInfo.name.replace(/\.pdf$/i, ''),
             width: info.pdfInfo._width as number,
@@ -181,30 +182,51 @@ export const PDFInput: FunctionComponent<{
     onDrop,
   });
   return (
-    <Box {...getRootProps()} border={isDragActive}>
-      {thumbSrc ? (
-        <Box height="small" width="small" border>
-          <Image src={thumbSrc} fit="cover" />
-        </Box>
-      ) : (
-        <Box
-          height="small"
-          width="small"
-          align="center"
-          justify="center"
-          border
-        >
-          <DocumentPdf size="xlarge" />
-        </Box>
-      )}
+    <Box
+      {...getRootProps()}
+      align="center"
+      margin={{ top: 'large' }}
+      border={isDragActive}
+    >
       <input {...getInputProps()} />
-      {progress >= 0 && (
-        <Meter
-          alignSelf="stretch"
-          type="bar"
-          values={[{ label: `${progress}%`, value: progress }]}
-        />
-      )}
+      <Stack anchor="center" guidingChild={1}>
+        {thumbSrc ? (
+          <Box height="small" width="medium">
+            <Image src={thumbSrc} fit="contain" />
+          </Box>
+        ) : (
+          <Box
+            height="small"
+            width="medium"
+            align="center"
+            justify="center"
+            border
+          >
+            <DocumentPdf size="xlarge" />
+            <Text>Klik om een PDF te uploaden</Text>
+            <Text>(hierop slepen kan ook)</Text>
+          </Box>
+        )}
+        {progress >= 0 &&
+          (progress < 100 ? (
+            <>
+              <Meter
+                type="circle"
+                size="xsmall"
+                thickness="small"
+                values={[{ label: `${progress}%`, value: progress }]}
+              />
+              <Box direction="row" align="center" justify="center">
+                <Text size="xlarge" weight="bold">
+                  {progress}
+                </Text>
+                <Text size="small">%</Text>
+              </Box>
+            </>
+          ) : (
+            <Checkmark size="xlarge" color="status-ok" />
+          ))}
+      </Stack>
       {isDragActive ? (
         <Text>Laat los om te updaten</Text>
       ) : hash == null ? (

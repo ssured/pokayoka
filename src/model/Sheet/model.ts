@@ -1,11 +1,11 @@
-import { UndefinedOrPartialSPO } from '../../utils/spo-observable';
 import * as yup from 'yup';
 import { generateId } from '../../utils/id';
 import { Omit } from '../../utils/typescript';
+import { RelationsOf, many } from '../base';
 
 declare global {
-  type Sheet = {
-    '@type': 'Sheet';
+  type PSheet = {
+    '@type': 'PSheet';
     identifier: string;
     name: string;
     width: number;
@@ -19,11 +19,13 @@ declare global {
   };
 }
 
-export type PartialSheet = UndefinedOrPartialSPO<Sheet>;
+export const sheetRelations: RelationsOf<PSheet> = {
+  images: many({}),
+};
 
-export const sheetSchema = yup.object<Sheet>().shape({
-  // '@type': yup.string().oneOf(['Sheet']) as yup.Schema<'Sheet'>,
-  // identifier: yup.string().required(),
+export const pSheetSchema = yup.object<PSheet>().shape({
+  '@type': yup.string().oneOf(['PSheet']),
+  identifier: yup.string().required(),
   name: yup.string().required(),
   width: yup
     .number()
@@ -35,17 +37,18 @@ export const sheetSchema = yup.object<Sheet>().shape({
     .integer()
     .positive()
     .required(),
-  images: yup.object(),
+  images: yup.object().required(),
   $thumb: yup.string(),
   $source: yup.string(),
 });
 
-export const isSheet = (v: unknown): v is Sheet => sheetSchema.isValidSync(v);
+export const isPSheet = (v: unknown): v is PSheet =>
+  pSheetSchema.isValidSync(v);
 
 export const newSheet = (
-  required: Omit<Sheet, '@type' | 'identifier' | 'images' | '$source'>
-): Sheet => ({
-  '@type': 'Sheet',
+  required: Omit<PSheet, '@type' | 'identifier' | 'images' | '$source'>
+): PSheet => ({
+  '@type': 'PSheet',
   identifier: generateId(),
   images: {},
   ...required,

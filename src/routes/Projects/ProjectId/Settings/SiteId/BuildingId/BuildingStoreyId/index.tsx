@@ -5,40 +5,38 @@ import { Page, PageTitle } from '../../../../../../../components/Page/Page';
 import { router } from '../../../../../../../router';
 import { Maybe } from '../../../../../../../utils/universe';
 import { Settings } from './Settings';
+import { AddSheet } from './AddSheet';
+
+const currentRoute =
+  router.projects.projectId.settings.siteId.buildingId.buildingStoreyId;
 
 export const BuildingStoreyId: React.FunctionComponent<{
   buildingStorey: Maybe<PBuildingStorey>;
 }> = observer(({ buildingStorey }) => {
   return (
     <>
-      <Route
-        match={
-          router.projects.projectId.settings.siteId.buildingId.buildingStoreyId
-        }
-        exact
-      >
+      <Route match={currentRoute} exact>
         <Page>
           <Settings buildingStorey={buildingStorey} />
         </Page>
       </Route>
 
-      <Route
-        match={
-          router.projects.projectId.settings.siteId.buildingId.buildingStoreyId
-            .addSheet
-        }
-        exact
-      >
+      <Route match={currentRoute.addSheet} exact>
         <PageTitle title={[['Plattegrond toevoegen']]}>
           <Page>
-            <Settings buildingStorey={buildingStorey} />
+            <AddSheet
+              onSubmit={async sheet => {
+                buildingStorey.sheets[sheet.identifier] = sheet;
+                currentRoute.$replace();
+              }}
+            />
           </Page>
         </PageTitle>
       </Route>
 
       {/* <Route
         match={
-          router.projects.projectId.settings.siteId.buildingId.buildingStoreyId
+          currentRoute
         }
       >
         <PageTitle
