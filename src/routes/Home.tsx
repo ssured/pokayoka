@@ -76,8 +76,8 @@ export const Home: React.FunctionComponent<{}> = observer(({}) => {
             >
               <Box>plaatje</Box>
               <RoutedButton
-                to={router.projects.id}
-                params={{ id: project.identifier }}
+                to={router.projects.projectId}
+                params={{ projectId: project.identifier }}
                 label={project.name}
                 plain={false}
               />

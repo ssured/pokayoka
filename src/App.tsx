@@ -94,7 +94,7 @@ export const App: React.FunctionComponent<{}> = observer(() => {
   });
 
   const size = useContext(ResponsiveContext);
-  const [showSidebar, toggleSidebar] = useToggle(true);
+  const [showSidebar, toggleSidebar] = useToggle(false);
 
   const user = useRoot();
 
@@ -159,25 +159,6 @@ export const App: React.FunctionComponent<{}> = observer(() => {
 
               <Route match={router.account}>
                 <User />
-              </Route>
-
-              <Route match={router.projects} exact>
-                <p>Account page</p>
-                <Link to={router.home}>Home</Link>
-                <Link
-                  to={router.projects.projectId}
-                  params={{ projectId: '123' }}
-                >
-                  Account 123
-                </Link>
-
-                <RoutedButton to={router.projects}>TEST</RoutedButton>
-
-                <RoutedButton
-                  to={router.projects.id}
-                  params={{ id: '123' }}
-                  label="TEST"
-                />
               </Route>
 
               <Route match={router.projects.new} exact>

@@ -1,12 +1,17 @@
 import { navigate } from '@reach/router';
-import { Box, Grid, Heading, ResponsiveContext } from 'grommet';
-import React, { ReactNode, useContext } from 'react';
+import {
+  Box,
+  BoxProps,
+  Grid,
+  Heading,
+  ResponsiveContext,
+  Button,
+} from 'grommet';
+import React, { ReactNode, useContext, useState } from 'react';
 import { UI_EMPTY_STRING } from '../../constants';
 import { colorsLightToDark, sizesSmallToBig } from '../../theme';
 
-const PageTitlesContext = React.createContext<
-  [ReactNode, string | undefined][]
->([]);
+const PageTitlesContext = React.createContext<[ReactNode, ReactNode?][][]>([]);
 
 export const PageTitle: React.FunctionComponent<{
   /**
@@ -35,14 +40,16 @@ export const PageTitle: React.FunctionComponent<{
     <PageTitlesContext.Provider
       value={[
         [
-          size !== 'small' && prefix ? (
-            <>
-              <small>{prefix}:</small> {title || UI_EMPTY_STRING}
-            </>
-          ) : (
-            title || UI_EMPTY_STRING
-          ),
-          link,
+          [
+            size !== 'small' && prefix ? (
+              <>
+                <small>{prefix}:</small> {title || UI_EMPTY_STRING}
+              </>
+            ) : (
+              title || UI_EMPTY_STRING
+            ),
+            link,
+          ],
         ],
         ...current,
       ]}
@@ -64,10 +71,21 @@ interface Border {
 const Tab: React.FunctionComponent<{
   border: Border;
   depth?: number;
-  titles: [ReactNode, string?][];
+  titles: [ReactNode, ReactNode?][][];
   totalHeight?: number;
-}> = ({ border, titles = [], depth = 0, totalHeight = titles.length }) => {
-  const [title, href] = titles[0];
+  titleSeparator?: [ReactNode, ReactNode?];
+}> = ({
+  border,
+  titles = [],
+  depth = 0,
+  totalHeight = titles.length,
+  titleSeparator = ['/'],
+}) => {
+  const [showingTitle, setShowingTitle] = useState<ReactNode>(undefined);
+  const toggleShowingTitle = (title: ReactNode) =>
+    setShowingTitle(showingTitle === title ? undefined : title);
+
+  const crumbs = titles[0];
   const ancestors = titles.slice(1);
   return (
     <Box margin={{ horizontal: depth > 0 ? 'medium' : undefined }}>
@@ -86,27 +104,55 @@ const Tab: React.FunctionComponent<{
         elevation={sizesSmallToBig[totalHeight - depth]}
       >
         <Box
-          as="a"
+          direction="row"
           align="center"
           pad={{ horizontal: 'medium' }}
-          onClick={href == null ? undefined : () => navigate(href)}
-          style={{ cursor: 'pointer', zIndex: 1 }}
+          style={{ zIndex: 1 }}
           background={colorsLightToDark[depth]}
         >
-          <Heading
-            level={depth === 0 ? '2' : '3'}
-            margin={{ horizontal: 'medium', vertical: 'xsmall' }}
-          >
-            {title}
-          </Heading>
+          {Object.values(crumbs)
+            .reduce(
+              (entries, crumb, i) => {
+                if (i > 0 && titleSeparator) {
+                  entries.push(titleSeparator);
+                }
+                entries.push(crumb);
+                return entries;
+              },
+              [] as [ReactNode, ReactNode?][]
+            )
+            .map(([title, subTitle], index) => (
+              // @ts-ignore
+              <Box
+                as={subTitle ? Button : Box}
+                active={showingTitle === subTitle}
+                key={index}
+              >
+                <Heading
+                  level={depth === 0 ? '2' : '3'}
+                  margin={{ horizontal: 'small', vertical: 'xsmall' }}
+                  // style={{ cursor: subTitle ? 'pointer' : undefined }}
+                  onClick={
+                    subTitle ? () => toggleShowingTitle(subTitle) : undefined
+                  }
+                >
+                  {title}
+                </Heading>
+              </Box>
+            ))}
         </Box>
+        {showingTitle && (
+          <Box fill="horizontal" align="center">
+            {showingTitle}
+          </Box>
+        )}
       </Box>
     </Box>
   );
 };
 
 export const Page: React.FunctionComponent<{
-  titles?: [ReactNode, string?][];
+  titles?: [ReactNode, ReactNode?][][];
   leftOfTitle?: ReactNode;
   rightOfTitle?: ReactNode;
 }> = ({
@@ -134,7 +180,7 @@ export const Page: React.FunctionComponent<{
         { name: 'below-content', start: [0, 2], end: [2, 2] },
       ]}
     >
-      <Box gridArea="title">
+      <Box gridArea="title" justify="end">
         <Tab border={border} titles={titles} />
       </Box>
 
@@ -149,7 +195,12 @@ export const Page: React.FunctionComponent<{
         {children}
       </Box>
 
-      <Box gridArea="left-of-title" border={{ ...border, side: 'bottom' }}>
+      <Box
+        gridArea="left-of-title"
+        border={{ ...border, side: 'bottom' }}
+        align="start"
+        justify="end"
+      >
         {leftOfTitle}
       </Box>
       <Box

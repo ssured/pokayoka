@@ -1,7 +1,7 @@
 import React from 'react';
 import { storiesOf } from '@storybook/react';
 import { Page, PageTitle } from './Page';
-import { Grommet, Box } from 'grommet';
+import { Grommet, Box, Text } from 'grommet';
 
 storiesOf('Page', module)
   .add('context', () => (
@@ -20,10 +20,10 @@ storiesOf('Page', module)
       <Box fill pad="medium">
         <Page
           titles={[
-            ['2e verdieping', '/subsub'],
-            ['Molukkenstraat 5', '/subsub'],
-            ['Groningen', '/sub'],
-            ['Molukkenstraat', '/hello'],
+            [['2e verdieping', '/subsub']],
+            [['Molukkenstraat 5', '/subsub']],
+            [['Groningen', '/sub']],
+            [['Molukkenstraat', '/hello']],
           ]}
         >
           Content
@@ -34,7 +34,23 @@ storiesOf('Page', module)
   .add('single', () => (
     <Grommet full plain>
       <Box fill pad="medium">
-        <Page titles={[['Hello', '/hello']]}>Content</Page>
+        <Page
+          titles={[
+            [
+              ['Hello', <Box key="hello">options</Box>],
+              ['Hello', <Box key="hello">options</Box>],
+              ['World'],
+            ],
+          ]}
+          leftOfTitle={'Left of title'}
+          rightOfTitle={
+            <Box border round>
+              <Text size="xxlarge">Right</Text>
+            </Box>
+          }
+        >
+          Content
+        </Page>
       </Box>
     </Grommet>
   ));
