@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Maybe } from '../../../utils/universe';
 import { Hierarchy } from './Hierarchy';
 import { Down } from 'grommet-icons';
+import { Page, PageCrumb } from '../../../components/Page/Page';
 
 const SelectHierarchy: React.FunctionComponent<{
   project: Maybe<PProject>;
@@ -85,15 +86,17 @@ export const Snags: React.FunctionComponent<{
   project: Maybe<PProject>;
 }> = observer(({ project }) => {
   return (
-    <>
-      <Box direction="row" justify="between">
-        <SelectHierarchy project={project} />
+    <PageCrumb title={'Bevindingen'}>
+      <Page>
+        <Box direction="row" justify="between">
+          <SelectHierarchy project={project} />
 
-        <Box direction="row" gap="medium">
-          <FilterItem>Aannemer</FilterItem>
-          <EditFilter project={project} />
+          <Box direction="row" gap="medium">
+            <FilterItem>Aannemer</FilterItem>
+            <EditFilter project={project} />
+          </Box>
         </Box>
-      </Box>
-    </>
+      </Page>
+    </PageCrumb>
   );
 });

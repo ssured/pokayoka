@@ -1,88 +1,117 @@
-import { Box, Keyboard, Text, TextInput } from 'grommet';
+import { Box, ButtonProps, Keyboard, Text, TextInput } from 'grommet';
 import { useObserver } from 'mobx-react-lite';
-import React from 'react';
+import React, { useState, ReactNode } from 'react';
 import { TextButton } from '../components/TextButton';
-import { UI_EMPTY_STRING } from '../constants';
-import { LensEditComponent, LensShowComponent, useLens } from '../hooks/lens';
-import { setSubject } from '../model/base';
 import { SPOShape } from '../utils/spo';
-import { UndefinedOrPartialSPO } from '../utils/spo-observable';
 import { KeysOfType } from '../utils/typescript';
-import { when } from 'mobx';
+import { Maybe } from '../utils/universe';
 
 const TextInputStatic: React.FunctionComponent<{}> = ({ children }) => (
   <Text truncate>{children}</Text>
 );
 
+type ShowComponent<T> = (
+  value: T,
+  actions: { editButtonProps: ButtonProps; edit: () => void }
+) => ReactNode;
+
+type EditComponent<T> = (
+  state: [T, (value: T) => void],
+  actions: {
+    saveButtonProps: ButtonProps;
+    save: () => void;
+    cancelButtonProps: ButtonProps;
+    cancel: () => void;
+  }
+) => ReactNode;
+
 interface EditInlineStringPropProps<T extends SPOShape> {
-  subject: UndefinedOrPartialSPO<T>;
-  prop: KeysOfType<Required<T>, string>;
+  subject: Maybe<T>;
+  prop: KeysOfType<Maybe<T>, string | undefined>;
   rtl?: boolean;
-  show?: LensShowComponent<string | undefined>;
-  edit?: LensEditComponent<string | undefined>;
+  show?: ShowComponent<string | undefined>;
+  edit?: EditComponent<string | undefined>;
+  placeholder?: string;
 }
 
 export function EditInlineStringProp<T extends SPOShape>({
   subject,
   prop,
   rtl,
-  show = value => <TextInputStatic>{value}</TextInputStatic>,
+  placeholder,
+  show = value => (
+    <TextInputStatic>
+      {value || <Text color={'light-4'}>{placeholder}</Text>}
+    </TextInputStatic>
+  ),
   edit = ([value, setValue], { cancel, save }) => (
     <Keyboard onEsc={cancel} onEnter={save}>
       <TextInput
-        value={value || UI_EMPTY_STRING}
+        value={value || ''}
         onChange={e => {
           setValue(e.target.value);
         }}
+        placeholder={placeholder}
       />
     </Keyboard>
   ),
 }: EditInlineStringPropProps<T>): ReturnType<
   React.FunctionComponent<EditInlineStringPropProps<T>>
 > {
-  const lens = useLens(
-    {
-      getter: () =>
-        when(() => !!subject[prop]).then(() => subject[prop]) as Promise<
-          string | undefined
-        >,
-      setter: value => setSubject(subject, prop, value as any),
-    },
-    [subject, prop]
-  );
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState<string>('');
+
+  const editAction = () => {
+    setIsEditing(true);
+    setValue((subject[prop] || '') as string);
+  };
+  const editButtonProps: ButtonProps = { plain: true, onClick: editAction };
+  const cancelAction = () => {
+    setIsEditing(false);
+    setValue('');
+  };
+  const cancelButtonProps: ButtonProps = { plain: true, onClick: cancelAction };
+  const saveAction = () => {
+    setIsEditing(false);
+    // @ts-ignore
+    subject[prop] = value;
+    setValue('');
+  };
+  const saveButtonProps: ButtonProps = { plain: true, onClick: saveAction };
+
   return useObserver(() => {
-    const value = (
+    const input = (
       <Box justify="center">
-        {lens.fold({
-          show,
-          edit,
-        })}
+        {isEditing
+          ? edit([value, setValue as any], {
+              cancel: cancelAction,
+              save: saveAction,
+              cancelButtonProps,
+              saveButtonProps,
+            })
+          : show(subject[prop] as any, { editButtonProps, edit: editAction })}
       </Box>
     );
     const button = (
       <Box justify="center">
-        {lens.fold({
-          busy: () => null,
-          show: (_, { editButtonProps }) => (
-            <TextButton {...editButtonProps} label="Edit" />
-          ),
-          edit: (_, { saveButtonProps, cancelButtonProps }) => (
-            <Box direction="row" gap="medium">
-              <TextButton {...saveButtonProps} label="Save" />
-              <TextButton {...cancelButtonProps} label="Cancel" />
-            </Box>
-          ),
-        })}
+        {isEditing ? (
+          <Box direction="row" gap="medium">
+            <TextButton {...saveButtonProps} label="Opslaan" />
+            <TextButton {...cancelButtonProps} label="Annuleren" />
+          </Box>
+        ) : (
+          <TextButton {...editButtonProps} label="Bewerk" />
+        )}
       </Box>
     );
     return rtl ? (
       <>
         {button}
-        {value}
+        {input}
       </>
     ) : (
       <>
-        {value}
+        {input}
         {button}
       </>
     );

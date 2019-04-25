@@ -1,58 +1,40 @@
-import { navigate } from '@reach/router';
-import {
-  Box,
-  BoxProps,
-  Grid,
-  Heading,
-  ResponsiveContext,
-  Button,
-} from 'grommet';
+import { Box, Button, Grid, Heading } from 'grommet';
 import React, { ReactNode, useContext, useState } from 'react';
-import { UI_EMPTY_STRING } from '../../constants';
 import { colorsLightToDark, sizesSmallToBig } from '../../theme';
 
 const PageTitlesContext = React.createContext<[ReactNode, ReactNode?][][]>([]);
 
 export const PageTitle: React.FunctionComponent<{
   /**
-   * prefix, only shown if screen wider than small
+   * title of the page, if undefined defaults to UI_EMTPY_STRING constant
    */
-  prefix: string | undefined;
+  title: [ReactNode, ReactNode?][];
+}> = ({ title, children }) => {
+  const current = useContext(PageTitlesContext);
 
+  return (
+    <PageTitlesContext.Provider value={[title, ...current]}>
+      {children}
+    </PageTitlesContext.Provider>
+  );
+};
+
+export const PageCrumb: React.FunctionComponent<{
   /**
    * title of the page, if undefined defaults to UI_EMTPY_STRING constant
    */
-  title: string | undefined;
+  title: ReactNode;
 
   /**
-   * absolute link, or relative when starting with './'
+   * menu down of the title
    */
-  href: string | undefined;
-}> = ({ prefix, title, href, children }) => {
+  subTitle?: ReactNode;
+}> = ({ title, subTitle, children }) => {
   const current = useContext(PageTitlesContext);
-  const size = useContext(ResponsiveContext);
-
-  // parse relative links, which start with './'
-  const link =
-    href && href.match(/^\.\//) ? current[0][1] + href.substr(1) : href;
 
   return (
     <PageTitlesContext.Provider
-      value={[
-        [
-          [
-            size !== 'small' && prefix ? (
-              <>
-                <small>{prefix}:</small> {title || UI_EMPTY_STRING}
-              </>
-            ) : (
-              title || UI_EMPTY_STRING
-            ),
-            link,
-          ],
-        ],
-        ...current,
-      ]}
+      value={[[...current[0], [title, subTitle]], ...current.slice(1)]}
     >
       {children}
     </PageTitlesContext.Provider>

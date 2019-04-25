@@ -217,7 +217,6 @@ export class ReactiveLens<T> {
     if (this.state === 'loading') {
       this.state = 'showing';
       this.value = value;
-      console.log('value=', value);
     } else {
       throw new Error(`ReactiveLens: wrong state ${this.state}`);
     }

@@ -11,6 +11,8 @@ import { Route } from 'boring-router-react';
 import { TileGrid } from '../../../layout/TileGrid';
 import { Box, Text } from 'grommet';
 import { Snags } from './Snags';
+import { UserSettings } from 'grommet-icons';
+import { Settings } from './Settings';
 
 const Avatar: React.FunctionComponent<{ name: string }> = ({ name }) => (
   <Box round border pad="xsmall">
@@ -22,66 +24,65 @@ export const Detail: React.FunctionComponent<{
   project: Maybe<PProject>;
 }> = observer(({ project }) => {
   return (
-    <>
-      <Page
-        leftOfTitle={<Disc size="large" />}
-        rightOfTitle={<Avatar name="SS" />}
-        titles={[
-          [
-            [
-              <RoutedButton
-                key="a0"
-                to={router.projects.projectId}
-                active={false}
-                label={project.name}
-              />,
-            ],
-            [
-              <Apps key="a1" />,
-              <Box key="a2" direction="row" gap="medium">
-                <RoutedButton
-                  to={router.projects.projectId.snags}
-                  active={false}
-                  label={
-                    <Box
-                      fill
-                      justify="center"
-                      align="center"
-                      direction="column"
-                      gap="small"
-                      animation="slideDown"
-                      pad="small"
-                    >
-                      <Bug />
-                      <Text size="small">Bevindingen</Text>
-                    </Box>
-                  }
-                />
+    <PageTitle
+      title={[
+        [
+          <RoutedButton
+            key="a0"
+            to={router.projects.projectId}
+            active={false}
+            label={project.name}
+          />,
+        ],
+        [
+          <Apps key="a1" />,
+          <Box key="a2" direction="row" gap="medium">
+            <RoutedButton
+              to={router.projects.projectId.snags}
+              active={false}
+              label={
+                <Box
+                  fill
+                  justify="center"
+                  align="center"
+                  direction="column"
+                  gap="small"
+                  animation="slideDown"
+                  pad="small"
+                >
+                  <Bug />
+                  <Text size="small">Bevindingen</Text>
+                </Box>
+              }
+            />
 
-                <RoutedButton
-                  to={router.projects.projectId}
-                  active={false}
-                  label={
-                    <Box
-                      fill
-                      justify="center"
-                      align="center"
-                      direction="column"
-                      gap="small"
-                      animation="slideDown"
-                      pad="small"
-                    >
-                      <Schedules />
-                      <Text size="small">Planning</Text>
-                    </Box>
-                  }
-                />
-              </Box>,
-            ],
-          ],
-        ]}
-      >
-        <Route match={router.projects.projectId} exact>
+            <RoutedButton
+              to={router.projects.projectId.settings}
+              active={false}
+              label={
+                <Box
+                  fill
+                  justify="center"
+                  align="center"
+                  direction="column"
+                  gap="small"
+                  animation="slideDown"
+                  pad="small"
+                >
+                  <UserSettings />
+                  <Text size="small">Projectbeheer</Text>
+                </Box>
+              }
+            />
+          </Box>,
+        ],
+      ]}
+    >
+      <Route match={router.projects.projectId} exact>
+        <Page
+          leftOfTitle={<Disc size="large" />}
+          rightOfTitle={<Avatar name="SS" />}
+        >
           <Todo>
             <RoutedButton
               to={router.projects.projectId.settings}
@@ -117,20 +118,16 @@ export const Detail: React.FunctionComponent<{
               Planning
             </Box>
           </TileGrid>
-        </Route>
+        </Page>
+      </Route>
 
-        <Route match={router.projects.projectId.settings} exact>
-          <RoutedButton
-            to={router.projects.projectId}
-            label="Project home"
-            plain={false}
-          />
-        </Route>
+      <Route match={router.projects.projectId.settings} exact>
+        <Settings project={project} />
+      </Route>
 
-        <Route match={router.projects.projectId.snags} exact>
-          <Snags project={project} />
-        </Route>
-      </Page>
+      <Route match={router.projects.projectId.snags} exact>
+        <Snags project={project} />
+      </Route>
       {/* <h1>Projectnaam: {project.name} </h1>
       <ul>
         {Object.entries(project.sites).map(([key, site]) => (
@@ -138,6 +135,6 @@ export const Detail: React.FunctionComponent<{
         ))}
       </ul> */}
       {/* <Hierarchy project={project} /> */}
-    </>
+    </PageTitle>
   );
 });
