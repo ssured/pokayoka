@@ -27,6 +27,12 @@ export const router = Router.create(
                     buildingId: {
                       $match: RouteMatch.segment,
                       $exact: true,
+                      $children: {
+                        buildingStoreyId: {
+                          $match: RouteMatch.segment,
+                          $exact: true,
+                        },
+                      },
                     },
                   },
                 },
