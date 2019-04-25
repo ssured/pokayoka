@@ -2,10 +2,9 @@ import { Box, Button, DropButton, Layer, Text } from 'grommet';
 import { Close, Filter, FormClose, FormDown } from 'grommet-icons';
 import { observer } from 'mobx-react-lite';
 import React, { useState } from 'react';
+import { Page, PageCrumb } from '../../../components/Page/Page';
 import { Maybe } from '../../../utils/universe';
 import { Hierarchy } from './Hierarchy';
-import { Down } from 'grommet-icons';
-import { Page, PageCrumb } from '../../../components/Page/Page';
 
 const SelectHierarchy: React.FunctionComponent<{
   project: Maybe<PProject>;

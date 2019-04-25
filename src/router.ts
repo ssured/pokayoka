@@ -20,6 +20,16 @@ export const router = Router.create(
               $exact: true,
               $children: {
                 addContact: true,
+                siteId: {
+                  $match: RouteMatch.segment,
+                  $exact: true,
+                  $children: {
+                    buildingId: {
+                      $match: RouteMatch.segment,
+                      $exact: true,
+                    },
+                  },
+                },
               },
             },
             snags: true,

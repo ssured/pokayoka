@@ -13,7 +13,7 @@ import {
 } from 'grommet';
 import { Save } from 'grommet-icons';
 import { Formik, useField } from 'formik';
-import { newRole, roleSchema } from '../../../model/Role';
+import { newRole, roleSchema } from '../../../../model/Role';
 
 const TextField: React.FunctionComponent<
   TextInputProps & { name: string; label: string; placeholder?: string }

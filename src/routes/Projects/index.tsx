@@ -8,7 +8,7 @@ import { ObservableMap } from 'mobx';
 import { WrapAsync } from '../../model/base';
 import { ProjectModel, Project } from '../../model/Project/model';
 import { useAccount } from '../../contexts/spo-hub';
-import { Project as ProjectComponent } from './Project';
+import { Project as ProjectComponent } from './ProjectId/index';
 import { observer } from 'mobx-react-lite';
 
 interface ProjectsParams {}

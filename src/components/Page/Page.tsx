@@ -88,6 +88,7 @@ const Tab: React.FunctionComponent<{
         <Box
           direction="row"
           align="center"
+          justify="center"
           pad={{ horizontal: 'medium' }}
           style={{ zIndex: 1 }}
           background={colorsLightToDark[depth]}
@@ -113,7 +114,6 @@ const Tab: React.FunctionComponent<{
                 <Heading
                   level={depth === 0 ? '2' : '3'}
                   margin={{ horizontal: 'small', vertical: 'xsmall' }}
-                  // style={{ cursor: subTitle ? 'pointer' : undefined }}
                   onClick={
                     subTitle ? () => toggleShowingTitle(subTitle) : undefined
                   }

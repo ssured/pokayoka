@@ -1,19 +1,23 @@
-import React from 'react';
-import { Maybe } from '../../../utils/universe';
-import { observer } from 'mobx-react-lite';
-import { Hierarchy } from './Hierarchy';
-import { Page, PageTitle, PageCrumb } from '../../../components/Page/Page';
-import { Todo } from '../../../layout/Todo';
-import { RoutedButton } from '../../../layout/RoutedButton';
-import { SettingsOption, Schedules, Bug, Disc, Apps } from 'grommet-icons';
-import { router } from '../../../router';
 import { Route } from 'boring-router-react';
-import { TileGrid } from '../../../layout/TileGrid';
 import { Box, Text } from 'grommet';
+import {
+  Apps,
+  Bug,
+  Disc,
+  Schedules,
+  SettingsOption,
+  UserSettings,
+} from 'grommet-icons';
+import { observer } from 'mobx-react-lite';
+import React from 'react';
+import { Page, PageCrumb, PageTitle } from '../../../components/Page/Page';
+import { RoutedButton } from '../../../layout/RoutedButton';
+import { TileGrid } from '../../../layout/TileGrid';
+import { Todo } from '../../../layout/Todo';
+import { router } from '../../../router';
+import { Maybe } from '../../../utils/universe';
 import { Snags } from './Snags';
-import { UserSettings } from 'grommet-icons';
-import { Settings } from './Settings';
-import { AddContactPerson } from './AddContactPerson';
+import { Settings } from './Settings/index';
 
 const Avatar: React.FunctionComponent<{ name: string }> = ({ name }) => (
   <Box round border pad="xsmall">
@@ -132,24 +136,7 @@ export const Detail: React.FunctionComponent<{
             />
           }
         >
-          <Route match={router.projects.projectId.settings} exact>
-            <Page>
-              <Settings project={project} />
-            </Page>
-          </Route>
-
-          <Route match={router.projects.projectId.settings.addContact} exact>
-            <PageTitle title={[['Contactpersoon toevoegen']]}>
-              <Page>
-                <AddContactPerson
-                  onSubmit={async role => {
-                    project.roles[role.identifier] = role;
-                    router.projects.projectId.settings.$replace();
-                  }}
-                />
-              </Page>
-            </PageTitle>
-          </Route>
+          <Settings project={project} />
         </PageCrumb>
       </Route>
 

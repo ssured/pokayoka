@@ -1,1 +1,1 @@
-read nlsfb standard
+- contact persoon verwijderen werkt nog niet

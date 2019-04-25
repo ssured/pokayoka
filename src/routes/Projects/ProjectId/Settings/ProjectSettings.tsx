@@ -12,15 +12,15 @@ import { filter, groupBy } from 'lodash';
 import { observer } from 'mobx-react-lite';
 import React, { useContext } from 'react';
 import { Map, Marker, TileLayer } from 'react-leaflet';
-import { EditInlineStringProp } from '../../../components/EditInlineStringProp';
-import { PageSection } from '../../../components/Page/PageSection';
-import { TextButton } from '../../../components/TextButton';
-import { RoutedButton } from '../../../layout/RoutedButton';
-import { Todo } from '../../../layout/Todo';
-import { router } from '../../../router';
-import { Maybe } from '../../../utils/universe';
+import { EditInlineStringProp } from '../../../../components/EditInlineStringProp';
+import { PageSection } from '../../../../components/Page/PageSection';
+import { TextButton } from '../../../../components/TextButton';
+import { RoutedButton } from '../../../../layout/RoutedButton';
+import { Todo } from '../../../../layout/Todo';
+import { router } from '../../../../router';
+import { Maybe } from '../../../../utils/universe';
 
-export const Settings: React.FunctionComponent<{
+export const ProjectSettings: React.FunctionComponent<{
   project: Maybe<PProject>;
 }> = observer(({ project }) => {
   const size = useContext(ResponsiveContext);
@@ -118,7 +118,12 @@ export const Settings: React.FunctionComponent<{
         }
       />
 
-      <Grid fill="horizontal" columns={['1/3']} rows={['small']} gap="medium">
+      <Grid
+        fill="horizontal"
+        columns={['medium']}
+        rows={['small']}
+        gap="medium"
+      >
         {Object.entries(project.sites || {}).map(
           ([key, site]) =>
             site && (
@@ -127,8 +132,10 @@ export const Settings: React.FunctionComponent<{
                 direction="column"
                 align="center"
                 style={{ cursor: 'pointer' }}
-                onClick={
-                  () => {} // navigate(`/paged/${project.code!}/${key}`)
+                onClick={() =>
+                  router.projects.projectId.settings.siteId.$push({
+                    siteId: site.identifier,
+                  })
                 }
               >
                 <Stack fill>

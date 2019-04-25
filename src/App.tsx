@@ -35,7 +35,7 @@ import { observer } from 'mobx-react-lite';
 import { RoutedButton } from './layout/RoutedButton';
 import { User } from './routes/User';
 import { New as NewProject } from './routes/Projects/New';
-import { Detail } from './routes/Projects/Project/Detail';
+import { Detail } from './routes/Projects/ProjectId/Detail';
 import { useRoot } from './contexts/spo-hub';
 import { router } from './router';
 
