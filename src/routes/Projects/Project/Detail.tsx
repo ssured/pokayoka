@@ -2,7 +2,7 @@ import React from 'react';
 import { Maybe } from '../../../utils/universe';
 import { observer } from 'mobx-react-lite';
 import { Hierarchy } from './Hierarchy';
-import { Page, PageTitle } from '../../../components/Page/Page';
+import { Page, PageTitle, PageCrumb } from '../../../components/Page/Page';
 import { Todo } from '../../../layout/Todo';
 import { RoutedButton } from '../../../layout/RoutedButton';
 import { SettingsOption, Schedules, Bug, Disc, Apps } from 'grommet-icons';
@@ -13,6 +13,7 @@ import { Box, Text } from 'grommet';
 import { Snags } from './Snags';
 import { UserSettings } from 'grommet-icons';
 import { Settings } from './Settings';
+import { AddContactPerson } from './AddContactPerson';
 
 const Avatar: React.FunctionComponent<{ name: string }> = ({ name }) => (
   <Box round border pad="xsmall">
@@ -121,8 +122,35 @@ export const Detail: React.FunctionComponent<{
         </Page>
       </Route>
 
-      <Route match={router.projects.projectId.settings} exact>
-        <Settings project={project} />
+      <Route match={router.projects.projectId.settings}>
+        <PageCrumb
+          title={
+            <RoutedButton
+              to={router.projects.projectId.settings}
+              active={false}
+              label={'Projectbeheer'}
+            />
+          }
+        >
+          <Route match={router.projects.projectId.settings} exact>
+            <Page>
+              <Settings project={project} />
+            </Page>
+          </Route>
+
+          <Route match={router.projects.projectId.settings.addContact} exact>
+            <PageTitle title={[['Contactpersoon toevoegen']]}>
+              <Page>
+                <AddContactPerson
+                  onSubmit={async role => {
+                    project.roles[role.identifier] = role;
+                    router.projects.projectId.settings.$replace();
+                  }}
+                />
+              </Page>
+            </PageTitle>
+          </Route>
+        </PageCrumb>
       </Route>
 
       <Route match={router.projects.projectId.snags} exact>

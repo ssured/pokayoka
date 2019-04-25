@@ -16,7 +16,12 @@ export const router = Router.create(
           $match: RouteMatch.segment,
           $exact: true,
           $children: {
-            settings: true,
+            settings: {
+              $exact: true,
+              $children: {
+                addContact: true,
+              },
+            },
             snags: true,
           },
         },
