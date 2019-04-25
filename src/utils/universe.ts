@@ -177,7 +177,25 @@ export const createUniverse = <T extends SPOShape>({
               }
             }
           } else {
-            if (value == null) {
+            if (value == null && subKey in core) {
+              // cascade deleting down the tree
+              const current = core[subKey];
+              if (current && typeof current === 'object') {
+                const currentKeys = Object.keys(current);
+                if (currentKeys.length > 0) {
+                  publicSet(
+                    subPath,
+                    emitValues,
+                    currentKeys.reduce(
+                      (nullMap, key) => {
+                        nullMap[key] = null;
+                        return nullMap;
+                      },
+                      {} as any
+                    )
+                  );
+                }
+              }
               delete core[subKey];
             } else {
               core[subKey] = value;

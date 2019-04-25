@@ -16,7 +16,6 @@ import { EditInlineStringProp } from '../../../../components/EditInlineStringPro
 import { PageSection } from '../../../../components/Page/PageSection';
 import { TextButton } from '../../../../components/TextButton';
 import { RoutedButton } from '../../../../layout/RoutedButton';
-import { Todo } from '../../../../layout/Todo';
 import { router } from '../../../../router';
 import { Maybe } from '../../../../utils/universe';
 
@@ -86,23 +85,27 @@ export const ProjectSettings: React.FunctionComponent<{
             <Text weight="bold">{roleName}</Text>
             <Box as="ul" margin={{ left: 'medium' }}>
               {roles.map((role, i) => (
-                <Text key={i} as="li">
+                <Box
+                  key={i}
+                  as="li"
+                  direction="row"
+                  align="center"
+                  gap="medium"
+                >
                   {role.member && (
-                    <>
+                    <Text>
                       {role.member.givenName} {role.member.additionalName}{' '}
                       {role.member.familyName}
-                    </>
+                    </Text>
                   )}
-                  <Todo>
-                    <Button
-                      plain
-                      icon={<Trash color="blue" />}
-                      onClick={() =>
-                        (project.roles[role.identifier!] = null as any)
-                      }
-                    />
-                  </Todo>
-                </Text>
+                  <Button
+                    plain
+                    icon={<Trash color="blue" />}
+                    onClick={() =>
+                      (project.roles[role.identifier!] = null as any)
+                    }
+                  />
+                </Box>
               ))}
             </Box>
           </Box>
