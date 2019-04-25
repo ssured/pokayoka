@@ -12,6 +12,7 @@ import { BuildingStoreyFormCreate } from '../BuildingStorey/BuildingStoreyFormCr
 import { updateSubject, setSubject } from '../base';
 import { generateId } from '../../../server/utils/snag-id';
 import { BuildingStoreyFormEdit } from '../BuildingStorey/BuildingStoreyFormEdit';
+import { CSS_SPREAD_ABSOLUTE } from '../../constants';
 
 export const ProjectHierarchy: React.FunctionComponent<{
   project: PartialProject;
@@ -61,13 +62,7 @@ export const ProjectHierarchy: React.FunctionComponent<{
               <Map
                 center={[52.2975, 6.318611]}
                 zoom={14}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                }}
+                style={CSS_SPREAD_ABSOLUTE}
               >
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

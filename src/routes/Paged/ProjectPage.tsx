@@ -29,6 +29,7 @@ import { subj } from '../../utils/spo';
 import { AddContactPerson } from './AddContactPerson';
 import { SitePage } from './SitePage';
 import { isRole } from '../../model/Role';
+import { CSS_SPREAD_ABSOLUTE } from '../../constants';
 
 export const ProjectPage: React.FunctionComponent<
   RouteComponentProps<{ projectCode: string }> & {}
@@ -196,14 +197,7 @@ const ProjectShow: React.FunctionComponent<{
                     zoom={14}
                     zoomControl={false}
                     attributionControl={false}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      zIndex: 0,
-                    }}
+                    style={CSS_SPREAD_ABSOLUTE}
                   >
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

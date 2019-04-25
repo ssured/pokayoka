@@ -14,6 +14,7 @@ import { subj } from '../../utils/spo';
 import { Map, TileLayer, Marker } from 'react-leaflet';
 import { AddSheet } from './AddSheet';
 import { setSubjectMany } from '../../model/base';
+import { CSS_SPREAD_ABSOLUTE } from '../../constants';
 
 export const BuildingStoreyPage: React.FunctionComponent<
   RouteComponentProps<{ buildingStoreyKey: string }> & {
@@ -113,14 +114,7 @@ const BuildingStoreyShow: React.FunctionComponent<{
               zoom={14}
               zoomControl={false}
               attributionControl={false}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 0,
-              }}
+              style={CSS_SPREAD_ABSOLUTE}
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

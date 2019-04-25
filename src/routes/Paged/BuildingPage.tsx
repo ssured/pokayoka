@@ -13,6 +13,7 @@ import { PartialBuilding } from '../../model/Building/model';
 import { subj } from '../../utils/spo';
 import { Map, TileLayer, Marker } from 'react-leaflet';
 import { BuildingStoreyPage } from './BuildingStoreyPage';
+import { CSS_SPREAD_ABSOLUTE } from '../../constants';
 
 export const BuildingPage: React.FunctionComponent<
   RouteComponentProps<{ buildingKey: string }> & {
@@ -101,14 +102,7 @@ const BuildingShow: React.FunctionComponent<{
               zoom={14}
               zoomControl={false}
               attributionControl={false}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 0,
-              }}
+              style={CSS_SPREAD_ABSOLUTE}
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

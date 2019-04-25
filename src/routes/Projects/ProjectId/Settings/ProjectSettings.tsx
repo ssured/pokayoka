@@ -18,6 +18,7 @@ import { TextButton } from '../../../../components/TextButton';
 import { RoutedButton } from '../../../../layout/RoutedButton';
 import { router } from '../../../../router';
 import { Maybe } from '../../../../utils/universe';
+import { CSS_SPREAD_ABSOLUTE } from '../../../../constants';
 
 export const ProjectSettings: React.FunctionComponent<{
   project: Maybe<PProject>;
@@ -147,14 +148,7 @@ export const ProjectSettings: React.FunctionComponent<{
                     zoom={14}
                     zoomControl={false}
                     attributionControl={false}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      zIndex: 0,
-                    }}
+                    style={CSS_SPREAD_ABSOLUTE}
                   >
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

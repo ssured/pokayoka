@@ -13,6 +13,7 @@ import { PartialSite } from '../../model/Site/model';
 import { subj } from '../../utils/spo';
 import { Map, TileLayer, Marker } from 'react-leaflet';
 import { BuildingPage } from './BuildingPage';
+import { CSS_SPREAD_ABSOLUTE } from '../../constants';
 
 export const SitePage: React.FunctionComponent<
   RouteComponentProps<{ siteKey: string }> & { projectCode: string }
@@ -85,14 +86,7 @@ const SiteShow: React.FunctionComponent<{
               zoom={14}
               zoomControl={false}
               attributionControl={false}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 0,
-              }}
+              style={CSS_SPREAD_ABSOLUTE}
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -140,14 +134,7 @@ const SiteShow: React.FunctionComponent<{
                     zoom={14}
                     zoomControl={false}
                     attributionControl={false}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      zIndex: 0,
-                    }}
+                    style={CSS_SPREAD_ABSOLUTE}
                   >
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
