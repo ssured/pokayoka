@@ -8,6 +8,7 @@ import { EditInlineStringProp } from '../../../../../../../components/EditInline
 import { PageSection } from '../../../../../../../components/Page/PageSection';
 import { TextButton } from '../../../../../../../components/TextButton';
 import { Maybe } from '../../../../../../../utils/universe';
+import { router } from '../../../../../../../router';
 
 export const Settings: React.FunctionComponent<{
   buildingStorey: Maybe<PBuildingStorey>;
@@ -25,38 +26,6 @@ export const Settings: React.FunctionComponent<{
         <Grid columns={['flex', 'auto']} gap="medium">
           <EditInlineStringProp subject={buildingStorey} prop="name" />
         </Grid>
-        <Box height="small">
-          <Stack fill>
-            <Map
-              center={[52.2975, 6.318611]}
-              zoom={14}
-              zoomControl={false}
-              attributionControl={false}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 0,
-              }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-              />
-              <Marker position={[52.2975, 6.318611]} />
-            </Map>
-            <Box
-              fill
-              style={{ zIndex: 1, pointerEvents: 'none' }}
-              align="center"
-              justify="end"
-            >
-              <Text size="large">{buildingStorey.name}</Text>
-            </Box>
-          </Stack>
-        </Box>
       </Grid>
 
       <PageSection
@@ -64,7 +33,7 @@ export const Settings: React.FunctionComponent<{
         action={
           <TextButton
             onClick={() =>
-              navigate([window.location.pathname, 'add-sheet'].join('/'))
+              router.projects.projectId.settings.siteId.buildingId.buildingStoreyId.addSheet.$push()
             }
           >
             <Add size="small" color="currentColor" /> plattegrond

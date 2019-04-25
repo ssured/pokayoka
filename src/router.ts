@@ -28,9 +28,13 @@ export const router = Router.create(
                       $match: RouteMatch.segment,
                       $exact: true,
                       $children: {
+                        addBuildingStorey: true,
                         buildingStoreyId: {
                           $match: RouteMatch.segment,
                           $exact: true,
+                          $children: {
+                            addSheet: true,
+                          },
                         },
                       },
                     },

@@ -1,7 +1,7 @@
 import { Route } from 'boring-router-react';
 import { observer } from 'mobx-react-lite';
 import React from 'react';
-import { Page } from '../../../../../../../components/Page/Page';
+import { Page, PageTitle } from '../../../../../../../components/Page/Page';
 import { router } from '../../../../../../../router';
 import { Maybe } from '../../../../../../../utils/universe';
 import { Settings } from './Settings';
@@ -11,10 +11,29 @@ export const BuildingStoreyId: React.FunctionComponent<{
 }> = observer(({ buildingStorey }) => {
   return (
     <>
-      <Route match={router.projects.projectId.settings.siteId.buildingId} exact>
+      <Route
+        match={
+          router.projects.projectId.settings.siteId.buildingId.buildingStoreyId
+        }
+        exact
+      >
         <Page>
           <Settings buildingStorey={buildingStorey} />
         </Page>
+      </Route>
+
+      <Route
+        match={
+          router.projects.projectId.settings.siteId.buildingId.buildingStoreyId
+            .addSheet
+        }
+        exact
+      >
+        <PageTitle title={[['Plattegrond toevoegen']]}>
+          <Page>
+            <Settings buildingStorey={buildingStorey} />
+          </Page>
+        </PageTitle>
       </Route>
 
       {/* <Route

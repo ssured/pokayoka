@@ -112,7 +112,7 @@ const Tab: React.FunctionComponent<{
                 key={index}
               >
                 <Heading
-                  level={depth === 0 ? '2' : '3'}
+                  level={String(Math.min(4, depth + 2)) as '2' | '3' | '4'}
                   margin={{ horizontal: 'small', vertical: 'xsmall' }}
                   onClick={
                     subTitle ? () => toggleShowingTitle(subTitle) : undefined

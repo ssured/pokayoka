@@ -8,6 +8,8 @@ import { EditInlineStringProp } from '../../../../../../components/EditInlineStr
 import { PageSection } from '../../../../../../components/Page/PageSection';
 import { TextButton } from '../../../../../../components/TextButton';
 import { Maybe } from '../../../../../../utils/universe';
+import { RoutedButton } from '../../../../../../layout/RoutedButton';
+import { router } from '../../../../../../router';
 
 export const Settings: React.FunctionComponent<{
   building: Maybe<PBuilding>;
@@ -57,9 +59,17 @@ export const Settings: React.FunctionComponent<{
       <PageSection
         heading="Verdiepingen"
         action={
-          <TextButton>
-            <Add size="small" color="currentColor" /> verdieping
-          </TextButton>
+          <RoutedButton
+            to={
+              router.projects.projectId.settings.siteId.buildingId
+                .addBuildingStorey
+            }
+            label={
+              <Text color="blue">
+                <Add size="small" color="currentColor" /> verdieping
+              </Text>
+            }
+          />
         }
       />
 
@@ -73,7 +83,11 @@ export const Settings: React.FunctionComponent<{
                 align="center"
                 style={{ cursor: 'pointer' }}
                 onClick={() =>
-                  navigate([window.location.pathname, key].join('/'))
+                  router.projects.projectId.settings.siteId.buildingId.buildingStoreyId.$push(
+                    {
+                      buildingStoreyId: buildingStorey.identifier,
+                    }
+                  )
                 }
               >
                 <Text size="large" truncate>
