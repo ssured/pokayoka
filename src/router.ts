@@ -56,6 +56,7 @@ export const router = Router.create(
       },
     },
     account: true,
+    dev: true,
     notFound: {
       $match: RouteMatch.rest,
     },

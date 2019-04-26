@@ -38,6 +38,7 @@ import { New as NewProject } from './routes/Projects/New';
 import { Detail } from './routes/Projects/ProjectId/Detail';
 import { useRoot } from './contexts/spo-hub';
 import { router } from './router';
+import { Dev } from './routes/Dev';
 
 /*
 Router:
@@ -177,6 +178,10 @@ export const App: React.FunctionComponent<{}> = observer(() => {
                     router.projects.projectId.$params.projectId
                   ]()}
                 />
+              </Route>
+
+              <Route match={router.dev} exact>
+                <Dev />
               </Route>
 
               <Route match={router.notFound}>
