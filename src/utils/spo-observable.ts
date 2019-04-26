@@ -6,10 +6,13 @@ import { isObjt, objt, pred, SPOShape, subj } from './spo';
 import { SPOHub } from './spo-hub';
 import { createUniverse, ThunkTo, Maybe } from './universe';
 import { RelationsOf } from '../model/base';
+import dset from 'dset';
 
 const pathToKey = charwise.encode;
 // @ts-ignore
 window.charwise = charwise;
+
+type RequestedMap = { [key: string]: boolean | RequestedMap };
 
 export function createObservable<T extends SPOShape = SPOShape>(
   hub: SPOHub,
@@ -18,7 +21,20 @@ export function createObservable<T extends SPOShape = SPOShape>(
   type state = string;
   type SubjStateMap = Record<string, state>;
 
-  const inSync = false;
+  const requested: RequestedMap = {};
+
+  function request(subj: subj) {
+    // if a more generic subject was already requested, ignore the request
+    try {
+      dset(requested, subj, true);
+      // console.log('spo-observable get', subj);
+      hub.get({ subj }, root);
+    } catch (e) {
+      if (e.message.match(/^cannot create property/i) == null) {
+        throw e;
+      }
+    }
+  }
 
   const subjStates: Record<string, SubjStateMap> = {};
 
@@ -69,10 +85,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
 
       return {
         onActive: () => {
-          if (!inSync) {
-            // console.log('spo-observable get', subj);
-            hub.get({ subj }, root);
-          }
+          request(subj);
         },
       };
     },
@@ -122,6 +135,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
           tuple: [subj, pred, Di, Si],
         } = msg;
         mergeTuple([Si, Di], [subj, pred]);
+
         break;
       }
       case 'get': {
