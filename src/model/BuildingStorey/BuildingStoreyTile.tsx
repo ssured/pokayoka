@@ -1,14 +1,13 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 
-import { Box, Heading } from 'grommet';
-import { RouteButton } from '../../components/ui/RouteLink';
-import { BuildingStoreyModel } from './model';
-import { subj } from '../../utils/spo';
+import { Box, Heading, BoxProps, Image } from 'grommet';
+import { Maybe } from '../../utils/universe';
 
 export const BuildingStoreyTile: React.FunctionComponent<{
-  buildingStorey: [BuildingStoreyModel, subj];
-}> = observer(({ buildingStorey: [buildingStorey, subj] }) => (
+  box?: BoxProps;
+  buildingStorey: Maybe<PBuildingStorey>;
+}> = observer(({ box = {}, buildingStorey, children }) => (
   <Box
     pad="large"
     align="center"
@@ -18,11 +17,12 @@ export const BuildingStoreyTile: React.FunctionComponent<{
     border
     round
     gap="small"
+    {...box}
   >
-    <Heading level="3">{buildingStorey.name || 'no name'}</Heading>
-    <RouteButton
-      href={`/buildingStoreys/${subj.join('.')}`}
-      label={'Open buildingStorey'}
-    />
+    {buildingStorey.activeSheet && buildingStorey.activeSheet.$thumb && (
+      <Image src={`/cdn/${buildingStorey.activeSheet.$thumb}`} fit="contain" />
+    )}
+    <Heading level="3">{buildingStorey.name}</Heading>
+    {children}
   </Box>
 ));

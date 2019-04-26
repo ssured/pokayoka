@@ -50,6 +50,8 @@ const getKeys = (obj: any): Set<string> | undefined => {
   return (obj && typeof obj === 'object' && obj[proxyKeysSymbol]) || undefined;
 };
 
+let storageErrors = 0;
+
 export const createUniverse = <T extends SPOShape>({
   runtimeShape,
   resolve,
@@ -129,7 +131,28 @@ export const createUniverse = <T extends SPOShape>({
       // setTimeout(
       //   () =>
       //     runInAction(() => {
-      core[key] = proxy;
+      try {
+        core[key] = proxy;
+      } catch (e) {
+        storageErrors += 1;
+        if (storageErrors > 10) {
+          console.error(
+            'FIXME could not store key and the problem got out of hand',
+            key
+          );
+
+          /**
+           * Some computed + observed side effect problem with mobx happens here.
+           * this solution seems hacky but works wonders
+           * This only occurs when referencing another node in the tree
+           * so it might be related with a cyclic dependency
+           *
+           * just returning the proxy is a pretty ok solution
+           */
+        }
+
+        return proxy;
+      }
 
       const unregister = onBecomeObserved(core, key, () => {
         unregister();

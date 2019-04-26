@@ -46,7 +46,7 @@ export const router = Router.create(
             sheets: {
               $exact: true,
               $children: {
-                sheetId: {
+                buildingStoreyId: {
                   $match: RouteMatch.segment,
                 },
               },

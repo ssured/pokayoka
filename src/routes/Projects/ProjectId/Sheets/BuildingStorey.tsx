@@ -10,14 +10,18 @@ import { isPSheet } from '../../../../model/Sheet/model';
 import { CSS_SPREAD_ABSOLUTE } from '../../../../constants';
 import { Map } from 'leaflet';
 
-export const Sheet: React.FunctionComponent<{
-  sheet: Maybe<PSheet>;
-}> = observer(({ sheet }) => {
+export const BuildingStorey: React.FunctionComponent<{
+  buildingStorey: Maybe<PBuildingStorey>;
+}> = observer(({ buildingStorey }) => {
+  const sheet = buildingStorey.activeSheet;
+
+  if (!isPSheet(sheet)) return <Text>loading...</Text>;
+
   const data = useObservable({
     get availableZoomLevels() {
       return [
         ...new Set(
-          Object.keys(sheet.images)
+          Object.keys(sheet!.images)
             .map(key => key.match(/^\$(\d+)/))
             .filter(match => match != null)
             .map(match => parseInt(match![1], 10))
@@ -26,7 +30,7 @@ export const Sheet: React.FunctionComponent<{
     },
     get urlForXYZ() {
       return (x: number, y: number, z: number) => {
-        const hash = sheet.images[`$${z}/${y}/${x}`];
+        const hash = sheet!.images[`$${z}/${y}/${x}`];
         return typeof hash === 'string' ? `/cdn/${hash}` : null;
       };
     },
@@ -48,14 +52,6 @@ export const Sheet: React.FunctionComponent<{
       return 1;
     },
   });
-
-  if (!isPSheet(sheet)) return <Text>loading...</Text>;
-
-  //   console.log({
-  //     z: data.availableZoomLevels,
-  //     w: sheet.width,
-  //     h: sheet.height,
-  //   });
 
   return (
     <Page>

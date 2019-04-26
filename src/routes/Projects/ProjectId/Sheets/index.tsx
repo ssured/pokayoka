@@ -8,7 +8,8 @@ import { Route } from 'boring-router-react';
 import { router } from '../../../../router';
 import { SheetTile } from '../../../../model/Sheet/SheetTile';
 import { RoutedButton } from '../../../../layout/RoutedButton';
-import { Sheet } from './Sheet';
+import { BuildingStorey } from './BuildingStorey';
+import { BuildingStoreyTile } from '../../../../model/BuildingStorey/BuildingStoreyTile';
 
 const currentRoute = router.projects.projectId.sheets;
 
@@ -16,12 +17,13 @@ export const Sheets: React.FunctionComponent<{
   project?: Maybe<PProject>;
 }> = observer(({ project = useContext(PProjectContext) }) => {
   const data = useObservable({
-    get availableSheets(): PSheet[] {
+    get storeysWithActiveSheet(): PBuildingStorey[] {
       return Object.values(project.sites)
         .flatMap(site => Object.values(site.buildings))
         .flatMap(building => Object.values(building.buildingStoreys))
-        .flatMap(storey => Object.values(storey.sheets))
-        .filter(sheet => sheet != null) as PSheet[];
+        .filter(
+          storey => storey.activeSheet && storey.activeSheet.$thumb != null
+        ) as PBuildingStorey[];
     },
     // _activeSheet: undefined as PSheet | undefined,
     // get activeSheet(): PSheet | undefined {
@@ -34,34 +36,39 @@ export const Sheets: React.FunctionComponent<{
       <Route match={currentRoute} exact>
         <Page>
           <Box direction="row" wrap>
-            {data.availableSheets
-              .filter(sheet => sheet.identifier != null)
-              .map(sheet => (
-                <SheetTile key={sheet.identifier} sheet={sheet}>
+            {data.storeysWithActiveSheet
+              .filter(storey => storey.identifier != null)
+              .map(storey => (
+                <BuildingStoreyTile
+                  key={storey.identifier}
+                  buildingStorey={storey}
+                >
                   <RoutedButton
-                    to={currentRoute.sheetId}
-                    params={{ sheetId: sheet.identifier }}
+                    to={currentRoute.buildingStoreyId}
+                    params={{ buildingStoreyId: storey.identifier }}
                     label="Open plattegrond"
                     plain={false}
                   />
-                </SheetTile>
+                </BuildingStoreyTile>
               ))}
           </Box>
         </Page>
       </Route>
 
-      <Route match={currentRoute.sheetId} exact>
+      <Route match={currentRoute.buildingStoreyId} exact>
         {(() => {
-          const sheet = data.availableSheets.find(
-            sheet => sheet.identifier === currentRoute.sheetId.$params.sheetId
+          const storey = data.storeysWithActiveSheet.find(
+            storey =>
+              storey.identifier ===
+              currentRoute.buildingStoreyId.$params.buildingStoreyId
           );
 
-          return sheet ? (
-            <PageTitle title={[[sheet.name]]}>
-              <Sheet sheet={sheet} />
+          return storey ? (
+            <PageTitle title={[[storey.name]]}>
+              <BuildingStorey buildingStorey={storey} />
             </PageTitle>
           ) : (
-            <>Sheet niet gevonden</>
+            <>Storey niet gevonden</>
           );
         })()}
       </Route>
