@@ -114,15 +114,28 @@ export const Detail: React.FunctionComponent<{
             leftOfTitle={<Disc size="large" />}
             rightOfTitle={<Avatar name="SS" />}
           >
-            <Todo>
-              <RoutedButton
-                to={currentRoute.settings}
-                icon={<SettingsOption />}
-                label="Project instellingen"
-                plain={false}
-              />
-            </Todo>
+            <RoutedButton
+              to={currentRoute.settings}
+              icon={<SettingsOption />}
+              label="Projectbeheer"
+              plain={false}
+            />
             <TileGrid>
+              <Box
+                fill
+                justify="center"
+                align="center"
+                direction="column"
+                gap="medium"
+              >
+                <MapLocation size="xlarge" />
+                <RoutedButton
+                  to={currentRoute.sheets}
+                  label="Plattegronden"
+                  plain={false}
+                />
+              </Box>
+
               <Box
                 fill
                 justify="center"
