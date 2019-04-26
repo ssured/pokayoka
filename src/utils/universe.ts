@@ -6,10 +6,14 @@ import {
 } from 'mobx';
 import { SPOShape, primitive, RawSPOShape } from './spo';
 import dlv from 'dlv';
-import { RelationsOf } from '../model/base';
+import { RelationsOf, Many } from '../model/base';
 
-export type Maybe<T> = T extends object
-  ? { [K in keyof T]: Maybe<T[K]> }
+export type Nothing = { [key: string]: Nothing };
+
+export type Maybe<T> = T extends SPOShape
+  ? Required<T> extends Many<infer U>
+    ? { [K in string]: Maybe<U> }
+    : { [K in keyof Required<T>]: Maybe<Required<T>[K]> } | Nothing
   : T | undefined;
 
 export type ThunkTo<T extends SPOShape> = {
@@ -48,6 +52,12 @@ const proxyKeysSymbol = Symbol('keys of proxy');
 const getKeys = (obj: any): Set<string> | undefined => {
   // @ts-ignore
   return (obj && typeof obj === 'object' && obj[proxyKeysSymbol]) || undefined;
+};
+
+// @ts-ignore
+export const isSomething = <T>(v: Maybe<Nothing | T>): v is T => {
+  const keys = getKeys(v);
+  return (keys && keys.size > 0) || false;
 };
 
 let storageErrors = 0;
