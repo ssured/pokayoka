@@ -1,14 +1,15 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 
-import { Box, Heading, Image } from 'grommet';
-import { RouteButton } from '../../components/ui/RouteLink';
-import { SheetModel } from './model';
-import { subj } from '../../utils/spo';
+import { Box, Heading, Image, BoxProps } from 'grommet';
+import { Maybe } from '../../utils/universe';
+import { RoutedButton } from '../../layout/RoutedButton';
+import { RouteMatch } from 'boring-router';
 
 export const SheetTile: React.FunctionComponent<{
-  sheet: [SheetModel, subj];
-}> = observer(({ sheet: [sheet, subj] }) => (
+  box?: BoxProps;
+  sheet: Maybe<PSheet>;
+}> = observer(({ box = {}, sheet, children }) => (
   <Box
     pad="large"
     align="center"
@@ -18,11 +19,12 @@ export const SheetTile: React.FunctionComponent<{
     border
     round
     gap="small"
+    {...box}
   >
     <Heading level="3">{sheet.name || 'no name'}</Heading>
     <Box height="small" width="small" border>
       <Image src={`/cdn/${sheet.$thumb}`} fit="cover" />
     </Box>
-    <RouteButton href={`/sheets/${subj.join('.')}`} label={'Open sheet'} />
+    {children}
   </Box>
 ));

@@ -126,6 +126,9 @@ export const createUniverse = <T extends SPOShape>({
         },
       });
 
+      // setTimeout(
+      //   () =>
+      //     runInAction(() => {
       core[key] = proxy;
 
       const unregister = onBecomeObserved(core, key, () => {
@@ -142,6 +145,11 @@ export const createUniverse = <T extends SPOShape>({
           onBecomeUnobserved(core, key, onInactive);
         }
       });
+      //     }),
+      //   0
+      // );
+
+      return proxy;
     }
 
     return core[key] as any;

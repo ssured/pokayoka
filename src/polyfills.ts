@@ -3,18 +3,14 @@
 // TODO maybe something more efficient exists for Edge?
 if (!HTMLCanvasElement.prototype.toBlob) {
   Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
-    value(
-      callback: BlobCallback,
-      type?: string,
-      quality?: any
-    ) {
+    value(callback: BlobCallback, type?: string, quality?: any) {
       const [, encBinStr] = this.toDataURL(type, quality).split(',');
 
       const binStr = atob(encBinStr);
       const length = binStr.length;
       const array = new Uint8Array(length);
 
-      for (let i = 0; i < length; i+=1 {
+      for (let i = 0; i < length; i += 1) {
         array[i] = binStr.charCodeAt(i);
       }
 

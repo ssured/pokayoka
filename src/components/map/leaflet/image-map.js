@@ -40,7 +40,11 @@ class PDFMap extends React.Component {
   }
 
   render() {
-    const { children, ...mapOptions } = this.props;
+    const {
+      children,
+      style = { flex: '1 1 auto' },
+      ...mapOptions
+    } = this.props;
     return (
       <Map
         crs={L.CRS.Simple}
@@ -52,7 +56,7 @@ class PDFMap extends React.Component {
         zoomControl={false}
         ref={this.mapRef}
         {...mapOptions}
-        style={{ flex: '1 1 auto' }}
+        style={style}
       >
         {children}
       </Map>

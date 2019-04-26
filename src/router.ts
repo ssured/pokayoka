@@ -43,6 +43,14 @@ export const router = Router.create(
               },
             },
             snags: true,
+            sheets: {
+              $exact: true,
+              $children: {
+                sheetId: {
+                  $match: RouteMatch.segment,
+                },
+              },
+            },
           },
         },
       },

@@ -28,6 +28,8 @@ class TileImage extends GridLayer {
   }
 
   updateLeafletElement(fromProps, toProps) {
+    this.leafletElement.setTilingResource(toProps);
+    // console.log('updateLeafletEleemnt', fromProps, toProps);
     // if (toProps.url !== fromProps.url) {
     //   this.leafletElement.setUrl(toProps.url)
     // }
