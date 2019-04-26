@@ -1,4 +1,4 @@
-import { Many, RelationsOf, many } from '../base';
+import { Many, RelationsOf, many, One } from '../base';
 import * as yup from 'yup';
 import { generateId } from '../../utils/id';
 import { sheetRelations } from '../Sheet/model';
@@ -10,11 +10,13 @@ declare global {
     name: string;
     description?: string;
     // tasks: Many<Task>;
+    activeSheet?: One<PSheet>;
     sheets: Many<PSheet>;
   };
 }
 
 export const buildingStoreyRelations: RelationsOf<PBuildingStorey> = {
+  activeSheet: sheetRelations,
   sheets: many(sheetRelations),
 };
 
@@ -28,8 +30,8 @@ export const pBuildingStoreySchema = yup.object<PBuildingStorey>().shape({
 
   description: yup.string(),
 
-  // buildingStoreys: yup.object(),
-  // tasks: yup.object(),
+  sheets: yup.object(),
+  activeSheet: yup.object(),
 });
 
 export const isPBuildingStorey = (v: unknown): v is PBuildingStorey =>

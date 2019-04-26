@@ -27,6 +27,7 @@ export const BuildingStoreyId: React.FunctionComponent<{
             <AddSheet
               onSubmit={async sheet => {
                 buildingStorey.sheets[sheet.identifier] = sheet;
+                buildingStorey.activeSheet = sheet;
                 currentRoute.$replace();
               }}
             />

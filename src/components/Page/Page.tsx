@@ -104,24 +104,23 @@ const Tab: React.FunctionComponent<{
               },
               [] as [ReactNode, ReactNode?][]
             )
-            .map(([title, subTitle], index) => (
-              // @ts-ignore
-              <Box
-                as={subTitle ? Button : Box}
-                active={showingTitle === subTitle}
-                key={index}
-              >
-                <Heading
-                  level={String(Math.min(4, depth + 2)) as '2' | '3' | '4'}
-                  margin={{ horizontal: 'small', vertical: 'xsmall' }}
-                  onClick={
-                    subTitle ? () => toggleShowingTitle(subTitle) : undefined
-                  }
-                >
-                  {title}
-                </Heading>
-              </Box>
-            ))}
+            .map(([title, subTitle], index) => {
+              const Comp = subTitle ? Button : Box;
+              return (
+                // @ts-ignore
+                <Comp active={showingTitle === subTitle} key={index}>
+                  <Heading
+                    level={String(Math.min(4, depth + 2)) as '2' | '3' | '4'}
+                    margin={{ horizontal: 'small', vertical: 'xsmall' }}
+                    onClick={
+                      subTitle ? () => toggleShowingTitle(subTitle) : undefined
+                    }
+                  >
+                    {title}
+                  </Heading>
+                </Comp>
+              );
+            })}
         </Box>
         {showingTitle && (
           <Box fill="horizontal" align="center">
