@@ -83,10 +83,13 @@ export function createObservable<T extends SPOShape = SPOShape>(
       const states = getStateMap(subj);
 
       for (const [pred, objt] of Object.entries(value)) {
-        if (isObjt(objt)) {
+        if (isObjt(objt) || objt == null) {
           const state = hub.getCurrentState();
           states[pred] = state;
-          hub.put({ tuple: [subj, pred, objt, state] }, root);
+          hub.put(
+            { tuple: [subj, pred, objt == null ? null : objt, state] },
+            root
+          );
 
           // publish the path to this subject
           // TODO this is really inefficient as it overwrites many times for each prop in an object

@@ -39,6 +39,7 @@ export class SPOStorage {
       //   )}`
       // );
       this.hub.put({ tuple: result.tuples[0] }, this);
+      // if (result.tuples[0][0].length > subj.length + 1) return;
     }
   }
 

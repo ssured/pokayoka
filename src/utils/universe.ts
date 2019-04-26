@@ -28,15 +28,26 @@ type NodeBehaviour = {
 };
 
 const proxyPathSymbol = Symbol('path of proxy');
-export const getPath = (obj: SPOShape): string[] | undefined => {
+export const getPath = (obj: any): string[] | undefined => {
   // @ts-ignore
-  return obj[proxyPathSymbol];
+  return (obj && typeof obj === 'object' && obj[proxyPathSymbol]) || undefined;
+};
+
+const setPath = (obj: any, path: string[]): void => {
+  if (obj && typeof obj === 'object') {
+    obj[proxyPathSymbol] = path;
+    if (!Array.isArray(obj)) {
+      // TODO recurse deeper and set all paths for linked objects?
+      // for some reason this breaks current tests
+      // needs more investigation
+    }
+  }
 };
 
 const proxyKeysSymbol = Symbol('keys of proxy');
-const getKeys = (obj: SPOShape): Set<string> | undefined => {
+const getKeys = (obj: any): Set<string> | undefined => {
   // @ts-ignore
-  return obj[proxyKeysSymbol];
+  return (obj && typeof obj === 'object' && obj[proxyKeysSymbol]) || undefined;
 };
 
 export const createUniverse = <T extends SPOShape>({
@@ -148,6 +159,12 @@ export const createUniverse = <T extends SPOShape>({
           updateListener(path, value);
         }
 
+        // make sure the passed value is tagged with the current path
+        // helps linking assignments
+        if (!getPath(value)) {
+          setPath(value, path);
+        }
+
         // ensure the whole path is set by settings all keys of the subpath
         for (const [i, part] of path.entries()) {
           getKeys(publicGet(path.slice(0, i)))!.add(part);
@@ -180,7 +197,11 @@ export const createUniverse = <T extends SPOShape>({
             if (value == null && subKey in core) {
               // cascade deleting down the tree
               const current = core[subKey];
-              if (current && typeof current === 'object') {
+              if (
+                current &&
+                typeof current === 'object' &&
+                !Array.isArray(current) // do not follow links
+              ) {
                 const currentKeys = Object.keys(current);
                 if (currentKeys.length > 0) {
                   publicSet(
