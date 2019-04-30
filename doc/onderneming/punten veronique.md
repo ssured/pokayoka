@@ -1,0 +1,13 @@
+- [ ] Product/dienst, wat is het en welk probleem lost het op?
+- [ ] De markt, wie zijn de afnemers van het product? Wat zijn de kenmerken van deze markt?
+- [ ] Markt(potentie) met daarin ook een goede omschrijving hoe de markt in elkaar zit met wet- en regelgeving
+- [ ] Concurrentie en eventuele substituten
+- [ ] Marketingplan, hoe gaat de markt bewerkt worden (welke acties en investeringen zijn hiervoor nodig?)
+- [ ] Organisatie(opzet) en betrokken personen (onder andere, wie is de ondernemer?)
+- [ ] Juridische structuur met goede uitleg hoe de verschillende entiteiten, contracten, patenten, intellectueel eigendom etc. lopen (wellicht aangevuld met compliance)
+- [ ] SWOT (Sterkte, zwakte, kansen en bedreigingen voor de organisatie)
+- [ ] Investeringsprognose (waar zijn welke gelden voor nodig, wanneer zijn deze investeringen verwacht - tijdspad)
+- [ ] Gewenste financieringsstructuur
+- [ ] Prognose voor de aankomende jaren (balans, V&W en liquiditeitsprognose)
+- [ ] Financials van de afgelopen periode indien van toepassing
+- [ ] Het belang en de inbedding van het bedrijf voor en in Noord-Nederland

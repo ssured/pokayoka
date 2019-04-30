@@ -1,8 +1,8 @@
 # development
 
-- [ ] mri regelen
-- [ ] liftoff actie uitschrijven
-- [ ] voorbereiden veronique
+- [x] mri regelen
+- [x] liftoff actie uitschrijven
+- [x] voorbereiden veronique
 - [ ] haakjes liesbeth uitzoeken
 - [ ] rapporteren mockups
 
