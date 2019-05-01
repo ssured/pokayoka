@@ -1,10 +1,12 @@
-import { Box, Button, DropButton, Layer, Text } from 'grommet';
-import { Close, Filter, FormClose, FormDown } from 'grommet-icons';
+import { Box, Button, DropButton, Layer, Stack, Text } from 'grommet';
+import { Add, Close, Filter, FormClose, FormDown } from 'grommet-icons';
 import { observer } from 'mobx-react-lite';
-import React, { useState } from 'react';
-import { Page, PageCrumb } from '../../../components/Page/Page';
-import { Maybe } from '../../../utils/universe';
-import { Hierarchy } from './Hierarchy';
+import React, { useState, useContext } from 'react';
+import { Page, PageCrumb } from '../../../../components/Page/Page';
+import { Maybe } from '../../../../utils/universe';
+import { Hierarchy } from '../Hierarchy';
+import { router } from '../../../../router';
+import { PProjectContext } from '../Detail';
 
 const SelectHierarchy: React.FunctionComponent<{
   project: Maybe<PProject>;
@@ -81,21 +83,30 @@ const EditFilter: React.FunctionComponent<{
   );
 });
 
-export const Snags: React.FunctionComponent<{
-  project: Maybe<PProject>;
-}> = observer(({ project }) => {
+export const List: React.FunctionComponent<{
+  project?: Maybe<PProject>;
+}> = observer(({ project = useContext(PProjectContext) }) => {
   return (
-    <PageCrumb title={'Bevindingen'}>
-      <Page>
-        <Box direction="row" justify="between">
-          <SelectHierarchy project={project} />
+    <Page>
+      <Stack fill anchor="bottom-right">
+        <Box fill>
+          <Box direction="row" justify="between">
+            <SelectHierarchy project={project} />
 
-          <Box direction="row" gap="medium">
-            <FilterItem>Aannemer</FilterItem>
-            <EditFilter project={project} />
+            <Box direction="row" gap="medium">
+              <FilterItem>Aannemer</FilterItem>
+              <EditFilter project={project} />
+            </Box>
           </Box>
         </Box>
-      </Page>
-    </PageCrumb>
+
+        <Button
+          plain={false}
+          hoverIndicator
+          icon={<Add size="large" />}
+          onClick={() => router.projects.projectId.snags.new.$push()}
+        />
+      </Stack>
+    </Page>
   );
 });

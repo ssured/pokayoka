@@ -2,7 +2,7 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Box, Heading, BoxProps, Image } from 'grommet';
-import { Maybe } from '../../utils/universe';
+import { Maybe, isSomething } from '../../utils/universe';
 
 export const BuildingStoreyTile: React.FunctionComponent<{
   box?: BoxProps;
@@ -19,9 +19,13 @@ export const BuildingStoreyTile: React.FunctionComponent<{
     gap="small"
     {...box}
   >
-    {buildingStorey.activeSheet && buildingStorey.activeSheet.$thumb && (
-      <Image src={`/cdn/${buildingStorey.activeSheet.$thumb}`} fit="contain" />
-    )}
+    {isSomething(buildingStorey.activeSheet) &&
+      buildingStorey.activeSheet.$thumb && (
+        <Image
+          src={`/cdn/${buildingStorey.activeSheet.$thumb}`}
+          fit="contain"
+        />
+      )}
     <Heading level="3">{buildingStorey.name}</Heading>
     {children}
   </Box>

@@ -4,8 +4,8 @@ import { generateId } from '../utils/id';
 import { organizationRelations } from './Organization';
 
 declare global {
-  type Person = {
-    '@type': 'Person';
+  type PPerson = {
+    '@type': 'PPerson';
     identifier: string;
     /**
      * Family name. In the U.S., the last name of an Person. This can be used along with givenName instead of the name property.
@@ -37,13 +37,13 @@ declare global {
   };
 }
 
-export const personRelations: RelationsOf<Person> = {
+export const pPersonRelations: RelationsOf<PPerson> = {
   worksFor: many(organizationRelations),
 };
 
-export const personSchema = yup.object<Person>().shape({
-  // '@type': yup.string().oneOf(['Person']) as yup.Schema<'Person'>,
-  // identifier: yup.string().required(),
+export const pPersonSchema = yup.object<PPerson>().shape({
+  '@type': yup.string().oneOf(['PPerson']),
+  identifier: yup.string().required(),
   familyName: yup.string().required(),
   givenName: yup.string(),
   additionalName: yup.string(),
@@ -53,12 +53,22 @@ export const personSchema = yup.object<Person>().shape({
   worksFor: yup.object(),
 });
 
-export const isPerson = (v: unknown): v is Person =>
-  personSchema.isValidSync(v);
+export const isPPerson = (v: unknown): v is PPerson =>
+  pPersonSchema.isValidSync(v);
 
-export const newPerson = (required: Pick<Person, 'familyName'>): Person => ({
-  '@type': 'Person',
+export const newPPerson = (required: Pick<PPerson, 'familyName'>): PPerson => ({
+  '@type': 'PPerson',
   identifier: generateId(),
   worksFor: {},
   ...required,
 });
+
+/**
+ * Returns the full name of the person
+ * @param person The person
+ */
+export function fullName(person: PPerson) {
+  return [person.givenName, person.additionalName, person.familyName]
+    .filter(Boolean)
+    .join(' ');
+}

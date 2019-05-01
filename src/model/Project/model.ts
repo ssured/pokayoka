@@ -13,7 +13,7 @@ declare global {
     name: string;
     sites: Many<PSite>;
     $image?: string;
-    roles: Many<Role>;
+    roles: Many<PRole>;
   };
 }
 
@@ -50,7 +50,7 @@ export const newPProject = (
 
 // all possible actions on a project follow here
 
-export const projectRemoveRole = (project: PProject, role: Role) =>
+export const projectRemoveRole = (project: PProject, role: PRole) =>
   runInAction(() => {
     Object.entries(project.roles || {})
       .filter(([, projectRole]) => projectRole.identifier === role.identifier)

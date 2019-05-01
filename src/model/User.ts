@@ -1,16 +1,17 @@
-import { Many, RelationsOf, many } from './base';
+import { Many, RelationsOf, many, One } from './base';
 import * as yup from 'yup';
 import { generateId } from '../utils/id';
 import { projectRelations } from './Project/model';
+import { pPersonRelations, pPersonSchema } from './Person';
 
 declare global {
-  type User = {
-    '@type': 'PYUser';
+  type PUser = {
+    '@type': 'PUser';
     identifier: string;
     /**
-     * Name of the user
+     * Person record of the user
      */
-    name?: string;
+    is: One<PPerson>;
 
     /**
      * Projects this user has access to
@@ -21,24 +22,26 @@ declare global {
 
 // exposes a runtime crawlable model of all relations
 // this is needed in Universe to know if an object is a subobject or a primitive
-export const userRelations: RelationsOf<User> = {
+export const userRelations: RelationsOf<PUser> = {
+  is: pPersonRelations,
   projects: many(projectRelations),
 };
 
-export const userSchema = yup.object<User>().shape({
+export const userSchema = yup.object<PUser>().shape({
   '@type': yup
     .string()
-    .oneOf(['PYUser'])
+    .oneOf(['PUser'])
     .required(),
   identifier: yup.string().required(),
-  name: yup.string(),
+  is: pPersonSchema,
   projects: yup.object(),
 });
 
-export const isUser = (v: unknown): v is User => userSchema.isValidSync(v);
+export const isUser = (v: unknown): v is PUser => userSchema.isValidSync(v);
 
-export const newUser = (): User => ({
-  '@type': 'PYUser',
+export const newUser = (required: Pick<PUser, 'is'>): PUser => ({
+  '@type': 'PUser',
   identifier: generateId(),
   projects: {},
+  ...required,
 });

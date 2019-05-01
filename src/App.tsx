@@ -187,12 +187,8 @@ export const App: React.FunctionComponent<{}> = observer(() => {
               <Route match={router.notFound}>
                 <NotFound />
               </Route>
-              {/* <NotFound default /> */}
-              {/* <User path=":userId">
-                  <Project path=":projectId" />
-                </User>  */}
             </Box>
-            <Box gridArea="footer">footer</Box>
+            <Box gridArea="footer" />
 
             <Box gridArea="nav">
               {showSidebar && (

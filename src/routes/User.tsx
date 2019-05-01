@@ -6,7 +6,8 @@ import React, { useState } from 'react';
 import { useRoot } from '../contexts/spo-hub';
 import { TextField } from '../form/TextField';
 import { PageTitle } from '../layout/PageTitle';
-import { isUser } from '../model/User';
+import { isUser, newUser } from '../model/User';
+import { newPPerson } from '../model/Person';
 
 export const User: React.FunctionComponent<{}> = observer(({}) => {
   const [submitted, setSubmitted] = useState(false);
@@ -21,18 +22,19 @@ export const User: React.FunctionComponent<{}> = observer(({}) => {
 
         {/* <li>keys: {Object.keys(user).join(',')}</li> */}
 
-        {Object.entries(user).map(([key, value]) => (
-          <li key={key}>
-            {key} = {value}
-          </li>
-        ))}
-
         <li>isUser: {isUser(user) ? 'YEA' : 'Nope'}</li>
       </ul>
 
-      {isUser(user) && (
+      {
         <Formik
-          initialValues={user}
+          initialValues={
+            isUser(user)
+              ? user
+              : newUser({
+                  is: newPPerson({ familyName: '' }),
+                  ...(user as any),
+                })
+          }
           // validationSchema={userSchema}
           validateOnBlur={submitted}
           validateOnChange={submitted}
@@ -88,13 +90,16 @@ export const User: React.FunctionComponent<{}> = observer(({}) => {
 
                   <TextField label="Type" name="@type" />
                   <TextField label="ID" name="identifier" />
-                  <TextField label="Naam" name="name" />
+                  <TextField label="Voornaam" name="is.givenName" />
+                  <TextField label="Tussenvoegsel" name="is.additionalName" />
+                  <TextField label="Achternaam" name="is.familyName" />
+                  <TextField label="Email" name="is.email" />
                 </Box>
               </Grid>
             </form>
           )}
         />
-      )}
+      }
     </Box>
   );
 });

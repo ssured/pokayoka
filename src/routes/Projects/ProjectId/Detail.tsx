@@ -17,7 +17,7 @@ import { TileGrid } from '../../../layout/TileGrid';
 import { Todo } from '../../../layout/Todo';
 import { router } from '../../../router';
 import { Maybe } from '../../../utils/universe';
-import { Snags } from './Snags';
+import { Snags } from './Snags/index';
 import { Settings } from './Settings/index';
 import { Sheets } from './Sheets/index';
 
@@ -179,8 +179,18 @@ export const Detail: React.FunctionComponent<{
           </PageCrumb>
         </Route>
 
-        <Route match={currentRoute.snags} exact>
-          <Snags project={project} />
+        <Route match={currentRoute.snags}>
+          <PageCrumb
+            title={
+              <RoutedButton
+                to={currentRoute.snags}
+                active={false}
+                label={'Bevindingen'}
+              />
+            }
+          >
+            <Snags project={project} />
+          </PageCrumb>
         </Route>
 
         <Route match={currentRoute.sheets}>

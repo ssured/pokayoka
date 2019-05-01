@@ -1,15 +1,14 @@
+import { Route } from 'boring-router-react';
 import { Box } from 'grommet';
 import { observer, useObservable } from 'mobx-react-lite';
 import React, { useContext } from 'react';
 import { Page, PageTitle } from '../../../../components/Page/Page';
+import { RoutedButton } from '../../../../layout/RoutedButton';
+import { BuildingStoreyTile } from '../../../../model/BuildingStorey/BuildingStoreyTile';
+import { router } from '../../../../router';
 import { Maybe } from '../../../../utils/universe';
 import { PProjectContext } from '../Detail';
-import { Route } from 'boring-router-react';
-import { router } from '../../../../router';
-import { SheetTile } from '../../../../model/Sheet/SheetTile';
-import { RoutedButton } from '../../../../layout/RoutedButton';
 import { BuildingStorey } from './BuildingStorey';
-import { BuildingStoreyTile } from '../../../../model/BuildingStorey/BuildingStoreyTile';
 
 const currentRoute = router.projects.projectId.sheets;
 

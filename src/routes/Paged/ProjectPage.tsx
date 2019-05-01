@@ -28,7 +28,7 @@ import {
 import { subj } from '../../utils/spo';
 import { AddContactPerson } from './AddContactPerson';
 import { SitePage } from './SitePage';
-import { isRole } from '../../model/Role';
+import { isPRole } from '../../model/Role';
 import { CSS_SPREAD_ABSOLUTE } from '../../constants';
 
 export const ProjectPage: React.FunctionComponent<
@@ -157,7 +157,7 @@ const ProjectShow: React.FunctionComponent<{
               {roles.map((role, i) => (
                 <Text key={i} as="li">
                   {role && role.member && role.member.familyName}
-                  {isRole(role) && isPProject(project) && (
+                  {isPRole(role) && isPProject(project) && (
                     <Button
                       plain
                       icon={<Trash color="blue" />}

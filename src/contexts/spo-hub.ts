@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { SPOHub } from '../utils/spo-hub';
 import { createObservable } from '../utils/spo-observable';
@@ -8,6 +8,10 @@ import { SpotDB } from '../utils/spotdb';
 import { useAuthentication } from './authentication';
 import { many } from '../model/base';
 import { userRelations } from '../model/User';
+import { observable, runInAction } from 'mobx';
+import { subj, SPOShape } from '../utils/spo';
+import dlv from 'dlv';
+import { Nothing, Maybe } from '../utils/universe';
 
 const spotDb = new SpotDB('pokayoka');
 
@@ -17,10 +21,14 @@ const storage = new SPOStorage(hub, spotDb);
 // const server = new SPOWs(hub, ws);
 
 const spo = createObservable<{
-  [key: string]: User;
+  [key: string]: PUser;
 }>(hub, many(userRelations));
 
 const SPOContext = createContext(spo);
+
+export const getSubject = <T extends SPOShape>(subj: subj): Maybe<T> => {
+  return dlv(spo(), subj) as any;
+};
 
 export const useRoot = () => {
   const auth = useAuthentication();
@@ -32,21 +40,21 @@ export const useRoot = () => {
   ];
 };
 
-// export const useQuery = (query: Parameters<typeof spotDb.query>[0]) => {
-//   return useMemo(() => {
-//     const resultArray = observable.array<
-//       ReturnType<typeof spotDb.query> extends AsyncIterableIterator<infer U>
-//         ? U
-//         : never
-//     >([], { deep: false });
-//     (async () => {
-//       for await (const result of spotDb.query(query)) {
-//         runInAction(() => resultArray.push(result));
-//       }
-//     })();
-//     return resultArray;
-//   }, []);
-// };
+export const useQuery = (query: Parameters<typeof spotDb.query>[0]) => {
+  return useMemo(() => {
+    const resultArray = observable.array<
+      ReturnType<typeof spotDb.query> extends AsyncIterableIterator<infer U>
+        ? U
+        : never
+    >([], { deep: false });
+    (async () => {
+      for await (const result of spotDb.query(query)) {
+        runInAction(() => resultArray.push(result));
+      }
+    })();
+    return resultArray;
+  }, []);
+};
 
 // // export const useSubject =
 

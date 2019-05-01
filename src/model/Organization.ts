@@ -11,7 +11,7 @@ declare global {
      */
     name: string;
 
-    member: Many<Role>;
+    member: Many<PRole>;
 
     /**
      * A description of the item.
