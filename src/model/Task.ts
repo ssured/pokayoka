@@ -4,17 +4,13 @@ import { generateId } from '../utils/id';
 import { pPersonSchema, pPersonRelations } from './Person';
 import { pObservationRelations } from './Observation';
 
-type PAssignment = {
-  sortIndex: number;
-  progress?: number;
-  person: PPerson;
-};
-
-const pAssignmentRelations: RelationsOf<PAssignment> = {
-  person: pPersonRelations,
-};
-
 declare global {
+  type PAssignment = {
+    sortIndex: number;
+    progress?: number;
+    person: PPerson;
+  };
+
   type PTask = {
     '@type': 'PTask';
     identifier: string;
@@ -25,6 +21,10 @@ declare global {
     assigned: Many<PAssignment>;
   };
 }
+
+const pAssignmentRelations: RelationsOf<PAssignment> = {
+  person: pPersonRelations,
+};
 
 export const pTaskRelations: RelationsOf<PTask> = {
   basedOn: many(pObservationRelations),
@@ -43,7 +43,7 @@ export const pTaskSchema = yup.object<PTask>().shape({
 export const isPTask = (v: unknown): v is PTask => pTaskSchema.isValidSync(v);
 
 export const newPTask = (
-  required: Pick<PTask, 'name' | 'assigned' | 'basedOn'>
+  required: Partial<PTask> & Pick<PTask, 'name' | 'assigned' | 'basedOn'>
 ): PTask => ({
   '@type': 'PTask',
   identifier: generateId(),

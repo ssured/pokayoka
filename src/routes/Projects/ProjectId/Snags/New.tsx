@@ -1,286 +1,453 @@
-import { Formik, useField } from 'formik';
+import { FieldState, FormState } from 'formstate';
 import {
   Box,
   Button,
   FormField,
   Grid,
   Heading,
-  Select,
-  TextInput,
-  TextInputProps,
   RangeInput,
   RangeInputProps,
-  Text,
+  Select,
   SelectProps,
+  Text,
+  TextArea,
+  TextAreaProps,
+  TextInput,
+  TextInputProps,
 } from 'grommet';
-import { Save, Add } from 'grommet-icons';
-import { observer } from 'mobx-react-lite';
-import { default as React, useState } from 'react';
+import { Add, Save } from 'grommet-icons';
+import { observer, useObserver } from 'mobx-react-lite';
+import { default as React, useMemo, useState } from 'react';
 import { Page } from '../../../../components/Page/Page';
-import { pRoleSchema } from '../../../../model/Role';
-import { newPTask, pTaskSchema } from '../../../../model/Task';
-import { useQuery, getSubject } from '../../../../contexts/spo-hub';
-import { isSomething } from '../../../../utils/universe';
-import { filter } from 'lodash';
+import { getSubject, useQuery } from '../../../../contexts/spo-hub';
 import { fullName, isPPerson } from '../../../../model/Person';
+import { newPTask } from '../../../../model/Task';
 import { Omit } from '../../../../utils/typescript';
+import { isSomething, getPath } from '../../../../utils/universe';
+import { getSubj, subj } from '../../../../utils/spo';
+import { isEqual } from '../../../../utils/index';
+
+function showRequired(label: string, required?: boolean) {
+  return `${label}${required ? ' *' : ''}`;
+}
 
 const TextField: React.FunctionComponent<
   TextInputProps & {
-    name: string;
     label: string;
     placeholder?: string;
     required?: boolean;
+    fieldState: FieldState<string>;
   }
-> = ({ label, required, ...props }) => {
-  const [field, meta] = useField(props.name);
-  const requiredLabel = `${label}${required ? '*' : ''}`;
-  return (
-    <>
-      <FormField
-        {...{
-          label: requiredLabel,
-          error: meta.touched ? meta.error : undefined,
-        }}
-      >
-        <TextInput {...{ ...field, value: field.value || '' }} {...props} />
-      </FormField>
-    </>
-  );
-};
+> = observer(({ label, required, fieldState, ...props }) => (
+  <FormField
+    {...{
+      label: showRequired(label, required),
+      error: fieldState.error,
+    }}
+  >
+    <TextInput
+      value={fieldState.value as any}
+      onChange={
+        ((e: any) => {
+          fieldState.onChange(e.target.value);
+        }) as any
+      }
+      {...props as any}
+    />
+  </FormField>
+));
 
-const ProgressField: React.FunctionComponent<
-  RangeInputProps & { name: string; label: string }
-> = ({ label, ...props }) => {
-  const [field, meta] = useField(props.name);
-  return (
-    <>
-      <FormField {...{ label, error: meta.touched ? meta.error : undefined }}>
-        <Box direction="row" align="center" pad="medium" gap="small">
-          <Text>{field.value || 0}%</Text>
-          <RangeInput
-            min={0}
-            max={100}
-            step={100 / 4}
-            {...{ ...field, value: field.value || 0 }}
-            {...props}
-          />
-        </Box>
-      </FormField>
-    </>
-  );
-};
-
-const PersonField: React.FunctionComponent<
-  Omit<SelectProps, 'options' | 'onChange'> & {
-    name: string;
+const TextAreaField: React.FunctionComponent<
+  TextAreaProps & {
     label: string;
     placeholder?: string;
-
-    onChange: (selected: PPerson) => void;
+    required?: boolean;
+    fieldState: FieldState<string>;
   }
-> = observer(({ label, onChange, ...props }) => {
-  const [search, setSearch] = useState<RegExp | null>(null);
-  const [field, meta] = useField(props.name);
-  const results = useQuery(v => [
-    {
-      s: v('s'),
-      p: '@type',
-      o: 'PPerson',
-    },
-  ]);
-  const persons = results
-    .map(result => getSubject<PPerson>((result.variables as any).s))
-    .filter(isSomething)
-    .filter(isPPerson) as PPerson[];
+> = observer(({ label, required, fieldState, ...props }) => (
+  <FormField
+    {...{
+      label: showRequired(label, required),
+      error: fieldState.error,
+    }}
+  >
+    <TextArea
+      value={fieldState.value as any}
+      onChange={
+        ((e: any) => {
+          fieldState.onChange(e.target.value);
+        }) as any
+      }
+      {...props as any}
+    />
+  </FormField>
+));
 
-  const options = persons
-    .map(person => ({
-      label: fullName(person),
-      value: person,
-    }))
-    .filter(option => search == null || search.test(option.label));
+type RangeFieldProps = RangeInputProps & {
+  label: string;
+  required?: boolean;
+  fieldState: FieldState<number>;
+};
 
-  const currentResponsible = filter(field.value, a => a.sortIndex > 0)[0];
+const RangeField: React.FunctionComponent<RangeFieldProps> = observer(
+  ({ label, required, fieldState, ...props }) => (
+    <FormField
+      {...{
+        label: showRequired(label, required),
+        error: fieldState.error,
+      }}
+    >
+      <Box direction="row" align="center" pad="medium" gap="small">
+        <Text>{fieldState.value || 0}%</Text>
+        <RangeInput
+          value={fieldState.value}
+          onChange={(e: any) => {
+            fieldState.onChange(parseInt(e.target.value, 10));
+          }}
+          {...props}
+        />
+      </Box>
+    </FormField>
+  )
+);
 
-  const value =
-    currentResponsible &&
-    filter(options, o => currentResponsible.person === o.value)[0];
+const ProgressField: React.FunctionComponent<RangeFieldProps> = ({
+  min = 0,
+  max = 100,
+  step = 25,
+  ...props
+}) => <RangeField min={min} max={max} step={step} {...props} />;
 
-  return (
-    <>
-      <FormField
-        {...{
-          label,
-          error: meta.touched ? meta.error : undefined,
-        }}
+type SelectOption<T> = {
+  label: string;
+  value: T;
+};
+
+type SelectFieldProps<T> = Omit<SelectProps, 'options' | 'onChange'> & {
+  label: string;
+  placeholder?: string;
+
+  options: SelectOption<T>[];
+
+  fieldState: FieldState<T>;
+};
+
+function SelectField<T>(
+  {
+    label,
+    options,
+    fieldState,
+    ...props
+  }: SelectFieldProps<T> /*& { children?: ReactNode }*/
+) {
+  return useObserver(() => (
+    <FormField label={label} error={fieldState.error}>
+      <Box
+        direction="row"
+        align="center"
+        pad="medium"
+        gap="small"
+        fill="horizontal"
       >
-        <Box
-          direction="row"
-          align="center"
-          pad="medium"
-          gap="small"
-          fill="horizontal"
-        >
-          <Select
-            value={value}
-            labelKey="label"
-            valueKey="value"
-            options={options}
-            onChange={event => {
-              onChange(event.value.value);
-              field.onBlur(event);
-            }}
-            onSearch={text =>
-              setSearch(text === '' ? null : new RegExp(text, 'i'))
-            }
-            {...props}
-          />
-          <Add />
-        </Box>
-      </FormField>
-    </>
-  );
-});
+        <Select
+          value={
+            options.find(option => isEqual(option.value, fieldState.value)) ||
+            ''
+          }
+          labelKey="label"
+          valueKey="value"
+          options={options}
+          onChange={event => fieldState.onChange(event.value.value)}
+          {...props}
+        />
+        <Add />
+      </Box>
+    </FormField>
+  ));
+}
 
-export const New: React.FunctionComponent<{
-  accountable: PPerson;
-  initialValues?: PTask;
-  onSubmit: (task: PTask) => Promise<void>;
-}> = observer(
+const SelectPersonField = observer(
   ({
-    accountable = {
-      '@type': 'PPerson',
-      identifier: 'sjoerd@weett.nl',
-      familyName: 'Jong',
-    } as PPerson,
-    initialValues = newPTask({
-      name: '',
-      assigned: {
-        [accountable.identifier]: {
-          sortIndex: 0,
-          progress: 0,
-          person: accountable,
-        },
-      },
-      basedOn: {},
-    }),
-    onSubmit,
+    label,
+    fieldState,
+    ...props
+  }: Omit<SelectFieldProps<subj>, 'options'> & {
+    label: string;
+    placeholder?: string;
   }) => {
-    const [submitted, setSubmitted] = useState(false);
+    const [search, setSearch] = useState<RegExp | null>(null);
+    const results = useQuery(v => [
+      {
+        s: v('s'),
+        p: '@type',
+        o: 'PPerson',
+        // filter: tuple => true
+      },
+    ]);
+    const persons = results
+      .map(result => getSubject<PPerson>((result.variables as any).s))
+      .filter(isSomething)
+      .filter(isPPerson) as PPerson[];
+
+    const options = persons
+      .map(person => ({
+        label: fullName(person),
+        value: getPath(person)!,
+      }))
+      .filter(option => search == null || search.test(option.label));
 
     return (
-      <Page>
-        <Formik
-          initialValues={initialValues}
-          validationSchema={pTaskSchema}
-          validateOnBlur={submitted}
-          validateOnChange={submitted}
-          onSubmit={async (values, helpers) => {
-            console.log(JSON.stringify(values, null, 2));
-            debugger;
-            try {
-              await onSubmit(values);
-            } finally {
-              helpers.setSubmitting(false);
-            }
-          }}
-          render={({
-            handleSubmit,
-            isSubmitting,
-            errors,
-            setFieldValue,
-            values,
-          }) => (
-            <form
-              onSubmit={e => {
-                e.preventDefault();
-                setSubmitted(true);
-                handleSubmit();
-              }}
-            >
-              <pre>Values {JSON.stringify(values, null, 2)}</pre>
-              <pre>Errors {JSON.stringify(errors, null, 2)}</pre>
-              <Grid
-                fill
-                rows={['auto', 'auto', 'auto']}
-                columns={['auto', 'auto']}
-                areas={[
-                  // { name: 'header', start: [0, 0], end: [1, 0] },
-                  { name: 'buttons', start: [0, 0], end: [1, 0] },
-                  { name: 'search', start: [0, 1], end: [0, 1] },
-                  { name: 'left', start: [0, 2], end: [0, 2] },
-                  { name: 'right', start: [1, 2], end: [1, 2] },
-                ]}
-                gap="medium"
-              >
-                <Box
-                  justify="end"
-                  direction="row"
-                  gap="medium"
-                  gridArea="buttons"
-                >
-                  <Button
-                    label="Annuleren"
-                    onClick={() => window.history.back()}
-                    disabled={isSubmitting}
-                  />
-                  <Button
-                    primary
-                    type="submit"
-                    icon={<Save />}
-                    label="Opslaan"
-                    disabled={isSubmitting}
-                  />
-                </Box>
-
-                <Box gridArea="search" />
-
-                <Box gridArea="left">
-                  <Heading level="3">Taak</Heading>
-
-                  <TextField
-                    label="Naam"
-                    name="name"
-                    placeholder="Taak naam"
-                    required
-                  />
-                  <TextField
-                    label="Op te leveren"
-                    name="deliverable"
-                    placeholder="Beschrijf kort het op te leveren resultaat"
-                  />
-                </Box>
-
-                <Box gridArea="right">
-                  <Heading level="3">Toewijzen</Heading>
-                  <ProgressField
-                    label={`Waargenomen voortgang`}
-                    name={`assigned.${accountable.identifier}.progress`}
-                  />
-
-                  <PersonField
-                    label="Verantwoordelijk"
-                    name="assigned"
-                    onChange={person => {
-                      const assigned = {
-                        [accountable.identifier]:
-                          values.assigned[accountable.identifier],
-                        [person.identifier]: {
-                          sortIndex: 1,
-                          progress: 0,
-                          person,
-                        },
-                      };
-                      setFieldValue('assigned', assigned);
-                    }}
-                  />
-                </Box>
-              </Grid>
-            </form>
-          )}
-        />
-      </Page>
+      <SelectField
+        label={label}
+        options={[{ label: 'niemand', value: [] }, ...options]}
+        fieldState={fieldState}
+        onSearch={text => setSearch(text === '' ? null : new RegExp(text, 'i'))}
+        {...props}
+      />
     );
   }
 );
+
+/** Our validations */
+const requiredWithMessage = (message: string) => (val: string) =>
+  !val.trim() && message;
+
+export const New: React.FunctionComponent<{
+  accountable: PPerson;
+  onSubmit: (task: PTask) => Promise<void>;
+}> = observer(({ accountable, onSubmit }) => {
+  const form = useMemo(
+    () =>
+      new FormState({
+        name: new FieldState('').validators(
+          requiredWithMessage('Naam kan niet leeg gelaten worden')
+        ),
+        deliverable: new FieldState('').validators(),
+        progress: new FieldState(0).validators(),
+
+        responsibleSubj: new FieldState<subj>([]),
+      }).validators(),
+    []
+  );
+
+  return (
+    <Page>
+      <form
+        onSubmit={async e => {
+          e.preventDefault();
+          const result = await form.validate();
+          if (!result.hasError) {
+            const responsible =
+              result.value.responsibleSubj.$.length > 0
+                ? (getSubject(result.value.responsibleSubj.$) as PPerson)
+                : null;
+
+            onSubmit(
+              newPTask({
+                name: result.value.name.$,
+
+                ...(result.value.deliverable.$
+                  ? { deliverable: result.value.deliverable.$ }
+                  : {}),
+
+                assigned: {
+                  [accountable.identifier]: {
+                    sortIndex: 0,
+                    progress: result.value.progress.$,
+                    person: accountable,
+                  },
+                  ...(responsible
+                    ? {
+                        [responsible.identifier]: {
+                          sortIndex: 1,
+                          progress: 0,
+                          person: responsible,
+                        },
+                      }
+                    : {}),
+                },
+                basedOn: {},
+              })
+            );
+          }
+        }}
+      >
+        <Grid
+          fill
+          rows={['auto', 'auto', 'auto']}
+          columns={['auto', 'auto']}
+          areas={[
+            // { name: 'header', start: [0, 0], end: [1, 0] },
+            { name: 'buttons', start: [0, 0], end: [1, 0] },
+            { name: 'search', start: [0, 1], end: [0, 1] },
+            { name: 'left', start: [0, 2], end: [0, 2] },
+            { name: 'right', start: [1, 2], end: [1, 2] },
+          ]}
+          gap="medium"
+        >
+          <Box justify="end" direction="row" gap="medium" gridArea="buttons">
+            <Button
+              label="Annuleren"
+              onClick={() => window.history.back()}
+              disabled={form.validating}
+            />
+            <Button
+              primary
+              type="submit"
+              icon={<Save />}
+              label="Opslaan"
+              disabled={form.hasError || form.validating}
+            />
+          </Box>
+
+          <Box gridArea="search" />
+
+          <Box gridArea="left">
+            <Heading level="3">Taak</Heading>
+
+            <TextField
+              label="Naam"
+              placeholder="Taak naam"
+              required
+              fieldState={form.$.name}
+            />
+            <TextAreaField
+              label="Op te leveren"
+              placeholder="Beschrijf kort het op te leveren resultaat"
+              fieldState={form.$.deliverable}
+            />
+          </Box>
+
+          <Box gridArea="right">
+            <Heading level="3">Toewijzen</Heading>
+            <ProgressField
+              label={`Waargenomen voortgang`}
+              fieldState={form.$.progress}
+            />
+
+            <SelectPersonField
+              label="Verantwoordelijk"
+              fieldState={form.$.responsibleSubj}
+            />
+          </Box>
+        </Grid>
+        {/* <pre>{JSON.stringify(form.$, null, 2)}</pre> */}
+      </form>
+    </Page>
+  );
+});
+
+/*
+     // return (
+    //   <Page>
+    //     <Formik
+    //       initialValues={initialValues}
+    //       validationSchema={pTaskSchema}
+    //       validateOnBlur={submitted}
+    //       validateOnChange={submitted}
+    //       onSubmit={async (values, helpers) => {
+    //         console.log(JSON.stringify(values, null, 2));
+    //         debugger;
+    //         try {
+    //           await onSubmit(values);
+    //         } finally {
+    //           helpers.setSubmitting(false);
+    //         }
+    //       }}
+    //       render={({
+    //         handleSubmit,
+    //         isSubmitting,
+    //         errors,
+    //         setFieldValue,
+    //         values,
+    //       }) => (
+    //         <form
+    //           onSubmit={e => {
+    //             e.preventDefault();
+    //             setSubmitted(true);
+    //             handleSubmit();
+    //           }}
+    //         >
+    //           <pre>Values {JSON.stringify(values, null, 2)}</pre>
+    //           <pre>Errors {JSON.stringify(errors, null, 2)}</pre>
+    //           <Grid
+    //             fill
+    //             rows={['auto', 'auto', 'auto']}
+    //             columns={['auto', 'auto']}
+    //             areas={[
+    //               // { name: 'header', start: [0, 0], end: [1, 0] },
+    //               { name: 'buttons', start: [0, 0], end: [1, 0] },
+    //               { name: 'search', start: [0, 1], end: [0, 1] },
+    //               { name: 'left', start: [0, 2], end: [0, 2] },
+    //               { name: 'right', start: [1, 2], end: [1, 2] },
+    //             ]}
+    //             gap="medium"
+    //           >
+    //             <Box
+    //               justify="end"
+    //               direction="row"
+    //               gap="medium"
+    //               gridArea="buttons"
+    //             >
+    //               <Button
+    //                 label="Annuleren"
+    //                 onClick={() => window.history.back()}
+    //                 disabled={isSubmitting}
+    //               />
+    //               <Button
+    //                 primary
+    //                 type="submit"
+    //                 icon={<Save />}
+    //                 label="Opslaan"
+    //                 disabled={isSubmitting}
+    //               />
+    //             </Box>
+
+    //             <Box gridArea="search" />
+
+    //             <Box gridArea="left">
+    //               <Heading level="3">Taak</Heading>
+
+    //               <TextField
+    //                 label="Naam"
+    //                 name="name"
+    //                 placeholder="Taak naam"
+    //                 required
+    //               />
+    //               <TextField
+    //                 label="Op te leveren"
+    //                 name="deliverable"
+    //                 placeholder="Beschrijf kort het op te leveren resultaat"
+    //               />
+    //             </Box>
+
+    //             <Box gridArea="right">
+    //               <Heading level="3">Toewijzen</Heading>
+    //               <ProgressField
+    //                 label={`Waargenomen voortgang`}
+    //                 name={`assigned.${accountable.identifier}.progress`}
+    //               />
+
+    //               <PersonField
+    //                 label="Verantwoordelijk"
+    //                 name="assigned"
+    //                 onChange={person => {
+    //                   const assigned = {
+    //                     [accountable.identifier]:
+    //                       values.assigned[accountable.identifier],
+    //                     [person.identifier]: {
+    //                       sortIndex: 1,
+    //                       progress: 0,
+    //                       person,
+    //                     },
+    //                   };
+    //                   setFieldValue('assigned', assigned);
+    //                 }}
+    //               />
+    //             </Box>
+    //           </Grid>
+    //         </form>
+    //       )}
+    //     />
+
+ */
