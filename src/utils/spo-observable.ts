@@ -70,7 +70,7 @@ export function createObservable<T extends SPOShape = SPOShape>(
         // console.log(
         //   `saveNow ${subj.join('/')} ${pred} = ${JSON.stringify(data)}`
         // );
-        set(subj, true, { [pred]: data });
+        set(subj, false, { [pred]: data });
       },
     }
   );
