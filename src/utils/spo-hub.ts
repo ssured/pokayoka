@@ -33,9 +33,7 @@ export class SPOHub {
   protected listeners: Set<Listener> = new Set();
   protected sources: WeakMap<Listener, unknown> = new WeakMap();
 
-  public getCurrentState() {
-    return getLocalState();
-  }
+  constructor(public getCurrentState: () => state = getLocalState) {}
 
   public register(source: unknown, listener: Listener) {
     this.listeners.add(listener);

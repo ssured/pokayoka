@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`mem based SPO observable test basic 1`] = `
+Object {
+  "test": Object {
+    "value": Array [
+      "test",
+      "000.001",
+    ],
+  },
+}
+`;
+
+exports[`mem based SPO observable test basic 2`] = `
+Object {
+  "test": Object {
+    "value": Array [
+      "test",
+      "000.001",
+    ],
+  },
+  "testRef": Array [
+    Array [
+      "test",
+    ],
+    "000.002",
+  ],
+}
+`;
+
+exports[`mem based SPO observable test nested 1`] = `
+Object {
+  "test1": Object {
+    "identifier": Array [
+      "test1",
+      "000.001",
+    ],
+    "is": Object {
+      "identifier": Array [
+        "p1",
+        "000.005",
+      ],
+      "name": Array [
+        "test1name",
+        "000.006",
+      ],
+    },
+    "name": Array [
+      "one",
+      "000.002",
+    ],
+  },
+  "test2": Object {
+    "identifier": Array [
+      "test2",
+      "001.001",
+    ],
+    "is": Array [
+      Array [
+        "test1",
+        "is",
+      ],
+      "001.003",
+    ],
+    "name": Array [
+      "two",
+      "001.002",
+    ],
+  },
+}
+`;

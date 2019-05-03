@@ -1,12 +1,12 @@
 import charwise from 'charwise';
 import dlv from 'dlv';
+import dset from 'dset';
+import { RelationsOf } from '../model/base';
 import { createConvergeFunction } from './ham';
 import { ensureNever } from './index';
 import { isObjt, objt, pred, SPOShape, subj } from './spo';
 import { SPOHub } from './spo-hub';
-import { createUniverse, ThunkTo, Maybe } from './universe';
-import { RelationsOf } from '../model/base';
-import dset from 'dset';
+import { createUniverse, getPath, Maybe, ThunkTo } from './universe';
 
 const pathToKey = charwise.encode;
 // @ts-ignore
@@ -90,36 +90,19 @@ export function createObservable<T extends SPOShape = SPOShape>(
       };
     },
     updateListener: function updateListener(subj, value) {
-      // console.log(
-      //   `updateListener ${subj.join('/')} = ${JSON.stringify(value)}`
-      // );
       const states = getStateMap(subj);
 
-      for (const [pred, objt] of Object.entries(value)) {
-        if (isObjt(objt) || objt == null) {
+      for (const [pred, objtOrReferencedValue] of Object.entries(value)) {
+        // check if the object is a reference, if so, use its path as objt
+        const objt = getPath(objtOrReferencedValue) || objtOrReferencedValue;
+
+        if (isObjt(objt)) {
           const state = hub.getCurrentState();
           states[pred] = state;
           hub.put(
             { tuple: [subj, pred, objt == null ? null : objt, state] },
             root
           );
-
-          // publish the path to this subject
-          // TODO this is really inefficient as it overwrites many times for each prop in an object
-          // Maybe the hub should filter these cases, maybe we should be more intelligent here
-          // for (let i = 2; i < subj.length; i += 1) {
-          //   hub.put(
-          //     {
-          //       tuple: [
-          //         subj.slice(0, i - 1),
-          //         subj[i - 1],
-          //         subj.slice(0, i),
-          //         state,
-          //       ],
-          //     },
-          //     root
-          //   );
-          // }
         } else {
           updateListener(subj.concat(pred), objt);
         }

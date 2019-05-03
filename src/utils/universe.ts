@@ -188,28 +188,29 @@ export const createUniverse = <T extends SPOShape>({
     return core[key] as any;
   };
 
-  const publicSet = (
+  function publicSet(
     path: string[],
     emitValues: boolean,
     value: RawSPOShape[string]
-  ) => {
+  ) {
     runInAction(() => {
-      if (value && typeof value === 'object' && !Array.isArray(value)) {
+      if (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        !getPath(value)
+      ) {
         if (emitValues) {
           // console.log('publicSet emits', path, value);
           updateListener(path, value);
-        }
-
-        // make sure the passed value is tagged with the current path
-        // helps linking assignments
-        if (!getPath(value)) {
-          setPath(value, path);
         }
 
         // ensure the whole path is set by settings all keys of the subpath
         for (const [i, part] of path.entries()) {
           getKeys(publicGet(path.slice(0, i)))!.add(part);
         }
+
+        setPath(value, path);
 
         const keys = getKeys(publicGet(path))!;
 
@@ -228,8 +229,9 @@ export const createUniverse = <T extends SPOShape>({
             if (Array.isArray(value)) {
               core[subKey] = publicGet(value);
             } else {
-              if (getPath(value as SPOShape)) {
-                core[subKey] = publicGet(getPath(value as SPOShape)!);
+              const valuePath = getPath(value);
+              if (valuePath) {
+                core[subKey] = publicGet(valuePath);
               } else {
                 publicSet(subPath, emitValues, value);
               }
@@ -265,14 +267,14 @@ export const createUniverse = <T extends SPOShape>({
           }
         });
       } else {
-        if (path.length >= 2) {
+        if (path.length > 0) {
           publicSet(path.slice(0, -1), emitValues, {
             [path[path.length - 1]]: value,
           });
         }
       }
     });
-  };
+  }
 
   const createPathProxy = (path: string[] = []): ThunkTo<T> => {
     const proxy = new Proxy(
