@@ -39,7 +39,7 @@ describe('mem based SPO observable test', () => {
     expect(getCurrentState()).toBe('001.002');
   });
 
-  test.only('basic', async () => {
+  test('basic', async () => {
     type User = { value: string };
     const userRelations: RelationsOf<User> = {};
 
