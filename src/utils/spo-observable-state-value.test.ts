@@ -15,7 +15,7 @@ const descending = (a: string, b: string) => (a < b ? 1 : -1);
 
 const lex = JSON.stringify;
 
-class StateValue {
+class StateBox {
   private values: ObservableMap<state, objt>;
   private states: IObservableArray<string>;
   public destroy: () => void;
@@ -90,7 +90,7 @@ describe('nested state keyed objects', () => {
     const state = observable.box<state>('1');
     const getState = () => state.get();
 
-    const value = new StateValue(getState, {
+    const value = new StateBox(getState, {
       1: 'one',
       2: 'two',
       4: 'four',
