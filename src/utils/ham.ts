@@ -70,7 +70,14 @@ export const createConvergeFunction = <
     noop?: (meta: MetaType) => void;
     saveBelowBoundary?: (data: DataType, meta: MetaType) => void;
   },
-  lex: (value: DataType) => string = v => JSON.stringify(v) || ''
+  lex: (value: DataType) => string = v => {
+    try {
+      return JSON.stringify(v) || '';
+    } catch (e) {
+      console.error('JSON error', e);
+      return '';
+    }
+  }
 ) =>
   function converge(
     current: [StateType, DataType],
@@ -109,6 +116,11 @@ export const createConvergeFunction = <
         updateLowerBoundary(Si, meta);
         return [Si, Di];
       case Sc === Si:
+        if (Dc === Di) {
+          noop(meta);
+          return [Sc, Dc];
+        }
+
         const Lc = lex(Dc);
         const Li = lex(Di);
 

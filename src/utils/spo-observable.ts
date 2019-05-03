@@ -42,8 +42,13 @@ export function createObservable<T extends SPOShape = SPOShape>(
     subjStates[pathToKey(subj)] || (subjStates[pathToKey(subj)] = {});
 
   // merge data into this observable, respecting HAM
-  const mergeTuple = ([Si, Di]: [state, objt], [subj, pred]: [subj, pred]) => {
+  const mergeTuple = (
+    [Si, rawDi]: [state, objt],
+    [subj, pred]: [subj, pred]
+  ) => {
     const states = getStateMap(subj);
+
+    const Di: objt = Array.isArray(rawDi) ? dlv(root(), rawDi) : rawDi;
 
     const Sc = states[pred] || '';
 
