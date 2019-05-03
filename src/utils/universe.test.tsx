@@ -8,7 +8,7 @@ import {
   autorun,
 } from 'mobx';
 import { createUniverse } from './universe';
-import console = require('console');
+
 import { RelationsOf, many, Many } from '../model/base';
 
 describe('linking observables', () => {

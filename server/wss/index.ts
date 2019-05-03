@@ -8,7 +8,6 @@ import { ensureNever } from '../../src/utils/index';
 
 import { level, levelId, persist } from './level';
 import { getMachineState } from './sync';
-import console = require('console');
 
 type IdentificationMessage = {
   type: 'identification';

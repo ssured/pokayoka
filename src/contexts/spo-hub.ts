@@ -17,8 +17,8 @@ const spotDb = new SpotDB('pokayoka');
 
 const hub = new SPOHub();
 const storage = new SPOStorage(hub, spotDb);
-// const ws = new ReconnectingWebSocket(`ws://localhost:3000/spows`);
-// const server = new SPOWs(hub, ws);
+const ws = new ReconnectingWebSocket(`ws://localhost:3000/spows`);
+const server = new SPOWs(hub, ws);
 
 const spo = createObservable<{
   [key: string]: PUser;

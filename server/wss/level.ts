@@ -13,7 +13,6 @@ import { Tuple, subj, pred, objt, state } from '../../src/utils/spo';
 import { AbstractBatch } from 'abstract-leveldown';
 import { getMachineState } from './sync';
 import { ham } from '../../src/utils/ham';
-import console = require('console');
 
 export const level = levelup(
   encode<KeyType, ValueType>(
