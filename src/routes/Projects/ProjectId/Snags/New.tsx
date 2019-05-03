@@ -14,10 +14,11 @@ import {
   TextAreaProps,
   TextInput,
   TextInputProps,
+  Image,
 } from 'grommet';
 import { Add, Save } from 'grommet-icons';
 import { observer, useObserver } from 'mobx-react-lite';
-import { default as React, useMemo, useState } from 'react';
+import { default as React, useMemo, useState, FunctionComponent } from 'react';
 import { Page } from '../../../../components/Page/Page';
 import { getSubject, useQuery } from '../../../../contexts/spo-hub';
 import { fullName, isPPerson } from '../../../../model/Person';
@@ -26,6 +27,9 @@ import { Omit } from '../../../../utils/typescript';
 import { isSomething, getPath } from '../../../../utils/universe';
 import { getSubj, subj } from '../../../../utils/spo';
 import { isEqual } from '../../../../utils/index';
+import { ImageInput } from '../../../../UI/binary-input';
+import { action } from 'mobx';
+import { newPObservation } from '../../../../model/Observation';
 
 function showRequired(label: string, required?: boolean) {
   return `${label}${required ? ' *' : ''}`;
@@ -208,14 +212,34 @@ const SelectPersonField = observer(
   }
 );
 
+const PhotoField: FunctionComponent<{
+  label: string;
+  placeholder?: string;
+  required?: boolean;
+  fieldState: FieldState<string>;
+}> = observer(({ label, required, fieldState, ...props }) => (
+  <FormField
+    {...{
+      label: showRequired(label, required),
+      error: fieldState.error,
+    }}
+  >
+    <ImageInput
+      onChange={({ value }) => fieldState.onChange(value || '')}
+      value={fieldState.value}
+    />
+  </FormField>
+));
+
 /** Our validations */
 const requiredWithMessage = (message: string) => (val: string) =>
   !val.trim() && message;
 
 export const New: React.FunctionComponent<{
   accountable: PPerson;
+  location: PObservationLocation;
   onSubmit: (task: PTask) => Promise<void>;
-}> = observer(({ accountable, onSubmit }) => {
+}> = observer(({ accountable, location, onSubmit }) => {
   const form = useMemo(
     () =>
       new FormState({
@@ -226,6 +250,8 @@ export const New: React.FunctionComponent<{
         progress: new FieldState(0).validators(),
 
         responsibleSubj: new FieldState<subj>([]),
+
+        $images: new FormState<FieldState<string>[]>([new FieldState('')]),
       }).validators(),
     []
   );
@@ -241,6 +267,25 @@ export const New: React.FunctionComponent<{
               result.value.responsibleSubj.$.length > 0
                 ? (getSubject(result.value.responsibleSubj.$) as PPerson)
                 : null;
+
+            const imageHashes = result.value.$images.$.map(
+              state => state.$
+            ).filter(Boolean);
+
+            const observation = newPObservation({
+              name: result.value.name.$,
+              author: accountable,
+              locations: {
+                [location.identifier]: location,
+              },
+              images: imageHashes.reduce(
+                (images, hash) => {
+                  images[`$${hash}`] = hash;
+                  return images;
+                },
+                {} as Record<string, string>
+              ),
+            });
 
             onSubmit(
               newPTask({
@@ -266,7 +311,7 @@ export const New: React.FunctionComponent<{
                       }
                     : {}),
                 },
-                basedOn: {},
+                basedOn: { [observation.identifier]: observation },
               })
             );
           }
@@ -324,10 +369,21 @@ export const New: React.FunctionComponent<{
               label={`Waargenomen voortgang`}
               fieldState={form.$.progress}
             />
-
             <SelectPersonField
               label="Verantwoordelijk"
               fieldState={form.$.responsibleSubj}
+            />
+            <Heading level="3">Waarneming</Heading>
+            {form.$.$images.$.map(($imageFieldState, index) => (
+              <PhotoField
+                key={index}
+                label="Foto"
+                fieldState={$imageFieldState}
+              />
+            ))}
+            <Button
+              icon={<Add />}
+              onClick={action(() => form.$.$images.$.push(new FieldState('')))}
             />
           </Box>
         </Grid>

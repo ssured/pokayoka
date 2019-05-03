@@ -4,6 +4,7 @@ import { generateId } from '../../utils/id';
 import { Many, RelationsOf, many } from '../base';
 import { siteRelations } from '../Site/model';
 import { roleRelations } from '../Role';
+import { pTaskRelations } from '../Task';
 
 declare global {
   type PProject = {
@@ -14,12 +15,14 @@ declare global {
     sites: Many<PSite>;
     $image?: string;
     roles: Many<PRole>;
+    tasks: Many<PTask>;
   };
 }
 
 export const projectRelations: RelationsOf<PProject> = {
   sites: many(siteRelations),
   roles: many(roleRelations),
+  tasks: many(pTaskRelations),
 };
 
 export const pProjectSchema = yup.object<PProject>().shape({
@@ -33,6 +36,7 @@ export const pProjectSchema = yup.object<PProject>().shape({
   sites: yup.object(),
   $image: yup.string(),
   roles: yup.object(),
+  tasks: yup.object(),
 });
 
 export const isPProject = (v: unknown): v is PProject =>
@@ -45,6 +49,7 @@ export const newPProject = (
   identifier: generateId(),
   sites: {},
   roles: {},
+  tasks: {},
   ...required,
 });
 

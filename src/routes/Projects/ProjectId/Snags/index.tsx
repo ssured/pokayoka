@@ -10,6 +10,8 @@ import { PageTitle } from '../../../../components/Page/Page';
 import { useRoot } from '../../../../contexts/spo-hub';
 import { isPPerson } from '../../../../model/Person';
 import { Text } from 'grommet';
+import { isPProject } from '../../../../model/Project/model';
+import { generateId } from '../../../../utils/id';
 
 const currentRoute = router.projects.projectId.snags;
 
@@ -25,11 +27,17 @@ export const Snags: React.FunctionComponent<{
 
       <Route match={currentRoute.new} exact>
         <PageTitle title={[['Nieuwe bevinding']]}>
-          {isPPerson(userPerson) || true ? (
+          {isPPerson(userPerson) && isPProject(project) ? (
             <New
               accountable={userPerson}
+              location={{
+                '@type': 'PObservationLocation',
+                identifier: generateId(),
+                locationType: 'element',
+                element: project,
+              }}
               onSubmit={async task => {
-                console.log('task', task);
+                project.tasks[task.identifier] = task;
                 currentRoute.$replace();
               }}
             />

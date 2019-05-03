@@ -1,4 +1,4 @@
-import { Box, Button, DropButton, Layer, Stack, Text } from 'grommet';
+import { Box, Button, DropButton, Layer, Stack, Text, Image } from 'grommet';
 import { Add, Close, Filter, FormClose, FormDown } from 'grommet-icons';
 import { observer } from 'mobx-react-lite';
 import React, { useState, useContext } from 'react';
@@ -7,6 +7,8 @@ import { Maybe } from '../../../../utils/universe';
 import { Hierarchy } from '../Hierarchy';
 import { router } from '../../../../router';
 import { PProjectContext } from '../Detail';
+import { useQuery, getSubject } from '../../../../contexts/spo-hub';
+import { isPTask } from '../../../../model/Task';
 
 const SelectHierarchy: React.FunctionComponent<{
   project: Maybe<PProject>;
@@ -83,9 +85,45 @@ const EditFilter: React.FunctionComponent<{
   );
 });
 
+const TaskRowItem: React.FunctionComponent<{
+  task: PTask;
+}> = observer(({ task }) => {
+  return (
+    <Box border>
+      {task.name}
+      {Object.entries(task.assigned).map(([key, assignment], index) => (
+        <Box key={key}>
+          {index + 1} = {assignment.progress} {assignment.person.familyName}
+        </Box>
+      ))}
+      {Object.entries(task.basedOn).map(([key, observation], index) => (
+        <Box key={key}>
+          {index + 1} ={' '}
+          {Object.values(observation.images).map(hash => (
+            <Image key={hash} src={`/cdn/${hash}`} />
+          ))}{' '}
+          {observation.author.familyName}
+        </Box>
+      ))}
+    </Box>
+  );
+});
+
 export const List: React.FunctionComponent<{
   project?: Maybe<PProject>;
 }> = observer(({ project = useContext(PProjectContext) }) => {
+  const results = useQuery(v => [
+    {
+      s: v('s'),
+      p: '@type',
+      o: 'PTask',
+      // filter: tuple => true
+    },
+  ]);
+  const tasks = results
+    .map(result => getSubject<PTask>((result.variables as any).s))
+    .filter(isPTask) as PTask[];
+
   return (
     <Page>
       <Stack fill anchor="bottom-right">
@@ -98,6 +136,10 @@ export const List: React.FunctionComponent<{
               <EditFilter project={project} />
             </Box>
           </Box>
+
+          {tasks.map(task => (
+            <TaskRowItem key={task.identifier} task={task} />
+          ))}
         </Box>
 
         <Button
