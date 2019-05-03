@@ -146,7 +146,7 @@ export const List: React.FunctionComponent<{
           plain={false}
           hoverIndicator
           icon={<Add size="large" />}
-          onClick={() => router.projects.projectId.snags.new.$push()}
+          onClick={() => router.projects.projectId.tasks.new.$push()}
         />
       </Stack>
     </Page>

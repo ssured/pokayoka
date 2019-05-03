@@ -13,9 +13,9 @@ import { Text } from 'grommet';
 import { isPProject } from '../../../../model/Project/model';
 import { generateId } from '../../../../utils/id';
 
-const currentRoute = router.projects.projectId.snags;
+const currentRoute = router.projects.projectId.tasks;
 
-export const Snags: React.FunctionComponent<{
+export const Tasks: React.FunctionComponent<{
   project?: Maybe<PProject>;
 }> = observer(({ project = useContext(PProjectContext) }) => {
   const userPerson = useRoot()().is;

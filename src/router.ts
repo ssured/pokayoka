@@ -42,7 +42,7 @@ export const router = Router.create(
                 },
               },
             },
-            snags: {
+            tasks: {
               $exact: true,
               $children: {
                 new: true,

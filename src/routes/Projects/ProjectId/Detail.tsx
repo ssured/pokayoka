@@ -14,10 +14,9 @@ import React, { createContext } from 'react';
 import { Page, PageCrumb, PageTitle } from '../../../components/Page/Page';
 import { RoutedButton } from '../../../layout/RoutedButton';
 import { TileGrid } from '../../../layout/TileGrid';
-import { Todo } from '../../../layout/Todo';
 import { router } from '../../../router';
 import { Maybe } from '../../../utils/universe';
-import { Snags } from './Snags/index';
+import { Tasks } from './Tasks/index';
 import { Settings } from './Settings/index';
 import { Sheets } from './Sheets/index';
 
@@ -69,7 +68,7 @@ export const Detail: React.FunctionComponent<{
               />
 
               <RoutedButton
-                to={currentRoute.snags}
+                to={currentRoute.tasks}
                 active={false}
                 label={
                   <Box
@@ -145,7 +144,7 @@ export const Detail: React.FunctionComponent<{
               >
                 <Bug size="xlarge" />
                 <RoutedButton
-                  to={currentRoute.snags}
+                  to={currentRoute.tasks}
                   label="Bevindingen"
                   plain={false}
                 />
@@ -179,17 +178,17 @@ export const Detail: React.FunctionComponent<{
           </PageCrumb>
         </Route>
 
-        <Route match={currentRoute.snags}>
+        <Route match={currentRoute.tasks}>
           <PageCrumb
             title={
               <RoutedButton
-                to={currentRoute.snags}
+                to={currentRoute.tasks}
                 active={false}
                 label={'Bevindingen'}
               />
             }
           >
-            <Snags project={project} />
+            <Tasks project={project} />
           </PageCrumb>
         </Route>
 
