@@ -1,35 +1,26 @@
 import {
   Box,
   Button,
+  Carousel,
   DropButton,
+  Heading,
+  Image,
   Layer,
+  Meter,
   Stack,
   Text,
-  Image,
-  Heading,
-  Meter,
 } from 'grommet';
-import {
-  Add,
-  Close,
-  Filter,
-  FormClose,
-  FormDown,
-  FormNext,
-  FormPrevious,
-  Radial,
-  RadialSelected,
-} from 'grommet-icons';
+import { Add, Clear, Close, Filter, FormClose, FormDown } from 'grommet-icons';
 import { observer } from 'mobx-react-lite';
-import React, { useState, useContext } from 'react';
-import { Page, PageCrumb } from '../../../../components/Page/Page';
-import { Maybe } from '../../../../utils/universe';
-import { Hierarchy } from '../Hierarchy';
-import { router } from '../../../../router';
-import { PProjectContext } from '../Detail';
-import { useQuery, getSubject } from '../../../../contexts/spo-hub';
-import { isPTask } from '../../../../model/Task';
+import React, { useContext, useState } from 'react';
+import { Page } from '../../../../components/Page/Page';
+import { getSubject, useQuery } from '../../../../contexts/spo-hub';
 import { fullName } from '../../../../model/Person';
+import { isPTask } from '../../../../model/Task';
+import { router } from '../../../../router';
+import { Maybe } from '../../../../utils/universe';
+import { PProjectContext } from '../Detail';
+import { Hierarchy } from '../Hierarchy';
 
 const SelectHierarchy: React.FunctionComponent<{
   project: Maybe<PProject>;
@@ -120,26 +111,24 @@ const TaskRowItem: React.FunctionComponent<{
     <Box border direction="row" pad="small" margin="small">
       {Object.entries(task.basedOn).map(([key, observation]) => {
         const hashes = Object.values(observation.images);
-        return (
-          <Stack key={key}>
-            <Box width="small" height="small">
-              {hashes.length > 0 && (
-                <Image key={hashes[0]} src={`/cdn/${hashes[0]}`} fit="cover" />
-              )}
-            </Box>
-            <Box fill direction="row" align="center" justify="between">
-              <Button icon={<FormPrevious />} />
-              <Button icon={<FormNext />} />
-            </Box>
-            <Box fill align="center" justify="end" pad="xsmall">
-              <Box direction="row" background="rgba(255,255,255,0.6)" round>
-                <Radial size="small" color="currentColor" />
-                <Radial size="small" color="currentColor" />
-                <RadialSelected size="small" color="currentColor" />
-                <Radial size="small" color="currentColor" />
+        return hashes.length > 1 ? (
+          <Carousel>
+            {hashes.map(hash => (
+              <Box width="small" height="small">
+                <Image key={hash} src={`/cdn/${hash}`} fit="cover" />
               </Box>
+            ))}
+          </Carousel>
+        ) : hashes.length > 0 ? (
+          hashes.map(hash => (
+            <Box width="small" height="small">
+              <Image key={hash} src={`/cdn/${hash}`} fit="cover" />
             </Box>
-          </Stack>
+          ))
+        ) : (
+          <Box width="small" height="small" align="center" justify="center">
+            <Clear size="large" />
+          </Box>
         );
       })}
 
@@ -150,16 +139,21 @@ const TaskRowItem: React.FunctionComponent<{
               size="xxsmall"
               thickness="xsmall"
               type="circle"
-              background="light-2"
+              background={
+                (hierarchy[0][1].progress || 0) === 0
+                  ? 'status-critical'
+                  : 'status-warning'
+              }
               values={[
                 {
                   value: hierarchy[0][1].progress || 0,
                   label: `${hierarchy[0][1].progress || 0}%`,
+                  color: 'status-ok',
                 },
               ]}
             />
           )}
-          <Heading level="2">{task.name}</Heading>
+          <Heading level="3">{task.name}</Heading>
         </Box>
 
         {hierarchy.map(([key, { progress, person }], index) => (
@@ -168,14 +162,16 @@ const TaskRowItem: React.FunctionComponent<{
             direction="row"
             align="center"
             gap="medium"
-            pad="small"
+            pad="xsmall"
           >
             {fullName(person)}
-            {index === 0
-              ? ' (Eindverantwoordelijk)'
-              : index === hierarchy.length - 1
-              ? ' (Verantwoordelijk)'
-              : ''}
+            {index === 0 ? (
+              <small>(Eindverantwoordelijk)</small>
+            ) : index === hierarchy.length - 1 ? (
+              <small>(Verantwoordelijk)</small>
+            ) : (
+              ''
+            )}
           </Box>
         ))}
       </Box>
@@ -201,7 +197,7 @@ export const List: React.FunctionComponent<{
   return (
     <Page>
       <Stack fill anchor="bottom-right">
-        <Box fill>
+        <Box fill overflow={{ vertical: 'scroll' }}>
           <Box direction="row" justify="between">
             <SelectHierarchy project={project} />
 
