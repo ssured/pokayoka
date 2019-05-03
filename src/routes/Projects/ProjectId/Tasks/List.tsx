@@ -1,5 +1,25 @@
-import { Box, Button, DropButton, Layer, Stack, Text, Image } from 'grommet';
-import { Add, Close, Filter, FormClose, FormDown } from 'grommet-icons';
+import {
+  Box,
+  Button,
+  DropButton,
+  Layer,
+  Stack,
+  Text,
+  Image,
+  Heading,
+  Meter,
+} from 'grommet';
+import {
+  Add,
+  Close,
+  Filter,
+  FormClose,
+  FormDown,
+  FormNext,
+  FormPrevious,
+  Radial,
+  RadialSelected,
+} from 'grommet-icons';
 import { observer } from 'mobx-react-lite';
 import React, { useState, useContext } from 'react';
 import { Page, PageCrumb } from '../../../../components/Page/Page';
@@ -9,6 +29,7 @@ import { router } from '../../../../router';
 import { PProjectContext } from '../Detail';
 import { useQuery, getSubject } from '../../../../contexts/spo-hub';
 import { isPTask } from '../../../../model/Task';
+import { fullName } from '../../../../model/Person';
 
 const SelectHierarchy: React.FunctionComponent<{
   project: Maybe<PProject>;
@@ -85,26 +106,79 @@ const EditFilter: React.FunctionComponent<{
   );
 });
 
+type taskAssignedEntry = [string, PAssignment];
+const entriesByHierarchy = (
+  [, a]: taskAssignedEntry,
+  [, b]: taskAssignedEntry
+) => a.sortIndex - b.sortIndex;
+
 const TaskRowItem: React.FunctionComponent<{
   task: PTask;
 }> = observer(({ task }) => {
+  const hierarchy = Object.entries(task.assigned).sort(entriesByHierarchy);
   return (
-    <Box border>
-      {task.name}
-      {Object.entries(task.assigned).map(([key, assignment], index) => (
-        <Box key={key}>
-          {index + 1} = {assignment.progress} {assignment.person.familyName}
+    <Box border direction="row" pad="small" margin="small">
+      {Object.entries(task.basedOn).map(([key, observation]) => {
+        const hashes = Object.values(observation.images);
+        return (
+          <Stack key={key}>
+            <Box width="small" height="small">
+              {hashes.length > 0 && (
+                <Image key={hashes[0]} src={`/cdn/${hashes[0]}`} fit="cover" />
+              )}
+            </Box>
+            <Box fill direction="row" align="center" justify="between">
+              <Button icon={<FormPrevious />} />
+              <Button icon={<FormNext />} />
+            </Box>
+            <Box fill align="center" justify="end" pad="xsmall">
+              <Box direction="row" background="rgba(255,255,255,0.6)" round>
+                <Radial size="small" color="currentColor" />
+                <Radial size="small" color="currentColor" />
+                <RadialSelected size="small" color="currentColor" />
+                <Radial size="small" color="currentColor" />
+              </Box>
+            </Box>
+          </Stack>
+        );
+      })}
+
+      <Box direction="column" pad={{ left: 'medium' }}>
+        <Box direction="row" align="center" gap="medium">
+          {hierarchy.length > 0 && (
+            <Meter
+              size="xxsmall"
+              thickness="xsmall"
+              type="circle"
+              background="light-2"
+              values={[
+                {
+                  value: hierarchy[0][1].progress || 0,
+                  label: `${hierarchy[0][1].progress || 0}%`,
+                },
+              ]}
+            />
+          )}
+          <Heading level="2">{task.name}</Heading>
         </Box>
-      ))}
-      {Object.entries(task.basedOn).map(([key, observation], index) => (
-        <Box key={key}>
-          {index + 1} ={' '}
-          {Object.values(observation.images).map(hash => (
-            <Image key={hash} src={`/cdn/${hash}`} />
-          ))}{' '}
-          {observation.author.familyName}
-        </Box>
-      ))}
+
+        {hierarchy.map(([key, { progress, person }], index) => (
+          <Box
+            key={key}
+            direction="row"
+            align="center"
+            gap="medium"
+            pad="small"
+          >
+            {fullName(person)}
+            {index === 0
+              ? ' (Eindverantwoordelijk)'
+              : index === hierarchy.length - 1
+              ? ' (Verantwoordelijk)'
+              : ''}
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 });
