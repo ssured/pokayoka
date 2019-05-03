@@ -12,7 +12,6 @@ type objt = string | null;
 type stateValue = Dictionary<objt>;
 
 const descending = (a: string, b: string) => (a < b ? 1 : -1);
-
 const lex = JSON.stringify;
 
 class StateBox {
@@ -46,8 +45,7 @@ class StateBox {
 
   @action
   merge(state: state, objt: objt) {
-    const current = this.values.get(state);
-    if (current === undefined || lex(current) < lex(objt)) {
+    if (!this.values.has(state) || lex(this.values.get(state)) < lex(objt)) {
       this.values.set(state, objt);
     }
   }
