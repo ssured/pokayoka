@@ -39,7 +39,7 @@ describe('mem based SPO observable test', () => {
     expect(getCurrentState()).toBe('001.002');
   });
 
-  test('basic', async () => {
+  test.only('basic', async () => {
     type User = { value: string };
     const userRelations: RelationsOf<User> = {};
 
@@ -53,7 +53,7 @@ describe('mem based SPO observable test', () => {
 
     // build a reference
     spo().testRef = spo().test;
-    await delay(1); // run async stuff
+    await delay(2); // run async stuff
 
     expect(storage.data).toMatchSnapshot();
     // a reference is stored instead of the data
