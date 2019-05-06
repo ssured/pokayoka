@@ -1,10 +1,10 @@
 # development
 
-- [x] mri regelen
-- [x] liftoff actie uitschrijven
-- [x] voorbereiden veronique
-- [ ] haakjes liesbeth uitzoeken
+- [ ] intake afmaken
+- [ ] nl/sfb bimloket radbout baayen via dik spekkink 015-720 08 20
+- [ ] website afmaken
 - [ ] rapporteren mockups
+- [ ] liftoff actie uitschrijven
 
 # business
 
