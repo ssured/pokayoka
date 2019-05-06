@@ -1,8 +1,8 @@
-import { One, RelationsOf, Many, many } from './base';
 import * as yup from 'yup';
 import { generateId } from '../utils/id';
-import { pPersonSchema, pPersonRelations } from './Person';
+import { Many, many, RelationsOf } from './base';
 import { pObservationRelations } from './Observation';
+import { pPersonRelations } from './Person';
 
 declare global {
   type PAssignment = {
@@ -21,6 +21,8 @@ declare global {
     assigned: Many<PAssignment>;
   };
 }
+
+export type taskStatus = 'open' | 'closed';
 
 const pAssignmentRelations: RelationsOf<PAssignment> = {
   person: pPersonRelations,
@@ -49,3 +51,24 @@ export const newPTask = (
   identifier: generateId(),
   ...required,
 });
+
+type taskAssignedEntry = [string, PAssignment];
+const entriesByHierarchy = (
+  [, a]: taskAssignedEntry,
+  [, b]: taskAssignedEntry
+) => a.sortIndex - b.sortIndex;
+export function getAssignmentHierarchy(task: PTask) {
+  return Object.entries(task.assigned).sort(entriesByHierarchy);
+}
+
+export function getAccountable(task: PTask) {
+  const hierarchy = getAssignmentHierarchy(task);
+  return hierarchy.length > 0 ? hierarchy[0][1].person : undefined;
+}
+
+export function getResponsible(task: PTask) {
+  const hierarchy = getAssignmentHierarchy(task);
+  return hierarchy.length > 1
+    ? hierarchy[hierarchy.length - 1][1].person
+    : undefined;
+}

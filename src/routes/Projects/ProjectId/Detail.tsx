@@ -19,6 +19,7 @@ import { Maybe } from '../../../utils/universe';
 import { Tasks } from './Tasks/index';
 import { Settings } from './Settings/index';
 import { Sheets } from './Sheets/index';
+import { FilterContext, Filter } from './FilterContext';
 
 const Avatar: React.FunctionComponent<{ name: string }> = ({ name }) => (
   <Box round border pad="xsmall">
@@ -35,184 +36,186 @@ export const Detail: React.FunctionComponent<{
 }> = observer(({ project }) => {
   return (
     <PProjectContext.Provider value={project}>
-      <PageTitle
-        title={[
-          [
-            <RoutedButton
-              key="a0"
-              to={currentRoute}
-              active={false}
-              label={project.name}
-            />,
-          ],
-          [
-            <Apps key="a1" />,
-            <Box key="a2" direction="row" gap="medium">
+      <FilterContext.Provider value={new Filter(project)}>
+        <PageTitle
+          title={[
+            [
               <RoutedButton
-                to={currentRoute.sheets}
+                key="a0"
+                to={currentRoute}
                 active={false}
-                label={
-                  <Box
-                    fill
-                    justify="center"
-                    align="center"
-                    direction="column"
-                    gap="small"
-                    animation="slideDown"
-                    pad="small"
-                  >
-                    <MapLocation />
-                    <Text size="small">Plattegronden</Text>
-                  </Box>
-                }
-              />
-
-              <RoutedButton
-                to={currentRoute.tasks}
-                active={false}
-                label={
-                  <Box
-                    fill
-                    justify="center"
-                    align="center"
-                    direction="column"
-                    gap="small"
-                    animation="slideDown"
-                    pad="small"
-                  >
-                    <Bug />
-                    <Text size="small">Bevindingen</Text>
-                  </Box>
-                }
-              />
-
-              <RoutedButton
-                to={currentRoute.settings}
-                active={false}
-                label={
-                  <Box
-                    fill
-                    justify="center"
-                    align="center"
-                    direction="column"
-                    gap="small"
-                    animation="slideDown"
-                    pad="small"
-                  >
-                    <UserSettings />
-                    <Text size="small">Projectbeheer</Text>
-                  </Box>
-                }
-              />
-            </Box>,
-          ],
-        ]}
-      >
-        <Route match={currentRoute} exact>
-          <Page
-            leftOfTitle={<Disc size="large" />}
-            rightOfTitle={<Avatar name="SS" />}
-          >
-            <RoutedButton
-              to={currentRoute.settings}
-              icon={<SettingsOption />}
-              label="Projectbeheer"
-              plain={false}
-            />
-            <TileGrid>
-              <Box
-                fill
-                justify="center"
-                align="center"
-                direction="column"
-                gap="medium"
-              >
-                <MapLocation size="xlarge" />
+                label={project.name}
+              />,
+            ],
+            [
+              <Apps key="a1" />,
+              <Box key="a2" direction="row" gap="medium">
                 <RoutedButton
                   to={currentRoute.sheets}
-                  label="Plattegronden"
-                  plain={false}
+                  active={false}
+                  label={
+                    <Box
+                      fill
+                      justify="center"
+                      align="center"
+                      direction="column"
+                      gap="small"
+                      animation="slideDown"
+                      pad="small"
+                    >
+                      <MapLocation />
+                      <Text size="small">Plattegronden</Text>
+                    </Box>
+                  }
                 />
-              </Box>
 
-              <Box
-                fill
-                justify="center"
-                align="center"
-                direction="column"
-                gap="medium"
-              >
-                <Bug size="xlarge" />
                 <RoutedButton
                   to={currentRoute.tasks}
-                  label="Bevindingen"
-                  plain={false}
+                  active={false}
+                  label={
+                    <Box
+                      fill
+                      justify="center"
+                      align="center"
+                      direction="column"
+                      gap="small"
+                      animation="slideDown"
+                      pad="small"
+                    >
+                      <Bug />
+                      <Text size="small">Bevindingen</Text>
+                    </Box>
+                  }
                 />
-              </Box>
 
-              <Box
-                fill
-                align="center"
-                justify="center"
-                direction="column"
-                gap="medium"
-              >
-                <Schedules size="xlarge" />
-                Planning
-              </Box>
-            </TileGrid>
-          </Page>
-        </Route>
-
-        <Route match={currentRoute.settings}>
-          <PageCrumb
-            title={
+                <RoutedButton
+                  to={currentRoute.settings}
+                  active={false}
+                  label={
+                    <Box
+                      fill
+                      justify="center"
+                      align="center"
+                      direction="column"
+                      gap="small"
+                      animation="slideDown"
+                      pad="small"
+                    >
+                      <UserSettings />
+                      <Text size="small">Projectbeheer</Text>
+                    </Box>
+                  }
+                />
+              </Box>,
+            ],
+          ]}
+        >
+          <Route match={currentRoute} exact>
+            <Page
+              leftOfTitle={<Disc size="large" />}
+              rightOfTitle={<Avatar name="SS" />}
+            >
               <RoutedButton
                 to={currentRoute.settings}
-                active={false}
-                label={'Projectbeheer'}
+                icon={<SettingsOption />}
+                label="Projectbeheer"
+                plain={false}
               />
-            }
-          >
-            <Settings project={project} />
-          </PageCrumb>
-        </Route>
+              <TileGrid>
+                <Box
+                  fill
+                  justify="center"
+                  align="center"
+                  direction="column"
+                  gap="medium"
+                >
+                  <MapLocation size="xlarge" />
+                  <RoutedButton
+                    to={currentRoute.sheets}
+                    label="Plattegronden"
+                    plain={false}
+                  />
+                </Box>
 
-        <Route match={currentRoute.tasks}>
-          <PageCrumb
-            title={
-              <RoutedButton
-                to={currentRoute.tasks}
-                active={false}
-                label={'Bevindingen'}
-              />
-            }
-          >
-            <Tasks project={project} />
-          </PageCrumb>
-        </Route>
+                <Box
+                  fill
+                  justify="center"
+                  align="center"
+                  direction="column"
+                  gap="medium"
+                >
+                  <Bug size="xlarge" />
+                  <RoutedButton
+                    to={currentRoute.tasks}
+                    label="Bevindingen"
+                    plain={false}
+                  />
+                </Box>
 
-        <Route match={currentRoute.sheets}>
-          <PageCrumb
-            title={
-              <RoutedButton
-                to={currentRoute.sheets}
-                active={false}
-                label={'Plattegronden'}
-              />
-            }
-          >
-            <Sheets />
-          </PageCrumb>
-        </Route>
-        {/* <h1>Projectnaam: {project.name} </h1>
+                <Box
+                  fill
+                  align="center"
+                  justify="center"
+                  direction="column"
+                  gap="medium"
+                >
+                  <Schedules size="xlarge" />
+                  Planning
+                </Box>
+              </TileGrid>
+            </Page>
+          </Route>
+
+          <Route match={currentRoute.settings}>
+            <PageCrumb
+              title={
+                <RoutedButton
+                  to={currentRoute.settings}
+                  active={false}
+                  label={'Projectbeheer'}
+                />
+              }
+            >
+              <Settings project={project} />
+            </PageCrumb>
+          </Route>
+
+          <Route match={currentRoute.tasks}>
+            <PageCrumb
+              title={
+                <RoutedButton
+                  to={currentRoute.tasks}
+                  active={false}
+                  label={'Bevindingen'}
+                />
+              }
+            >
+              <Tasks project={project} />
+            </PageCrumb>
+          </Route>
+
+          <Route match={currentRoute.sheets}>
+            <PageCrumb
+              title={
+                <RoutedButton
+                  to={currentRoute.sheets}
+                  active={false}
+                  label={'Plattegronden'}
+                />
+              }
+            >
+              <Sheets />
+            </PageCrumb>
+          </Route>
+          {/* <h1>Projectnaam: {project.name} </h1>
       <ul>
         {Object.entries(project.sites).map(([key, site]) => (
           <li key={key}>{site.name}</li>
         ))}
       </ul> */}
-        {/* <Hierarchy project={project} /> */}
-      </PageTitle>
+          {/* <Hierarchy project={project} /> */}
+        </PageTitle>
+      </FilterContext.Provider>
     </PProjectContext.Provider>
   );
 });

@@ -16,13 +16,14 @@ import React, { useContext, useState } from 'react';
 import { Page } from '../../../../components/Page/Page';
 import { getSubject, useQuery } from '../../../../contexts/spo-hub';
 import { fullName } from '../../../../model/Person';
-import { isPTask } from '../../../../model/Task';
+import { isPTask, getAssignmentHierarchy } from '../../../../model/Task';
 import { router } from '../../../../router';
 import { Maybe } from '../../../../utils/universe';
 import { PProjectContext } from '../Detail';
 import { Hierarchy } from '../Hierarchy';
+import { FilterContext } from '../FilterContext';
 
-const SelectHierarchy: React.FunctionComponent<{
+export const SelectHierarchy: React.FunctionComponent<{
   project: Maybe<PProject>;
 }> = observer(({ project }) => {
   const [open, setOpen] = useState<boolean | undefined>(undefined);
@@ -54,59 +55,10 @@ const SelectHierarchy: React.FunctionComponent<{
   );
 });
 
-const FilterItem: React.FunctionComponent<{}> = ({ children }) => {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <Button
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      label={
-        <Box direction="row" gap="small">
-          {children}
-          {hovered ? <Close /> : <FormClose />}
-        </Box>
-      }
-    />
-  );
-};
-
-const EditFilter: React.FunctionComponent<{
-  project: Maybe<PProject>;
-}> = observer(({ project }) => {
-  const [open, setOpen] = useState<boolean | undefined>(undefined);
-  const close = () => {
-    setOpen(false);
-    setTimeout(() => setOpen(undefined), 1);
-  };
-
-  return (
-    <DropButton
-      icon={<Filter />}
-      primary
-      open={open}
-      onClose={close}
-      dropContent={
-        <Layer full>
-          <Box align="end">
-            <Button icon={<Close />} onClick={close} />
-          </Box>
-          <Box pad="medium">Edit filter</Box>
-        </Layer>
-      }
-    />
-  );
-});
-
-type taskAssignedEntry = [string, PAssignment];
-const entriesByHierarchy = (
-  [, a]: taskAssignedEntry,
-  [, b]: taskAssignedEntry
-) => a.sortIndex - b.sortIndex;
-
 const TaskRowItem: React.FunctionComponent<{
   task: PTask;
 }> = observer(({ task }) => {
-  const hierarchy = Object.entries(task.assigned).sort(entriesByHierarchy);
+  const hierarchy = getAssignmentHierarchy(task);
   return (
     <Box border direction="row" pad="small" margin="small">
       {Object.entries(task.basedOn).map(([key, observation]) => {
@@ -190,24 +142,20 @@ export const List: React.FunctionComponent<{
       // filter: tuple => true
     },
   ]);
+  const { currentFilter, FilterRow } = useContext(FilterContext);
+
   const tasks = results
     .map(result => getSubject<PTask>((result.variables as any).s))
     .filter(isPTask) as PTask[];
+
+  const filteredTasks = tasks.filter(currentFilter);
 
   return (
     <Page>
       <Stack fill anchor="bottom-right">
         <Box fill overflow={{ vertical: 'scroll' }}>
-          <Box direction="row" justify="between">
-            <SelectHierarchy project={project} />
-
-            <Box direction="row" gap="medium">
-              <FilterItem>Aannemer</FilterItem>
-              <EditFilter project={project} />
-            </Box>
-          </Box>
-
-          {tasks.map(task => (
+          <FilterRow />
+          {filteredTasks.map(task => (
             <TaskRowItem key={task.identifier} task={task} />
           ))}
         </Box>

@@ -83,6 +83,8 @@ export const createUniverse = <T extends SPOShape>({
 } => {
   const core = observable<SPOShape>({}, {}, { deep: false });
 
+  const isMobxPropRegex = /^isMobX/;
+
   const publicGet = (path: string[]): Maybe<SPOShape> => {
     const keys = observable.set<string>([], { deep: false });
     const key = pathToKey(path);
@@ -90,7 +92,7 @@ export const createUniverse = <T extends SPOShape>({
     if (!core[key]) {
       const proxy: SPOShape = new Proxy({} as any, {
         get(_, subkey) {
-          if (typeof subkey === 'string') {
+          if (typeof subkey === 'string' && !isMobxPropRegex.test(subkey)) {
             // access core[key] to trigger mobx observable tracking
             core[key]; // this is not a no-op!
 
@@ -107,14 +109,16 @@ export const createUniverse = <T extends SPOShape>({
             case proxyKeysSymbol:
               return keys;
           }
+          return Reflect.get(_, subkey);
         },
         set(_, subkey, value) {
-          if (typeof subkey === 'string') {
+          if (typeof subkey === 'string' && !isMobxPropRegex.test(subkey)) {
             // console.log('publicSet', path.concat(subkey), true, value);
             publicSet(path.concat(subkey), true, value);
             return true;
           }
-          return false;
+          Reflect.set(_, subkey, value);
+          return true;
         },
         ownKeys() {
           core[key]; // this is not a no-op!
