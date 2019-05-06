@@ -2,47 +2,6 @@ import { observable, computed, action } from 'mobx';
 import { KeysOfType, Omit } from './typescript';
 import { primitive, SPOShape, subj } from './spo';
 
-// https://github.com/Microsoft/TypeScript/issues/27024#issuecomment-421529650
-type IfEquals<X, Y, A, B> = (<T>() => T extends X ? 1 : 2) extends (<
-  T
->() => T extends Y ? 1 : 2)
-  ? A
-  : B;
-
-// Alternatively:
-/*
-  type IfEquals<X, Y, A, B> =
-  [2] & [0, 1, X] extends [2] & [0, 1, Y] & [0, infer W, unknown]
-  ? W extends 1 ? B : A
-  : B;
-  */
-
-type WritableKeysOf<T> = {
-  [P in keyof T]: IfEquals<
-    { [Q in P]: T[P] },
-    { -readonly [Q in P]: T[P] },
-    P,
-    never
-  >
-}[keyof T];
-type WritablePart<T> = Pick<T, WritableKeysOf<Required<T>>>;
-type ReadOnlyPart<T> = Omit<T, WritableKeysOf<Required<T>>>;
-
-type tFunction = (...args: any[]) => any;
-
-type ComputedKeys<T> = Exclude<keyof T, WritableKeysOf<Required<T>>>;
-type ActionKeys<T> = KeysOfType<Required<T>, tFunction> &
-  WritableKeysOf<Required<T>>;
-
-type PrimitiveKeys<T> = KeysOfType<Required<T>, primitive> &
-  WritableKeysOf<Required<T>>;
-type RefKeys<T> = Exclude<
-  WritableKeysOf<Required<T>>,
-  KeysOfType<Required<T>, primitive | tFunction | Set<any>>
->;
-type SetKeys<T> = KeysOfType<Required<T>, Set<any>> &
-  WritableKeysOf<Required<T>>;
-
 describe('observable classes', () => {
   test('mobx classes', () => {
     class Right {

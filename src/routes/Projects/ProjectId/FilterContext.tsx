@@ -1,4 +1,4 @@
-import { Box, Button, DropButton, Layer, Select } from 'grommet';
+import { Box, Button, DropButton, Layer, Select, FormField } from 'grommet';
 import { Close, Filter as FilterIcon, FormClose } from 'grommet-icons';
 import { observable, action } from 'mobx';
 import { observer, useObserver } from 'mobx-react-lite';
@@ -84,32 +84,32 @@ const EditFilter: React.FunctionComponent<{
           </Box>
 
           <Box pad="medium">
-            <Select
-              size="medium"
-              placeholder="Verantwoordelijk"
-              // multiple
-              labelKey="label"
-              valueKey="value"
-              value={options.find(
-                option => filter.responsible === option.value
-              )}
-              options={options}
-              onChange={({ value }) => {
-                console.log(value, getPath(value.value));
-
-                filter.setResponsible(value.value);
-              }}
-              // onChange={({ value: nextValue }) =>
-              //   this.setState({ value: nextValue })
-              // }
-              // onClose={() => this.setState({ options: defaultOptions })}
-              // onSearch={text => {
-              //   const exp = new RegExp(text, 'i');
-              //   this.setState({
-              //     options: defaultOptions.filter(o => exp.test(o)),
-              //   });
-              // }}
-            />
+            <FormField label="Filter verantwoordelijke">
+              <Select
+                size="medium"
+                placeholder="Verantwoordelijk"
+                // multiple
+                labelKey="label"
+                valueKey="value"
+                value={options.find(
+                  option => filter.responsible === option.value
+                )}
+                options={options}
+                onChange={({ value }) => {
+                  filter.setResponsible(value.value);
+                }}
+                // onChange={({ value: nextValue }) =>
+                //   this.setState({ value: nextValue })
+                // }
+                // onClose={() => this.setState({ options: defaultOptions })}
+                // onSearch={text => {
+                //   const exp = new RegExp(text, 'i');
+                //   this.setState({
+                //     options: defaultOptions.filter(o => exp.test(o)),
+                //   });
+                // }}
+              />
+            </FormField>
           </Box>
         </Layer>
       }
@@ -137,6 +137,11 @@ export class Filter {
     );
   }
 
+  @action
+  setAccountable(accountable: PPerson | null) {
+    this.accountablePath = (accountable && getPath(accountable)) || null;
+  }
+
   @observable
   responsiblePath: subj | null = null;
 
@@ -148,8 +153,8 @@ export class Filter {
   }
 
   @action
-  setResponsible(resp: PPerson | null) {
-    this.responsiblePath = getPath(resp) || null;
+  setResponsible(responsible: PPerson | null) {
+    this.responsiblePath = (responsible && getPath(responsible)) || null;
   }
 
   /**

@@ -6,6 +6,7 @@ import {
   action,
   runInAction,
 } from 'mobx';
+import { primitive } from './spo';
 
 type state = string;
 type objt = string | null;
