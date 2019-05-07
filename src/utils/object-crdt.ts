@@ -57,15 +57,23 @@ export function valueAt<T extends IMergeable>(
   state: string,
   object: ToMergeableObject<T>
 ): T {
-  return Object.entries(object).reduce(
+  return Object.entries(object as Record<
+    string,
+    Record<string, unknown>
+  >).reduce(
     (object, [key, stateMap]) => {
-      if (isObjt(stateMap)) {
-        object[key] = stateMap;
+      const states = Object.keys(stateMap).sort(descending);
+      const currentState = states.find(k => k <= state) || '';
+      const currentValue = stateMap[currentState];
+
+      if (currentValue === undefined) {
+        object[key] = null;
+      } else if (isObjt(currentValue)) {
+        object[key] = currentValue;
       } else {
-        const states = Object.keys(stateMap).sort(descending);
-        const currentState = states.find(k => k <= state) || '';
-        object[key] = stateMap[currentState] || null;
+        object[key] = valueAt(state, currentValue as any);
       }
+
       return object;
     },
     {} as any
