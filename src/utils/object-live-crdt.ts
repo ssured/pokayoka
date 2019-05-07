@@ -1,5 +1,11 @@
-import { autorun, reaction, runInAction } from 'mobx';
-import { IMergeable, merge, ToMergeableObject, valueAt } from './object-crdt';
+import { autorun, reaction, runInAction, toJS } from 'mobx';
+import {
+  IMergeable,
+  merge,
+  ToMergeableObject,
+  valueAt,
+  asMergeableObject,
+} from './object-crdt';
 import { state, subj } from './spo';
 import { isEqual } from './index';
 import console = require('console');
@@ -27,6 +33,7 @@ export type StaticConstructors<T> = {
   create: (data: Serialized<T>) => InstanceShape<T>;
   serialize: (source: T) => Omit<Serialized<T>, 'identifier'>;
   merge: (source: T, data: Partial<Serialized<T>>) => void;
+  destroy: (source: T) => void;
 
   '@type': string;
 } & (RefKeys<T> extends never
@@ -101,18 +108,7 @@ export const serializeOne = <
   return { [prop]: asReferenceOrEmbedded(object, prop) };
 };
 
-type ToMergableSerializded<T extends Serialized<any>> = T extends Serialized<
-  infer U
->
-  ? {
-      [K in keyof T]: Record<
-        string,
-        T[K] extends IMergeable ? ToMergeableObject<T[K]> : T[K]
-      >
-    }
-  : never;
-
-type MergableSerialized<T extends IMergeable> = ToMergeableObject<
+export type MergableSerialized<T extends IMergeable> = ToMergeableObject<
   { identifier: string } & Pick<T, PrimitiveKeys<T>> &
     {
       [K in RefKeys<T>]:
@@ -138,6 +134,9 @@ export const create = <T extends IMergeable>(
     () => valueAt(getState(), source) as Partial<Serialized<T>>,
     current => {
       if (mutexLocked) return;
+
+      current; // ?
+
       try {
         mutexLocked = true;
         runInAction(() =>
@@ -154,15 +153,20 @@ export const create = <T extends IMergeable>(
     () => (instance.constructor as typeof ctor).serialize(instance),
     serialized => {
       if (mutexLocked) return;
+      // (serialized as any).identifier = instance.identifier;
       const state = getState();
       const current = valueAt(state, source);
+
+      current; // ?
+      serialized; // ?
+
       try {
         mutexLocked = true;
         const updates = {} as any;
         let doMerge = false;
         for (const [key, value] of Object.entries(serialized)) {
           if (value !== (current as any)[key]) {
-            updates[key] = { [state]: value };
+            updates[key] = asMergeableObject(state, value as any);
             doMerge = true;
           }
         }
@@ -173,24 +177,6 @@ export const create = <T extends IMergeable>(
     },
     { fireImmediately: false }
   );
-
-  //   for (const key of Object.keys(instance.serialized) as PrimitiveKeys<T>[]) {
-  //     if (key === '@type') continue;
-
-  //     observe(instance, key as keyof T, change => {
-  //       if (mutexLocked) return;
-  //       try {
-  //         mutexLocked = true;
-  //         merge(source, {
-  //           [key]: {
-  //             [getState()]: change.newValue,
-  //           },
-  //         } as any);
-  //       } finally {
-  //         mutexLocked = false;
-  //       }
-  //     });
-  //   }
 
   return instance;
 };

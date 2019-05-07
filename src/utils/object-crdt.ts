@@ -1,4 +1,5 @@
 import { mergeWith } from 'lodash';
+import { isObject } from './spo';
 
 type objt = null | string | number | boolean | string[];
 
@@ -52,6 +53,23 @@ export function merge<T extends IMergeable>(
 }
 
 const descending = (a: string, b: string) => (a < b ? 1 : -1);
+
+export function asMergeableObject<S extends string, T>(
+  state: S,
+  value: T
+): T extends IMergeable ? ToMergeableObject<T> : { [K in S]: T } {
+  return {
+    [state]: isObjt(value)
+      ? value
+      : Object.entries(value).reduce(
+          (map, [key, value]) => {
+            map[key] = asMergeableObject(state, value as any);
+            return map;
+          },
+          {} as any
+        ),
+  } as any;
+}
 
 export function valueAt<T extends IMergeable>(
   state: string,

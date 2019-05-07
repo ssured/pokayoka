@@ -1,17 +1,16 @@
-import { action, observable, runInAction, toJS } from 'mobx';
+import { action, observable, runInAction, toJS, IObservableObject } from 'mobx';
 import { generateId } from './id';
-import { isEqual } from './index';
 import {
   create,
-  pathOf,
   Serialized,
-  setPathOf,
+  serializeOne,
   StaticConstructors,
   staticImplements,
-  serializeOne,
+  MergableSerialized,
 } from './object-live-crdt';
-import { current } from '../../server/wss/level';
+import { merge, asMergeableObject } from './object-crdt';
 import console = require('console');
+import { current } from '../../server/wss/level';
 
 @staticImplements<Hello>()
 class Hello {
@@ -32,6 +31,7 @@ class Hello {
       greet: hello.greet,
     };
   }
+  static destroy(hello: Hello) {}
 
   @observable
   greet = '';
@@ -73,18 +73,24 @@ class Card {
 
       // check all references
       for (const [prop, ctor] of Object.entries(this.constructors)) {
-        if (!(prop in data)) continue;
         const incomingData = (data as any)[prop] as any;
         delete (update as any)[prop];
 
         const currentValue = (card as any)[prop] as any;
 
         if (currentValue) {
-          (currentValue.constructor as StaticConstructors<any>).merge(
-            currentValue,
-            incomingData
-          );
-        } else {
+          if (incomingData) {
+            (currentValue.constructor as StaticConstructors<any>).merge(
+              currentValue,
+              incomingData
+            );
+          } else {
+            (card as any)[prop] = null;
+            (currentValue.constructor as StaticConstructors<any>).destroy(
+              currentValue
+            );
+          }
+        } else if (incomingData) {
           (card as any)[prop] = ctor.create(incomingData);
         }
       }
@@ -93,6 +99,7 @@ class Card {
       Object.assign(card, update);
     });
   }
+  static destroy(card: Card) {}
   static constructors = {
     contents: Hello,
   };
@@ -197,5 +204,49 @@ describe('optional ref another class', () => {
     expect((card.contents as any).constructor['@type']).toEqual('Hello');
     expect(card.contents!.greet).toEqual('yo');
     expect(card.contents!.GREET).toEqual('YO');
+  });
+
+  test('create and update later', () => {
+    const source = observable.object<MergableSerialized<Card>>({
+      // '@type': { '1': 'Card' as const },
+      identifier: { '1': '123' },
+      contents: {},
+    });
+
+    const card = create(getState, [], Card, source);
+    expect(card.contents).toBeFalsy();
+
+    runInAction(() => {
+      // @ts-ignore
+      merge(source, {
+        contents: asMergeableObject('2', {
+          identifier: '432',
+          greet: 'yo',
+        }),
+      });
+    });
+
+    expect(card.contents).toBeFalsy();
+
+    runInAction(() => state.set(2));
+
+    expect((card.contents as any).constructor['@type']).toEqual('Hello');
+    expect(card.contents!.greet).toEqual('yo');
+    expect(card.contents!.GREET).toEqual('YO');
+
+    runInAction(() => {
+      // @ts-ignore
+      merge(source, {
+        contents: asMergeableObject('3', null),
+      });
+    });
+
+    expect((card.contents as any).constructor['@type']).toEqual('Hello');
+    expect(card.contents!.greet).toEqual('yo');
+    expect(card.contents!.GREET).toEqual('YO');
+
+    runInAction(() => state.set(3));
+
+    expect(card.contents).toBeFalsy();
   });
 });
