@@ -10,26 +10,23 @@ import {
   staticImplements,
   defaultCreate,
   pathOf,
+  defaultMerge,
 } from './object-live-crdt';
 import { isEqual } from './index';
 
 @staticImplements<Hello>()
 class Hello {
   static '@type' = 'Hello';
-
   constructor(readonly identifier: string) {}
-
   static create = defaultCreate.bind(Hello as any) as any;
+  static merge = defaultMerge.bind(Hello as any) as any;
+  static destroy(hello: Hello) {}
 
-  static merge(hello: Hello, data: Partial<Serialized<Hello>>) {
-    runInAction(() => Object.assign(hello, data));
-  }
   static serialize(hello: Hello) {
     return {
       greet: hello.greet,
     };
   }
-  static destroy(hello: Hello) {}
 
   @observable
   greet = '';
@@ -47,66 +44,20 @@ class Hello {
 @staticImplements<Card>()
 class Card {
   static '@type' = 'Card';
-
   constructor(readonly identifier: string) {}
-
   static create = defaultCreate.bind(Card as any) as any;
-  // static create = ((data: Partial<Serialized<Card>>) => {
-  //   const instance = new Card(data.identifier || generateId());
-  //   Card.merge(instance, data);
-  //   return instance;
-  // }) as any;
+  static merge = defaultMerge.bind(Card as any) as any;
+  static destroy(card: Card) {}
+
+  static constructors = {
+    contents: Hello,
+  };
 
   static serialize(card: Card) {
     return {
       ...serializeOne(card, 'contents'),
     };
   }
-  static merge(card: Card, data: Partial<Serialized<Card>>) {
-    runInAction(() => {
-      // make a mutable copy of data
-      const update: Partial<Serialized<Card>> = { ...data };
-
-      // remove not updateable properties
-      delete (update as any)['@type'];
-      delete update.identifier;
-
-      // check all references
-      for (const [prop, ctor] of Object.entries(this.constructors)) {
-        const incomingData = (data as any)[prop] as any;
-        delete (update as any)[prop];
-
-        const currentValue = (card as any)[prop] as any;
-
-        if (currentValue) {
-          if (incomingData) {
-            (currentValue.constructor as StaticConstructors<any>).merge(
-              currentValue,
-              incomingData
-            );
-          } else {
-            (card as any)[prop] = null;
-            if (
-              isEqual(pathOf(currentValue), [...(pathOf(card) || []), prop])
-            ) {
-              (currentValue.constructor as StaticConstructors<any>).destroy(
-                currentValue
-              );
-            }
-          }
-        } else if (incomingData) {
-          (card as any)[prop] = ctor.create(incomingData);
-        }
-      }
-
-      // assign remaining values, which should all be primitives
-      Object.assign(card, update);
-    });
-  }
-  static destroy(card: Card) {}
-  static constructors = {
-    contents: Hello,
-  };
 
   @observable
   contents?: Hello;

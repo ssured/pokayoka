@@ -51,6 +51,51 @@ export function defaultCreate<T>(
   return instance;
 }
 
+export function defaultMerge<T>(
+  this: StaticConstructors<T>,
+  card: T,
+  data: Partial<Serialized<T>>
+) {
+  runInAction(() => {
+    // make a mutable copy of data
+    const update: Partial<Serialized<T>> = { ...data };
+
+    // remove not updateable properties
+    delete (update as any)['@type'];
+    delete update.identifier;
+
+    // check all references
+    for (const [prop, ctor] of Object.entries(((this as any).constructors ||
+      {}) as Record<string, StaticConstructors<any>>)) {
+      const incomingData = (data as any)[prop] as any;
+      delete (update as any)[prop];
+
+      const currentValue = (card as any)[prop] as any;
+
+      if (currentValue) {
+        if (incomingData) {
+          (currentValue.constructor as StaticConstructors<any>).merge(
+            currentValue,
+            incomingData
+          );
+        } else {
+          (card as any)[prop] = null;
+          if (isEqual(pathOf(currentValue), [...(pathOf(card) || []), prop])) {
+            (currentValue.constructor as StaticConstructors<any>).destroy(
+              currentValue
+            );
+          }
+        }
+      } else if (incomingData) {
+        (card as any)[prop] = ctor.create(incomingData);
+      }
+    }
+
+    // assign remaining values, which should all be primitives
+    Object.assign(card, update);
+  });
+}
+
 const pathSymbol = Symbol('path of object');
 export function pathOf(o: any): subj | undefined {
   // @ts-ignore
