@@ -1,4 +1,4 @@
-import { reaction, runInAction } from 'mobx';
+import { reaction, runInAction, ObservableMap, isObservableMap } from 'mobx';
 import { isEqual } from './index';
 import {
   asMergeableObject,
@@ -18,8 +18,11 @@ export function staticImplements<T>() {
 export type Serialized<T> = { identifier: string } & Pick<T, PrimitiveKeys<T>> &
   {
     [K in RefKeys<T>]:
+      | null
       | subj
-      | Serialized<Required<T>[K]>
+      | ((Required<T>[K]) extends ObservableMap<string, infer U>
+          ? Record<string, subj | Serialized<U> | null>
+          : Serialized<Required<T>[K]>)
       | (undefined extends T[K] ? undefined : never)
   };
 
@@ -39,7 +42,14 @@ export type StaticConstructors<T> = {
 } & (RefKeys<T> extends never
   ? {}
   : {
-      constructors: { [K in RefKeys<T>]: StaticConstructors<Required<T>[K]> };
+      constructors: {
+        [K in RefKeys<T>]: (Required<T>[K]) extends ObservableMap<
+          string,
+          infer U
+        >
+          ? StaticConstructors<U>
+          : StaticConstructors<Required<T>[K]>
+      };
     });
 
 export function defaultCreate<T>(
@@ -68,26 +78,73 @@ export function defaultMerge<T>(
     for (const [prop, ctor] of Object.entries(((this as any).constructors ||
       {}) as Record<string, StaticConstructors<any>>)) {
       const incomingData = (data as any)[prop] as any;
+
       delete (update as any)[prop];
 
       const currentValue = (card as any)[prop] as any;
 
-      if (currentValue) {
-        if (incomingData) {
-          (currentValue.constructor as StaticConstructors<any>).merge(
-            currentValue,
-            incomingData
-          );
+      if (isObservableMap(currentValue)) {
+        // it's a referene to a map
+        const map = currentValue as ObservableMap<string, any>;
+        if (incomingData == null) {
+          map.clear();
         } else {
-          (card as any)[prop] = null;
-          if (isEqual(pathOf(currentValue), [...(pathOf(card) || []), prop])) {
-            (currentValue.constructor as StaticConstructors<any>).destroy(
-              currentValue
-            );
+          if (typeof incomingData !== 'object') {
+            throw new Error('incomingData must be an object');
+          }
+
+          for (const [id, data] of Object.entries(incomingData as Record<
+            string,
+            Partial<Serialized<T>>
+          >)) {
+            if (map.has(id)) {
+              const currentValue = map.get(id)!;
+              if (data) {
+                (currentValue.constructor as StaticConstructors<any>).merge(
+                  currentValue,
+                  data
+                );
+              } else {
+                map.delete(id);
+                if (
+                  isEqual(pathOf(currentValue), [...(pathOf(card) || []), prop])
+                ) {
+                  (currentValue.constructor as StaticConstructors<any>).destroy(
+                    currentValue
+                  );
+                }
+              }
+            } else if (data) {
+              data; // ?
+              if (typeof data.identifier === 'string') {
+                map.set(id, ctor.create(data as any));
+              }
+            }
           }
         }
-      } else if (incomingData) {
-        (card as any)[prop] = ctor.create(incomingData);
+      } else {
+        // it's a reference to one object
+        if (currentValue) {
+          if (incomingData) {
+            (currentValue.constructor as StaticConstructors<any>).merge(
+              currentValue,
+              incomingData
+            );
+          } else {
+            (card as any)[prop] = null;
+            if (
+              isEqual(pathOf(currentValue), [...(pathOf(card) || []), prop])
+            ) {
+              (currentValue.constructor as StaticConstructors<any>).destroy(
+                currentValue
+              );
+            }
+          }
+        } else if (incomingData) {
+          if (typeof incomingData.identifier === 'string') {
+            (card as any)[prop] = ctor.create(incomingData);
+          }
+        }
       }
     }
 
@@ -107,7 +164,7 @@ export function setPathOf<O extends object>(o: O, subj: subj) {
   return subj;
 }
 
-const asReferenceOrEmbedded = <
+export const asReferenceOrEmbedded = <
   Subject extends object,
   Pred extends RefKeys<Subject>
 >(
@@ -133,12 +190,29 @@ const asReferenceOrEmbedded = <
     pathOf(object) || setPathOf((object as unknown) as object, targetPath);
 
   if (isEqual(objectPath, targetPath)) {
-    // embed the object
-    const ctor = (object as any).constructor as StaticConstructors<
-      typeof object
-    >;
-    // @ts-ignore
-    return ctor.serialize(object);
+    if (isObservableMap(object)) {
+      const result = {} as any;
+      for (const [key, innerObject] of object.entries()) {
+        const innerTargetPath = targetPath.concat(key);
+        const innerObjectPath =
+          pathOf(innerObject) ||
+          setPathOf((innerObject as unknown) as object, innerTargetPath);
+        result[key] = isEqual(innerTargetPath, innerObjectPath)
+          ? {
+              identifier: innerObject.identifier,
+              ...innerObject.constructor.serialize(innerObject),
+            }
+          : innerObjectPath;
+      }
+      return result;
+    } else {
+      // embed the object
+      const ctor = (object as any).constructor as StaticConstructors<
+        typeof object
+      >;
+      // @ts-ignore
+      return ctor.serialize(object);
+    }
   }
 
   // make a reference
@@ -153,11 +227,36 @@ export const serializeOne = <
   prop: RefProp
 ): {
   [K in RefProp]:
+    | null
     | string[]
     | (undefined extends ParentObject[RefProp]
         ? undefined | Serialized<Exclude<ParentObject[RefProp], undefined>>
         : Serialized<ParentObject[RefProp]>)
 } => {
+  // @ts-ignore
+  return { [prop]: asReferenceOrEmbedded(object, prop) };
+};
+
+export const serializeMany = <
+  ParentObject,
+  RefProp extends RefKeys<ParentObject>
+>(
+  object: ParentObject,
+  prop: RefProp
+): {
+  [K in RefProp]:
+    | null
+    | string[]
+    | Record<
+        string,
+        | null
+        | string[]
+        | ((ParentObject[RefProp]) extends ObservableMap<string, infer U>
+            ? Serialized<U>
+            : never)
+      >
+} => {
+  // TODO implement
   // @ts-ignore
   return { [prop]: asReferenceOrEmbedded(object, prop) };
 };

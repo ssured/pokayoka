@@ -63,7 +63,7 @@ export function asMergeableObject<S extends string, T>(
       ? value
       : Object.entries(value).reduce(
           (map, [key, value]) => {
-            map[key] = asMergeableObject(state, value as any);
+            map[key] = value ? asMergeableObject(state, value as any) : null;
             return map;
           },
           {} as any
