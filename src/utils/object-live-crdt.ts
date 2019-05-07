@@ -1,14 +1,14 @@
-import { autorun, reaction, runInAction, toJS } from 'mobx';
+import { reaction, runInAction } from 'mobx';
+import { isEqual } from './index';
 import {
+  asMergeableObject,
   IMergeable,
   merge,
   ToMergeableObject,
   valueAt,
-  asMergeableObject,
 } from './object-crdt';
 import { state, subj } from './spo';
-import { isEqual } from './index';
-import console = require('console');
+import { generateId } from './id';
 
 /* class decorator */
 export function staticImplements<T>() {
@@ -30,7 +30,7 @@ type InstanceShape<T> = T & {
 export type StaticConstructors<T> = {
   new (identifier: string): InstanceShape<T>;
 
-  create: (data: Serialized<T>) => InstanceShape<T>;
+  create: (data: Serialized<T>) => T;
   serialize: (source: T) => Omit<Serialized<T>, 'identifier'>;
   merge: (source: T, data: Partial<Serialized<T>>) => void;
   destroy: (source: T) => void;
@@ -41,6 +41,15 @@ export type StaticConstructors<T> = {
   : {
       constructors: { [K in RefKeys<T>]: StaticConstructors<Required<T>[K]> };
     });
+
+export function defaultCreate<T>(
+  this: StaticConstructors<T>,
+  data: Serialized<T>
+): T {
+  const instance = new this(data.identifier || generateId());
+  this.merge(instance, data as Partial<typeof data>);
+  return instance;
+}
 
 const pathSymbol = Symbol('path of object');
 export function pathOf(o: any): subj | undefined {
@@ -125,6 +134,7 @@ export const create = <T extends IMergeable>(
   source: MergableSerialized<T>
 ) => {
   const current = valueAt(getState(), source) as Serialized<T>;
+
   const instance = ctor.create(current);
   setPathOf(instance, path);
 

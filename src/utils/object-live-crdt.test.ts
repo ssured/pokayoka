@@ -1,16 +1,17 @@
-import { action, observable, runInAction, toJS, IObservableObject } from 'mobx';
+import { action, observable, runInAction, toJS } from 'mobx';
 import { generateId } from './id';
+import { asMergeableObject, merge } from './object-crdt';
 import {
   create,
+  MergableSerialized,
   Serialized,
   serializeOne,
   StaticConstructors,
   staticImplements,
-  MergableSerialized,
+  defaultCreate,
+  pathOf,
 } from './object-live-crdt';
-import { merge, asMergeableObject } from './object-crdt';
-import console = require('console');
-import { current } from '../../server/wss/level';
+import { isEqual } from './index';
 
 @staticImplements<Hello>()
 class Hello {
@@ -18,11 +19,8 @@ class Hello {
 
   constructor(readonly identifier: string) {}
 
-  static create(data: Partial<Serialized<Hello>>) {
-    const instance = new this(data.identifier || generateId());
-    this.merge(instance, data);
-    return instance;
-  }
+  static create = defaultCreate.bind(Hello as any) as any;
+
   static merge(hello: Hello, data: Partial<Serialized<Hello>>) {
     runInAction(() => Object.assign(hello, data));
   }
@@ -52,11 +50,13 @@ class Card {
 
   constructor(readonly identifier: string) {}
 
-  static create(data: Partial<Serialized<Card>>) {
-    const instance = new this(data.identifier || generateId());
-    this.merge(instance, data);
-    return instance;
-  }
+  static create = defaultCreate.bind(Card as any) as any;
+  // static create = ((data: Partial<Serialized<Card>>) => {
+  //   const instance = new Card(data.identifier || generateId());
+  //   Card.merge(instance, data);
+  //   return instance;
+  // }) as any;
+
   static serialize(card: Card) {
     return {
       ...serializeOne(card, 'contents'),
@@ -86,9 +86,13 @@ class Card {
             );
           } else {
             (card as any)[prop] = null;
-            (currentValue.constructor as StaticConstructors<any>).destroy(
-              currentValue
-            );
+            if (
+              isEqual(pathOf(currentValue), [...(pathOf(card) || []), prop])
+            ) {
+              (currentValue.constructor as StaticConstructors<any>).destroy(
+                currentValue
+              );
+            }
           }
         } else if (incomingData) {
           (card as any)[prop] = ctor.create(incomingData);
