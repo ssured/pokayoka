@@ -2,7 +2,7 @@
 
 - [ ] intake afmaken
 - [ ] nl/sfb bimloket radbout baayen via dik spekkink 015-720 08 20
-- [ ] website afmaken
+- [ ] website afmaken - cookie warning toevoegen - "voor wie is het" werkend maken - privacy policy en algemene voorwaarden toevoegen - eigen foto's maken en gebruiken - analytics toevoegen
 - [ ] rapporteren mockups
 - [ ] liftoff actie uitschrijven
 
