@@ -1,4 +1,10 @@
-import { reaction, runInAction, ObservableMap, isObservableMap } from 'mobx';
+import {
+  reaction,
+  runInAction,
+  ObservableMap,
+  isObservableMap,
+  toJS,
+} from 'mobx';
 import { isEqual } from './index';
 import {
   asMergeableObject,
@@ -386,9 +392,11 @@ export const create = <T extends IMergeable>(
             doMerge = true;
           }
         }
-        updates; // ?
-        if (doMerge)
-          runInAction(() => merge(pickAt(getState(), source)!, updates));
+        // updates; // ?
+        if (doMerge) {
+          const current = pickAt(getState(), source)!;
+          runInAction(() => merge(current, updates));
+        }
       } finally {
         mutexLocked = false;
       }

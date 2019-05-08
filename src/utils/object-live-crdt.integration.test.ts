@@ -1,11 +1,12 @@
-import { action, observable, configure, runInAction } from 'mobx';
+import { action, observable, configure, runInAction, toJS } from 'mobx';
 import {
   create,
   staticImplements,
   MergableSerialized,
 } from './object-live-crdt';
 import nano from 'nano';
-import { asMergeableObject, valueAt, merge } from './object-crdt';
+import { asMergeableObject, valueAt, merge, pickAt } from './object-crdt';
+import { deepObserve } from 'mobx-utils';
 
 const couch = nano('http://admin:admin@localhost:5984');
 const testDbName = 'atest';
@@ -38,6 +39,8 @@ describe('one class', () => {
   let db!: nano.DocumentScope<unknown>;
 
   beforeAll(async () => {
+    await new Promise(res => setTimeout(res, 50));
+
     const dbs = await couch.db.list();
     if (dbs.includes(testDbName)) {
       await couch.db.destroy(testDbName);
@@ -50,25 +53,64 @@ describe('one class', () => {
     runInAction(() => state.set(1));
   });
 
-  test('create', async () => {
+  test.only('create', async () => {
     const _id = 'user1';
-    const initial = asMergeableObject(getState(), {
-      '@type': 'User',
-      identifier: _id,
-      name: 'Sjoerd',
+
+    // create document
+    await db.insert({
+      _id,
+      ...asMergeableObject(getState(), {
+        '@type': 'User',
+        identifier: _id,
+        name: 'Sjoerd',
+      }),
     });
 
-    initial; // ?
-    valueAt(getState(), initial); // ?
-    expect(valueAt(getState(), initial)!.identifier).toBe('user1');
-
-    await db.insert({ _id, ...initial });
-
+    // start from db data
+    const doc = await db.get(_id);
     const data = observable.object<Record<string, MergableSerialized<User>>>(
-      initial
+      doc as any
     );
+
     const hello = create(getState, [], User, data);
 
+    const updates: Promise<any>[] = [];
+    deepObserve(data, (change, path) => {
+      const update = new Promise(async (res, rej) => {
+        try {
+          await Promise.all(updates);
+          const current = await db.get(_id);
+          merge(
+            pickAt(getState(), current as any) as any,
+            pickAt(getState(), toJS(data))!
+          );
+          res(db.insert(current));
+        } catch (e) {
+          rej(e);
+        }
+      }).finally(() => {
+        const idx = updates.findIndex(u => u === update);
+        if (idx > -1) {
+          updates.splice(idx, 1);
+        }
+      });
+      updates.push(update);
+    });
+
     expect(hello.name).toEqual('Sjoerd');
+
+    runInAction(() => state.set(2));
+    hello.setName('Marieke');
+    expect(updates.length).toBe(1);
+
+    runInAction(() => state.set(3));
+    hello.setName('Wieger');
+    expect(updates.length).toBe(2);
+
+    runInAction(() => state.set(5));
+    hello.setName('Jolien');
+    expect(updates.length).toBe(3);
+
+    await Promise.all(updates);
   });
 });
