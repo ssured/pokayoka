@@ -62,11 +62,8 @@ const descending = (a: string, b: string) => (a < b ? 1 : -1);
  */
 export function asMergeableObject<
   S extends string,
-  T extends MergeableShape<any> | objt
->(
-  state: S,
-  value: T
-): T extends IMergeable ? ToMergeableObject<T> : { [K in S]: T } {
+  T extends MergeableShape<any>
+>(state: S, value: T): { [K in S]: ToMergeableObject<T> } {
   return {
     [state]: isObjt(value)
       ? value
@@ -80,27 +77,28 @@ export function asMergeableObject<
   } as any;
 }
 
+export function pickAt<T>(state: string, source: Record<string, T>): null | T {
+  const states = Object.keys(source).sort(descending);
+  const currentState = states.find(k => k <= state) || '';
+  const currentValue = source[currentState];
+  return currentValue == null ? null : currentValue;
+}
+
 export function valueAt<T extends IMergeable>(
   state: string,
-  object: ToMergeableObject<T>
-): T {
-  return Object.entries(object as Record<
+  stateMap: Record<string, ToMergeableObject<T>>
+): null | T {
+  const currentValue = pickAt(state, stateMap);
+
+  if (currentValue == null) return null;
+  if (isObjt(currentValue)) return currentValue as any;
+
+  return Object.entries(currentValue as Record<
     string,
     Record<string, unknown>
   >).reduce(
-    (object, [key, stateMap]) => {
-      const states = Object.keys(stateMap).sort(descending);
-      const currentState = states.find(k => k <= state) || '';
-      const currentValue = stateMap[currentState];
-
-      if (currentValue === undefined) {
-        object[key] = null;
-      } else if (isObjt(currentValue)) {
-        object[key] = currentValue;
-      } else {
-        object[key] = valueAt(state, currentValue as any);
-      }
-
+    (object, [key, innerStateMap]) => {
+      object[key] = valueAt(state, innerStateMap as any);
       return object;
     },
     {} as any

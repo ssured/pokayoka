@@ -6,6 +6,7 @@ import {
   merge,
   ToMergeableObject,
   valueAt,
+  pickAt,
 } from './object-crdt';
 import { state, subj, isObject } from './spo';
 import { generateId } from './id';
@@ -320,7 +321,7 @@ export const serializeMany = <
 };
 
 export type MergableSerialized<T extends IMergeable> = ToMergeableObject<
-  { identifier: string } & Pick<T, PrimitiveKeys<T>> &
+  { '@type'?: string; identifier: string } & Pick<T, PrimitiveKeys<T>> &
     {
       [K in RefKeys<T>]:
         | subj
@@ -333,13 +334,15 @@ export const create = <T extends IMergeable>(
   getState: () => state,
   path: subj,
   ctor: StaticConstructors<T>,
-  source: MergableSerialized<T>
+  source: Record<string, MergableSerialized<T>>
 ) => {
   const current = valueAt(getState(), source) as Serialized<T>;
 
-  const instance = (ctor.create || defaultCreate.bind(ctor as any))(
-    current
-  ) as T;
+  let instance!: T;
+  runInAction(() => {
+    instance = (ctor.create || defaultCreate.bind(ctor as any))(current) as T;
+  });
+
   setPathOf(instance, path);
 
   // manage live updates
@@ -368,7 +371,7 @@ export const create = <T extends IMergeable>(
     serialized => {
       if (mutexLocked) return;
       const state = getState();
-      const current = valueAt(state, source);
+      const currentValue = valueAt(state, source);
 
       // current; // ?
       // serialized; // ?
@@ -378,12 +381,14 @@ export const create = <T extends IMergeable>(
         const updates = {} as any;
         let doMerge = false;
         for (const [key, value] of Object.entries(serialized)) {
-          if (value !== (current as any)[key]) {
+          if (value !== (currentValue as any)[key]) {
             updates[key] = asMergeableObject(state, value as any);
             doMerge = true;
           }
         }
-        if (doMerge) runInAction(() => merge(source, updates));
+        updates; // ?
+        if (doMerge)
+          runInAction(() => merge(pickAt(getState(), source)!, updates));
       } finally {
         mutexLocked = false;
       }

@@ -114,21 +114,23 @@ describe('simple sync state', () => {
   });
 
   test('current returns current value', () => {
-    const object = merge<{ a: string }>(
-      {
-        a: { [s(1)]: 'one' },
-      },
-      {
-        a: { [s(2)]: 'two' },
-      }
-    );
+    const object = {
+      [s(0)]: merge<{ a: string }>(
+        {
+          a: { [s(1)]: 'one' },
+        },
+        {
+          a: { [s(2)]: 'two' },
+        }
+      ),
+    };
 
     expect(valueAt(s(0), object)).toEqual({ a: null });
     expect(valueAt(s(1), object)).toEqual({ a: 'one' });
     expect(valueAt(s(2), object)).toEqual({ a: 'two' });
     expect(valueAt(s(3), object)).toEqual({ a: 'two' });
 
-    merge(object, {
+    merge(object[s(0)], {
       a: { [s(3)]: 'three' },
     });
 

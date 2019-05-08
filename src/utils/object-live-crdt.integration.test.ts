@@ -1,59 +1,74 @@
-import { observable, action } from 'mobx';
+import { action, observable, configure, runInAction } from 'mobx';
 import {
   create,
   staticImplements,
-  defaultCreate,
-  defaultMerge,
+  MergableSerialized,
 } from './object-live-crdt';
+import nano from 'nano';
+import { asMergeableObject, valueAt, merge } from './object-crdt';
 
-@staticImplements<Hello>()
-class Hello {
-  static '@type' = 'Hello';
+const couch = nano('http://admin:admin@localhost:5984');
+const testDbName = 'atest';
+
+configure({ enforceActions: 'always' });
+
+@staticImplements<User>()
+class User {
+  static '@type' = 'User';
   constructor(readonly identifier: string) {}
-  static create = defaultCreate.bind(Hello as any) as any;
-  static merge = defaultMerge.bind(Hello as any) as any;
-  static destroy(hello: Hello) {}
 
-  static serialize(hello: Hello) {
+  static serialize(hello: User) {
     return {
-      greet: hello.greet,
+      name: hello.name,
     };
   }
 
   @observable
-  greet = '';
-
-  get GREET() {
-    return this.greet.toUpperCase();
-  }
+  name = '';
 
   @action
-  setGreet(greet: string) {
-    this.greet = greet;
+  setName(name: string) {
+    this.name = name;
   }
 }
 
 describe('one class', () => {
   const state = observable.box(1);
   const getState = () => String(state.get());
+  let db!: nano.DocumentScope<unknown>;
 
-  beforeEach(() => {
-    state.set(1);
+  beforeAll(async () => {
+    const dbs = await couch.db.list();
+    if (dbs.includes(testDbName)) {
+      await couch.db.destroy(testDbName);
+    }
+    await couch.db.create(testDbName);
+    db = couch.use(testDbName);
   });
 
-  test('create', () => {
-    const hello = create(
-      getState,
-      [],
-      Hello,
-      observable.object({
-        '@type': { '1': 'Hello' as const },
-        identifier: { '1': 'yo' },
-        greet: { '1': 'yo' },
-      })
-    );
+  beforeEach(() => {
+    runInAction(() => state.set(1));
+  });
 
-    expect(hello.greet).toEqual('yo');
-    expect(hello.GREET).toEqual('YO');
+  test('create', async () => {
+    const _id = 'user1';
+    const initial = asMergeableObject(getState(), {
+      '@type': 'User',
+      identifier: _id,
+      name: 'Sjoerd',
+    });
+
+    initial; // ?
+    valueAt(getState(), initial); // ?
+    expect(valueAt(getState(), initial)!.identifier).toBe('user1');
+
+    await db.insert({ _id, ...initial });
+
+    const data = observable.object<Record<string, MergableSerialized<User>>>(
+      initial
+    );
+    const hello = create(getState, [], User, data);
+
+    expect(hello.name).toEqual('Sjoerd');
   });
 });

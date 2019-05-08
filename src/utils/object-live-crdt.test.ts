@@ -1,5 +1,5 @@
 import { action, isObservableMap, observable, runInAction, toJS } from 'mobx';
-import { asMergeableObject, merge } from './object-crdt';
+import { asMergeableObject, merge, pickAt } from './object-crdt';
 import {
   create,
   MergableSerialized,
@@ -61,9 +61,11 @@ describe('one class', () => {
       [],
       Hello,
       observable.object({
-        '@type': { '1': 'Hello' as const },
-        identifier: { '1': 'yo' },
-        greet: { '1': 'yo' },
+        '1': {
+          '@type': { '1': 'Hello' as const },
+          identifier: { '1': 'yo' },
+          greet: { '1': 'yo' },
+        },
       })
     );
 
@@ -75,9 +77,11 @@ describe('one class', () => {
     state = observable.box(1);
 
     const source = observable.object({
-      '@type': { '1': 'Hello' as const },
-      identifier: { '1': 'yo' },
-      greet: { '1': 'yo' },
+      '1': {
+        '@type': { '1': 'Hello' as const },
+        identifier: { '1': 'yo' },
+        greet: { '1': 'yo' },
+      },
     });
     const hello = create(getState, [], Hello, source);
 
@@ -87,10 +91,12 @@ describe('one class', () => {
     expect(hello.greet).toEqual('hi');
     expect(hello.GREET).toEqual('HI');
 
-    expect(source).toEqual({
-      '@type': { '1': 'Hello' as const },
-      identifier: { '1': 'yo' },
-      greet: { '1': 'yo', '2': 'hi' },
+    expect(toJS(source)).toEqual({
+      '1': {
+        '@type': { '1': 'Hello' as const },
+        identifier: { '1': 'yo' },
+        greet: { '1': 'yo', '2': 'hi' },
+      },
     });
   });
 
@@ -98,9 +104,11 @@ describe('one class', () => {
     state = observable.box(1);
 
     const source = observable.object({
-      '@type': { '1': 'Hello' as const },
-      identifier: { '1': 'yo' },
-      greet: { '1': 'yo' },
+      '1': {
+        '@type': { '1': 'Hello' as const },
+        identifier: { '1': 'yo' },
+        greet: { '1': 'yo' },
+      },
     });
 
     const hello = create(getState, [], Hello, source);
@@ -108,7 +116,7 @@ describe('one class', () => {
     expect(hello.greet).toEqual('yo');
     expect(hello.GREET).toEqual('YO');
 
-    (source as any).greet['2'] = 'hi';
+    (source as any)['1'].greet['2'] = 'hi';
 
     expect(hello.greet).toEqual('yo');
     expect(hello.GREET).toEqual('YO');
@@ -119,9 +127,11 @@ describe('one class', () => {
     expect(hello.GREET).toEqual('HI');
 
     expect(toJS(source)).toEqual({
-      '@type': { '1': 'Hello' as const },
-      identifier: { '1': 'yo' },
-      greet: { '1': 'yo', '2': 'hi' },
+      '1': {
+        '@type': { '1': 'Hello' as const },
+        identifier: { '1': 'yo' },
+        greet: { '1': 'yo', '2': 'hi' },
+      },
     });
   });
 });
@@ -132,13 +142,15 @@ describe('optional ref another class', () => {
 
   test('create', () => {
     const state = observable.object({
-      '@type': { '1': 'Card' as const },
-      identifier: { '1': '123' },
-      contents: {
-        '1': {
-          '@type': { '1': 'Hello' as const },
-          identifier: { '1': '1234' },
-          greet: { '1': 'yo' },
+      '1': {
+        '@type': { '1': 'Card' as const },
+        identifier: { '1': '123' },
+        contents: {
+          '1': {
+            '@type': { '1': 'Hello' as const },
+            identifier: { '1': '1234' },
+            greet: { '1': 'yo' },
+          },
         },
       },
     });
@@ -150,10 +162,12 @@ describe('optional ref another class', () => {
   });
 
   test('create and update later', () => {
-    const source = observable.object<MergableSerialized<Card>>({
-      // '@type': { '1': 'Card' as const },
-      identifier: { '1': '123' },
-      contents: {},
+    const source = observable.object<Record<string, MergableSerialized<Card>>>({
+      '1': {
+        // '@type': { '1': 'Card' as const },
+        identifier: { '1': '123' },
+        contents: {},
+      },
     });
 
     const card = create(getState, [], Card, source);
@@ -161,7 +175,7 @@ describe('optional ref another class', () => {
 
     runInAction(() => {
       // @ts-ignore
-      merge(source, {
+      merge(pickAt(getState(), source), {
         contents: asMergeableObject('2', {
           identifier: '432',
           greet: 'yo',
@@ -179,8 +193,8 @@ describe('optional ref another class', () => {
 
     runInAction(() => {
       // @ts-ignore
-      merge(source, {
-        contents: asMergeableObject('3', null),
+      merge(pickAt(getState(), source), {
+        contents: asMergeableObject('3', null as any),
       });
     });
 
@@ -222,9 +236,11 @@ describe('optional many another class', () => {
   });
 
   test('create', () => {
-    const state = observable.object<MergableSerialized<Mail>>({
-      identifier: { '1': '123' },
-      contents: {},
+    const state = observable.object<Record<string, MergableSerialized<Mail>>>({
+      '1': {
+        identifier: { '1': '123' },
+        contents: {},
+      },
     });
 
     const card = create(getState, [], Mail, state);
@@ -232,15 +248,17 @@ describe('optional many another class', () => {
   });
 
   test('create and update internal', () => {
-    const data = observable.object<MergableSerialized<Mail>>({
-      identifier: { '1': '123' },
-      contents: {},
+    const data = observable.object<Record<string, MergableSerialized<Mail>>>({
+      '1': {
+        identifier: { '1': '123' },
+        contents: {},
+      },
     });
 
     const card = create(getState, [], Mail, data);
     expect(toJS(card.contents)).toEqual({});
 
-    expect(data.contents).toEqual({});
+    expect(data['1'].contents).toEqual({});
 
     state.set(2);
 
@@ -253,7 +271,7 @@ describe('optional many another class', () => {
       },
     });
 
-    expect(toJS(data.contents)).toEqual({
+    expect(toJS(data['1'].contents)).toEqual({
       '2': {
         card1: {
           '2': {
@@ -267,9 +285,11 @@ describe('optional many another class', () => {
   });
 
   test('create and update external', () => {
-    const source = observable.object<MergableSerialized<Mail>>({
-      identifier: { '1': '123' },
-      contents: {},
+    const source = observable.object<Record<string, MergableSerialized<Mail>>>({
+      '1': {
+        identifier: { '1': '123' },
+        contents: {},
+      },
     });
 
     const card = create(getState, [], Mail, source);
@@ -278,7 +298,7 @@ describe('optional many another class', () => {
 
     runInAction(() => {
       // @ts-ignore
-      merge(source, {
+      merge(pickAt(getState(), source), {
         contents: asMergeableObject('2', {
           card1: {
             identifier: 'c1',
@@ -303,8 +323,8 @@ describe('optional many another class', () => {
 
     runInAction(() => {
       // @ts-ignore
-      merge(source, {
-        contents: asMergeableObject('3', null),
+      merge(pickAt(getState(), source)!, {
+        contents: asMergeableObject('3', null as any),
       });
     });
 
