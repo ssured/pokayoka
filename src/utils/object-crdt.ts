@@ -72,7 +72,7 @@ export function asMergeableObject<
       ? value
       : Object.entries(value as MergeableShape<any>).reduce(
           (map, [key, value]) => {
-            map[key] = value ? asMergeableObject(state, value as any) : null;
+            map[key] = asMergeableObject(state, value as any);
             return map;
           },
           {} as any

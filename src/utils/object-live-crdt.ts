@@ -38,10 +38,10 @@ type InstanceShape<T> = T & {
 export type StaticConstructors<T> = {
   new (identifier: string): InstanceShape<T>;
 
-  create: (data: Serialized<T>) => T;
+  // create: (data: Serialized<T>) => T;
   serialize: (source: T) => Omit<Serialized<T>, 'identifier'>;
-  merge: (source: T, data: Partial<Serialized<T>>) => void;
-  destroy: (source: T) => void;
+  // merge: (source: T, data: Partial<Serialized<T>>) => void;
+  // destroy: (source: T) => void;
 
   '@type': string;
 } & (RefKeys<T> extends never
@@ -55,7 +55,7 @@ export type StaticConstructors<T> = {
           ? StaticConstructors<U>
           : StaticConstructors<Required<T>[K]>
       };
-    });
+    }) & { [key: string]: any };
 
 type LookupInfoObject<T> = {
   objectType: 'object';
@@ -107,7 +107,9 @@ export function defaultCreate<T>(
     throw new Error('create called on wrong @type');
   }
   const instance = new this(data.identifier || generateId());
-  this.merge(instance, data as Partial<typeof data>);
+  (this.merge || defaultMerge.bind(this as any))(instance, data as Partial<
+    typeof data
+  >);
   return instance;
 }
 
@@ -149,8 +151,11 @@ export function defaultMerge<T>(
           >)) {
             if (map.has(id)) {
               const currentValue = map.get(id)!;
+              const currentCtor = currentValue.constructor as StaticConstructors<
+                any
+              >;
               if (data) {
-                (currentValue.constructor as StaticConstructors<any>).merge(
+                (currentCtor.merge || defaultMerge.bind(currentCtor))(
                   currentValue,
                   data
                 );
@@ -167,7 +172,10 @@ export function defaultMerge<T>(
             } else if (data) {
               data; // ?
               if (typeof data.identifier === 'string') {
-                map.set(id, ctor.create(data as any));
+                map.set(
+                  id,
+                  (ctor.create || defaultCreate.bind(ctor))(data as any)
+                );
               }
             }
           }
@@ -176,7 +184,10 @@ export function defaultMerge<T>(
         // it's a reference to one object
         if (currentValue) {
           if (incomingData) {
-            (currentValue.constructor as StaticConstructors<any>).merge(
+            const currentCtor = currentValue.constructor as StaticConstructors<
+              any
+            >;
+            (currentCtor.merge || defaultMerge.bind(currentCtor)).merge(
               currentValue,
               incomingData
             );
@@ -192,7 +203,9 @@ export function defaultMerge<T>(
           }
         } else if (incomingData) {
           if (typeof incomingData.identifier === 'string') {
-            (card as any)[prop] = ctor.create(incomingData);
+            (card as any)[prop] = (ctor.create || defaultCreate.bind(ctor))(
+              incomingData
+            );
           }
         }
       }
@@ -283,7 +296,7 @@ export const serializeOne = <
 };
 
 export const serializeMany = <
-  ParentObject,
+  ParentObject extends object,
   RefProp extends RefKeys<ParentObject>
 >(
   object: ParentObject,
@@ -301,9 +314,9 @@ export const serializeMany = <
             : never)
       >
 } => {
-  // TODO implement
+  const value = asReferenceOrEmbedded(object, prop);
   // @ts-ignore
-  return { [prop]: asReferenceOrEmbedded(object, prop) };
+  return { [prop]: value };
 };
 
 export type MergableSerialized<T extends IMergeable> = ToMergeableObject<
@@ -324,7 +337,9 @@ export const create = <T extends IMergeable>(
 ) => {
   const current = valueAt(getState(), source) as Serialized<T>;
 
-  const instance = ctor.create(current);
+  const instance = (ctor.create || defaultCreate.bind(ctor as any))(
+    current
+  ) as T;
   setPathOf(instance, path);
 
   // manage live updates
@@ -334,13 +349,13 @@ export const create = <T extends IMergeable>(
     current => {
       if (mutexLocked) return;
 
-      current; // ?
+      // current; // ?
 
       try {
         mutexLocked = true;
-        runInAction(() =>
-          (instance.constructor as typeof ctor).merge(instance, current)
-        );
+        runInAction(() => {
+          (ctor.merge || defaultMerge.bind(ctor as any))(instance, current);
+        });
       } finally {
         mutexLocked = false;
       }
@@ -349,15 +364,14 @@ export const create = <T extends IMergeable>(
   );
 
   reaction(
-    () => (instance.constructor as typeof ctor).serialize(instance),
+    () => ctor.serialize(instance),
     serialized => {
       if (mutexLocked) return;
-      // (serialized as any).identifier = instance.identifier;
       const state = getState();
       const current = valueAt(state, source);
 
-      current; // ?
-      serialized; // ?
+      // current; // ?
+      // serialized; // ?
 
       try {
         mutexLocked = true;

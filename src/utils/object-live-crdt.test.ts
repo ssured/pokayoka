@@ -2,8 +2,6 @@ import { action, isObservableMap, observable, runInAction, toJS } from 'mobx';
 import { asMergeableObject, merge } from './object-crdt';
 import {
   create,
-  defaultCreate,
-  defaultMerge,
   MergableSerialized,
   serializeMany,
   serializeOne,
@@ -14,9 +12,6 @@ import {
 class Hello {
   static '@type' = 'Hello';
   constructor(readonly identifier: string) {}
-  static create = defaultCreate.bind(Hello as any) as any;
-  static merge = defaultMerge.bind(Hello as any) as any;
-  static destroy(hello: Hello) {}
 
   static serialize(hello: Hello) {
     return {
@@ -41,9 +36,6 @@ class Hello {
 class Card {
   static '@type' = 'Card';
   constructor(readonly identifier: string) {}
-  static create = defaultCreate.bind(Card as any) as any;
-  static merge = defaultMerge.bind(Card as any) as any;
-  static destroy(card: Card) {}
 
   static constructors = {
     contents: Hello,
@@ -206,9 +198,6 @@ describe('optional ref another class', () => {
 class Mail {
   static '@type' = 'Mail';
   constructor(readonly identifier: string) {}
-  static create = defaultCreate.bind(Mail as any) as any;
-  static merge = defaultMerge.bind(Mail as any) as any;
-  static destroy(card: Mail) {}
 
   static constructors = {
     contents: Card,
@@ -255,7 +244,7 @@ describe('optional many another class', () => {
 
     state.set(2);
 
-    card.contents.set('card1', Card.create({ identifier: 'card1' }));
+    card.contents.set('card1', new Card('card1'));
 
     expect(toJS(card.contents)).toEqual({
       card1: {
@@ -269,7 +258,7 @@ describe('optional many another class', () => {
         card1: {
           '2': {
             '@type': { '2': 'Card' },
-            contents: null,
+            contents: { '2': null },
             identifier: { '2': 'card1' },
           },
         },
