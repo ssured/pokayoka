@@ -54,14 +54,23 @@ export function merge<T extends IMergeable>(
 
 const descending = (a: string, b: string) => (a < b ? 1 : -1);
 
-export function asMergeableObject<S extends string, T>(
+/**
+ *
+ * @param state Which state should the value be wrapped with
+ * @param value The value to wrap
+ * @returns Object of the value at the state
+ */
+export function asMergeableObject<
+  S extends string,
+  T extends MergeableShape<any> | objt
+>(
   state: S,
   value: T
 ): T extends IMergeable ? ToMergeableObject<T> : { [K in S]: T } {
   return {
     [state]: isObjt(value)
       ? value
-      : Object.entries(value).reduce(
+      : Object.entries(value as MergeableShape<any>).reduce(
           (map, [key, value]) => {
             map[key] = value ? asMergeableObject(state, value as any) : null;
             return map;

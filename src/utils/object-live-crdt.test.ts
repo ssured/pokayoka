@@ -1,29 +1,14 @@
-import {
-  action,
-  observable,
-  runInAction,
-  toJS,
-  ObservableMap,
-  isObservableMap,
-} from 'mobx';
-import { generateId } from './id';
+import { action, isObservableMap, observable, runInAction, toJS } from 'mobx';
 import { asMergeableObject, merge } from './object-crdt';
 import {
   create,
-  MergableSerialized,
-  Serialized,
-  serializeOne,
-  StaticConstructors,
-  staticImplements,
   defaultCreate,
-  pathOf,
   defaultMerge,
-  asReferenceOrEmbedded,
+  MergableSerialized,
   serializeMany,
+  serializeOne,
+  staticImplements,
 } from './object-live-crdt';
-import { isEqual } from './index';
-import { identifier } from '@babel/types';
-import { string } from 'io-ts';
 
 @staticImplements<Hello>()
 class Hello {
@@ -217,70 +202,6 @@ describe('optional ref another class', () => {
   });
 });
 
-// function Many<T>(ctor: StaticConstructors<T>): StaticConstructors<ObservableMap<string, T>> {
-//   @staticImplements<Many>()
-//   class Many {
-//     static '@type' = `Many<${ctor['@type']}>`;
-//     constructor(readonly identifier: string) {}
-//     static create = defaultCreate.bind(Many as any) as any;
-//     static merge(card: Many, data: Partial<Serialized<Many>>) {
-//       runInAction(() => {
-//         // make a mutable copy of data
-//         const update = { ...data } as Record<
-//           string,
-//           Partial<Serialized<T>> | null
-//         >;
-
-//         // remove not updateable properties
-//         delete (update as any)['@type'];
-//         delete update.identifier;
-
-//         // check all references
-
-//         for (const [id, incomingData] of Object.entries(update)) {
-//           const currentValue = (card as any)[id] as any;
-
-//           if (currentValue) {
-//             if (incomingData) {
-//               (currentValue.constructor as StaticConstructors<any>).merge(
-//                 currentValue,
-//                 incomingData
-//               );
-//             } else {
-//               (card as any)[id] = null;
-//               if (
-//                 isEqual(pathOf(currentValue), [...(pathOf(card) || []), id])
-//               ) {
-//                 (currentValue.constructor as StaticConstructors<any>).destroy(
-//                   currentValue
-//                 );
-//               }
-//             }
-//           } else if (incomingData) {
-//             if (typeof incomingData.identifier === 'string') {
-//               (card as any)[id] = ctor.create(incomingData as any);
-//             }
-//           }
-//         }
-//       });
-//     }
-//     static destroy(map: Many) {}
-
-//     static serialize(map: Many): Record<string, Serialized<T>> {
-//       const serialized = {} as any;
-//       for (const [key, value] of Object.entries(map)) {
-//         if (key === 'identifier') continue;
-//         serialized[key] =
-//           value == null ? null : asReferenceOrEmbedded(map, key as never);
-//       }
-//       return serialized;
-//     }
-//   }
-//   return Many as any;
-// }
-
-// type Many<T> = Record<string, T>;
-
 @staticImplements<Mail>()
 class Mail {
   static '@type' = 'Mail';
@@ -307,6 +228,10 @@ describe('optional many another class', () => {
   const state = observable.box(1);
   const getState = () => String(state.get());
 
+  beforeEach(() => {
+    state.set(1);
+  });
+
   test('create', () => {
     const state = observable.object<MergableSerialized<Mail>>({
       identifier: { '1': '123' },
@@ -317,9 +242,7 @@ describe('optional many another class', () => {
     expect(toJS(card.contents)).toEqual({});
   });
 
-  test.only('create and update internal', () => {
-    state.set(1);
-
+  test('create and update internal', () => {
     const data = observable.object<MergableSerialized<Mail>>({
       identifier: { '1': '123' },
       contents: {},
@@ -342,11 +265,19 @@ describe('optional many another class', () => {
     });
 
     expect(toJS(data.contents)).toEqual({
-      '2': { card1: { '2': { contents: null, identifier: { '2': 'card1' } } } },
+      '2': {
+        card1: {
+          '2': {
+            '@type': { '2': 'Card' },
+            contents: null,
+            identifier: { '2': 'card1' },
+          },
+        },
+      },
     });
   });
 
-  test('create and update later', () => {
+  test('create and update external', () => {
     const source = observable.object<MergableSerialized<Mail>>({
       identifier: { '1': '123' },
       contents: {},

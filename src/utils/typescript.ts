@@ -57,21 +57,24 @@ declare global {
       never
     >
   }[keyof T];
-  type WritablePart<T> = Pick<T, WritableKeysOf<Required<T>>>;
-  type ReadOnlyPart<T> = Omit<T, WritableKeysOf<Required<T>>>;
+
+  type RequiredWritableKeysOf<T> = WritableKeysOf<Required<T>>;
+
+  type WritablePart<T> = Pick<T, RequiredWritableKeysOf<T>>;
+  type ReadOnlyPart<T> = Omit<T, RequiredWritableKeysOf<T>>;
 
   type tFunction = (...args: any[]) => any;
 
-  type ComputedKeys<T> = Exclude<keyof T, WritableKeysOf<Required<T>>>;
+  type ComputedKeys<T> = Exclude<keyof T, RequiredWritableKeysOf<T>>;
   type ActionKeys<T> = KeysOfType<Required<T>, tFunction> &
-    WritableKeysOf<Required<T>>;
+    RequiredWritableKeysOf<T>;
 
   type PrimitiveKeys<T> = KeysOfType<Required<T>, primitive> &
-    WritableKeysOf<Required<T>>;
+    RequiredWritableKeysOf<T>;
   type RefKeys<T> = Exclude<
-    WritableKeysOf<Required<T>>,
+    RequiredWritableKeysOf<T>,
     KeysOfType<Required<T>, primitive | tFunction | Set<any>>
   >;
   type SetKeys<T> = KeysOfType<Required<T>, Set<any>> &
-    WritableKeysOf<Required<T>>;
+    RequiredWritableKeysOf<T>;
 }
