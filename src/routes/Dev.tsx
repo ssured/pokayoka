@@ -68,7 +68,7 @@ const source = observable.map<string, string>();
 const { root, subscribe } = createEmittingRoot<string>({
   source,
   onSet: (key, value) => source.set(key, value),
-  requestSet: (key, value) => true,
+  onRootSet: (key, value) => true,
 });
 
 const events = observable.array<RootEventMsg<string>>();

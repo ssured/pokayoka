@@ -1,4 +1,10 @@
-import { isObservableMap, ObservableMap, reaction, runInAction } from 'mobx';
+import {
+  isObservableMap,
+  ObservableMap,
+  reaction,
+  runInAction,
+  toJS,
+} from 'mobx';
 import { isEqual } from './index';
 import {
   asMergeableObject,
@@ -252,7 +258,7 @@ function pathOf(o: any): subj | undefined {
   // @ts-ignore
   return o[pathSymbol];
 }
-function setPathOf<O extends object>(o: O, subj: subj) {
+export function setPathOf<O extends object>(o: O, subj: subj) {
   // @ts-ignore
   o[pathSymbol] = subj;
   return subj;
@@ -360,17 +366,41 @@ export type MergableSerialized<T extends IMergeable> = ToMergeableObject<
     }
 >;
 
+export function mergeSerialized(
+  state: string,
+  source: Record<string, ToMergeableObject<any>>,
+  serialized: Omit<Serialized<any>, 'identifier'>
+) {
+  runInAction(() => {
+    const current = valueAt(state, source) || {};
+    const currentSource = pickAt(state, source)!;
+
+    console.log(toJS(source));
+
+    for (const [key, incomingValue] of Object.entries(serialized)) {
+      const currentValue = (current as any)[key];
+      if (isObject(incomingValue) && isObject(currentValue)) {
+        mergeSerialized(state, currentSource[key], incomingValue);
+      } else if (!isEqual(incomingValue, currentValue)) {
+        merge(currentSource, {
+          [key]: asMergeableObject(state, incomingValue as any),
+        } as any);
+      }
+    }
+  });
+}
+
 export const create = <T extends IMergeable>(
   getState: () => state,
   path: subj,
-  ctor: StaticConstructors<T>,
+  Class: StaticConstructors<T>,
   source: Record<string, MergableSerialized<T>>
 ) => {
   const current = valueAt(getState(), source) as Serialized<T>;
 
   let instance!: T;
   runInAction(() => {
-    instance = ctor.create(current) as T;
+    instance = Class.create(current) as T;
   });
 
   setPathOf(instance, path);
@@ -386,7 +416,7 @@ export const create = <T extends IMergeable>(
 
       try {
         mutexLocked = true;
-        runInAction(() => ctor.merge(instance, current));
+        Class.merge(instance, current);
       } finally {
         mutexLocked = false;
       }
@@ -395,34 +425,12 @@ export const create = <T extends IMergeable>(
   );
 
   reaction(
-    () => ctor.serialize(instance),
+    () => Class.serialize(instance),
     serialized => {
       if (mutexLocked) return;
       try {
         mutexLocked = true;
-
-        const state = getState();
-
-        function mergeSerialized(
-          source: Record<string, ToMergeableObject<any>>,
-          serialized: Omit<Serialized<any>, 'identifier'>
-        ) {
-          const current = valueAt(state, source);
-          const currentSource = pickAt(state, source)!;
-
-          for (const [key, incomingValue] of Object.entries(serialized)) {
-            const currentValue = (current as any)[key];
-            if (isObject(incomingValue) && isObject(currentValue)) {
-              mergeSerialized(currentSource[key], incomingValue);
-            } else if (!isEqual(incomingValue, currentValue)) {
-              merge(currentSource, {
-                [key]: asMergeableObject(state, incomingValue as any),
-              } as any);
-            }
-          }
-        }
-
-        runInAction(() => mergeSerialized(source, serialized));
+        mergeSerialized(getState(), source, serialized);
       } finally {
         mutexLocked = false;
       }

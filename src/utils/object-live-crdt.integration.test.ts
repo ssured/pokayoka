@@ -46,14 +46,14 @@ class Project extends Base {
 class User extends Base {
   static '@type' = 'User';
 
+  static constructors = {
+    projects: many(Project),
+  };
+
   static serialize(user: User) {
     const { name } = user;
     return { name, ...serializeMany(user, 'projects') };
   }
-
-  static constructors = {
-    projects: many(Project),
-  };
 
   @observable
   name = '';

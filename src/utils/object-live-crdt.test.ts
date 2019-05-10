@@ -1,4 +1,11 @@
-import { action, isObservableMap, observable, runInAction, toJS } from 'mobx';
+import {
+  action,
+  isObservableMap,
+  observable,
+  runInAction,
+  toJS,
+  configure,
+} from 'mobx';
 import { asMergeableObject, merge, pickAt } from './object-crdt';
 import {
   UniversalObject,
@@ -9,6 +16,8 @@ import {
   serializeOne,
   many,
 } from './object-live-crdt';
+
+configure({ enforceActions: 'always' });
 
 abstract class Base extends UniversalObject {
   constructor(readonly identifier: string) {
@@ -93,9 +102,11 @@ describe('one class', () => {
     });
     const hello = create(getState, [], Hello, source);
 
-    state.set(2);
+    runInAction(() => {
+      state.set(2);
+    });
 
-    hello.greet = 'hi';
+    hello.setGreet('hi');
     expect(hello.greet).toEqual('hi');
     expect(hello.GREET).toEqual('HI');
 
@@ -129,7 +140,7 @@ describe('one class', () => {
     expect(hello.greet).toEqual('yo');
     expect(hello.GREET).toEqual('YO');
 
-    state.set(2);
+    runInAction(() => state.set(2));
 
     expect(hello.greet).toEqual('hi');
     expect(hello.GREET).toEqual('HI');
@@ -239,7 +250,7 @@ describe('optional many another class', () => {
   const getState = () => String(state.get());
 
   beforeEach(() => {
-    state.set(1);
+    runInAction(() => state.set(1));
   });
 
   test('create', () => {
@@ -267,9 +278,17 @@ describe('optional many another class', () => {
 
     expect(data['1'].contents).toEqual({});
 
-    state.set(2);
-
-    card.contents.set('card1', new Card('card1'));
+    runInAction(() => {
+      state.set(2);
+    });
+    runInAction(() => {
+      card.contents.set('card1', new Card('card1'));
+    });
+    // FIXME if both actions are run in the same block ,this test fails?
+    // runInAction(() => {
+    //   state.set(2);
+    //   card.contents.set('card1', new Card('card1'));
+    // });
 
     expect(toJS(card.contents)).toEqual({
       card1: {

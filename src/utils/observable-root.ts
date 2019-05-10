@@ -17,7 +17,7 @@ const observedKeys = Symbol('root observed keys');
 export type RootHandler<T> = {
   source?: ObservableMap<string, T>;
 
-  requestSet?: (key: string, value: T) => boolean;
+  onRootSet?: (key: string, value: T) => boolean;
 
   onObserved: (key: string, set: (value: T) => void) => void;
   onSet?: (key: string, value: T) => void;
@@ -34,18 +34,15 @@ export function getObservedKeys(
 
 export function createRoot<T>({
   source = observable.map<string, T>(),
-  requestSet = () => false,
+  onRootSet = () => false,
 
   onObserved,
   onUnobserved,
   onSet = () => {},
-}: RootHandler<T>): Record<string, T | undefined> {
+}: RootHandler<T>): Record<string, T> {
   const disposers: (() => void)[] = [];
 
-  const accessors = observable.map<
-    string,
-    IComputedValue<T | undefined> | undefined
-  >();
+  const accessors = observable.map<string, IComputedValue<T>>();
 
   const keys = observable.set<string>();
   let keysArrayIsWritable = false;
@@ -76,16 +73,16 @@ export function createRoot<T>({
     if (accessors.has(key)) return accessors.get(key)!;
 
     const accessor = computed(() => source.get(key));
-    accessors.set(key, accessor);
+    runInAction(() => accessors.set(key, accessor));
 
     onBecomeObserved(accessor, () =>
       onObserved(key, (value: T) => {
-        source.set(key, value);
+        runInAction(() => source.set(key, value));
         onSet(key, value);
       })
     );
     onBecomeUnobserved(accessor, () => {
-      accessors.delete(key);
+      runInAction(() => accessors.delete(key));
       onUnobserved(key);
     });
 
@@ -101,7 +98,7 @@ export function createRoot<T>({
     },
     set(target, key, value) {
       if (typeof key !== 'string') return false;
-      const setOk = requestSet(key, value);
+      const setOk = onRootSet(key, value);
       if (setOk) onSet(key, value);
       return setOk;
     },

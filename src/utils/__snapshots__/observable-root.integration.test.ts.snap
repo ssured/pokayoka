@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`one class it allows external updates 1`] = `
+Object {
+  "KJtest@example.com!": Object {
+    "0": Object {
+      "name": Object {
+        "2": "Two",
+      },
+      "projects": Object {
+        "2": Object {},
+      },
+    },
+  },
+}
+`;
+
+exports[`one class it allows external updates 2`] = `
+Object {
+  "KJtest@example.com!": Object {
+    "0": Object {
+      "name": Object {
+        "2": "Two",
+        "3": "Three",
+      },
+      "projects": Object {
+        "2": Object {},
+      },
+    },
+  },
+}
+`;
+
+exports[`one class it fires events 1`] = `
+Array [
+  Object {
+    "key": "KJtest@example.com!",
+    "type": "update",
+    "value": Object {
+      "identifier": "KJtest@example.com!",
+      "name": "",
+      "projects": Object {},
+    },
+  },
+  Object {
+    "key": "KJtest@example.com!",
+    "set": [Function],
+    "type": "observed",
+  },
+  Object {
+    "key": "KJtest@example.com!",
+    "type": "unobserved",
+  },
+]
+`;

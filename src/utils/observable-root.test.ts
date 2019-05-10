@@ -1,18 +1,7 @@
-import {
-  autorun,
-  computed,
-  IComputedValue,
-  observable,
-  onBecomeObserved,
-  onBecomeUnobserved,
-  ObservableMap,
-  isObservableArray,
-  isObservableSet,
-  ObservableSet,
-} from 'mobx';
-import { Omit } from './typescript';
-import SubscribableEvent from 'subscribableevent';
+import { autorun, isObservableArray, isObservableSet, configure } from 'mobx';
 import { createRoot, getObservedKeys } from './observable-root';
+
+configure({ enforceActions: 'always' });
 
 describe('observableRoot allows for async key+value lookup', () => {
   test('root tracks observability of props', async () => {
@@ -105,7 +94,7 @@ describe('observableRoot allows for async key+value lookup', () => {
     expect(values).toEqual([undefined]);
     await new Promise(res => setTimeout(res, 5));
     expect(values).toEqual([undefined, 'one']);
-    await new Promise(res => setTimeout(res, 15));
+    await new Promise(res => setTimeout(res, 25));
     expect(values).toEqual([undefined, 'one', 'two', 'three']);
 
     disposer1();
