@@ -18,8 +18,6 @@ export function letTypeScriptCheckStaticPropertiesOf<T>() {
 }
 
 export abstract class UniversalObject {
-  constructor(readonly identifier: string) {}
-
   // for inheritance we need to define all args as any
   // maybe future TS will improve this.
   static create(idOrDataArg: any): any {

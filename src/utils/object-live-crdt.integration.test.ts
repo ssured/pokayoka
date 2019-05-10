@@ -9,6 +9,7 @@ import {
   serializeMany,
   letTypeScriptCheckStaticPropertiesOf,
   UniversalObject,
+  many,
 } from './object-live-crdt';
 
 const couch = nano('http://admin:admin@localhost:5984');
@@ -16,8 +17,16 @@ const testDbName = 'atest';
 
 configure({ enforceActions: 'always' });
 
+abstract class Base extends UniversalObject {
+  constructor(readonly identifier: string) {
+    super(); // make ts-lint happy
+
+    // initialization logic goes here
+  }
+}
+
 @letTypeScriptCheckStaticPropertiesOf<Project>()
-class Project extends UniversalObject {
+class Project extends Base {
   static '@type' = 'Project';
 
   static serialize({ name }: Project) {
@@ -34,7 +43,7 @@ class Project extends UniversalObject {
 }
 
 @letTypeScriptCheckStaticPropertiesOf<User>()
-class User extends UniversalObject {
+class User extends Base {
   static '@type' = 'User';
 
   static serialize(user: User) {
@@ -43,7 +52,7 @@ class User extends UniversalObject {
   }
 
   static constructors = {
-    projects: Project,
+    projects: many(Project),
   };
 
   @observable

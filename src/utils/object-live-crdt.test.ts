@@ -10,8 +10,16 @@ import {
   many,
 } from './object-live-crdt';
 
+abstract class Base extends UniversalObject {
+  constructor(readonly identifier: string) {
+    super(); // make ts-lint happy
+
+    // initialization logic goes here
+  }
+}
+
 @letTypeScriptCheckStaticPropertiesOf<Hello>()
-class Hello extends UniversalObject {
+class Hello extends Base {
   static '@type' = 'Hello';
 
   static serialize(hello: Hello) {
@@ -34,7 +42,7 @@ class Hello extends UniversalObject {
 }
 
 @letTypeScriptCheckStaticPropertiesOf<Card>()
-class Card extends UniversalObject {
+class Card extends Base {
   static '@type' = 'Card';
 
   static constructors = {
@@ -209,7 +217,7 @@ describe('optional ref another class', () => {
 });
 
 @letTypeScriptCheckStaticPropertiesOf<Mail>()
-class Mail extends UniversalObject {
+class Mail extends Base {
   static '@type' = 'Mail';
 
   static constructors = {
