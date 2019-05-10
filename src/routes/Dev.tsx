@@ -1,9 +1,15 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useState } from 'react';
 import { useRoot } from '../contexts/spo-hub';
 import { observer, useObservable } from 'mobx-react-lite';
 import { SPOShape } from '../utils/spo';
-import { Box, Button, Text } from 'grommet';
-import { runInAction } from 'mobx';
+import { Box, Button, Text, TextInput } from 'grommet';
+import { runInAction, observable, action } from 'mobx';
+import {
+  createEmittingRoot,
+  getObservedKeys,
+  RootEventMsg,
+} from '../utils/observable-root';
+import { Close, Add } from 'grommet-icons';
 
 const Part: React.FunctionComponent<{
   object: SPOShape;
@@ -59,7 +65,106 @@ const Part: React.FunctionComponent<{
   );
 });
 
+const source = observable.map<string, string>();
+const { root, subscribe } = createEmittingRoot<string>({
+  source,
+  onSet: (key, value) => source.set(key, value),
+  requestSet: (key, value) => true,
+});
+
+const events = observable.array<RootEventMsg<string>>();
+
+subscribe(event => {
+  runInAction(() => events.push(event));
+  switch (event.type) {
+    case 'observed': {
+      break;
+    }
+    case 'update': {
+      break;
+    }
+    case 'unobserved': {
+      break;
+    }
+  }
+});
+
+const EditKey: React.FunctionComponent<{ prop: string }> = observer(
+  ({ prop }) => {
+    return (
+      <TextInput
+        value={root[prop]}
+        onChange={({ target: { value } }) =>
+          runInAction(() => (root[prop] = value))
+        }
+      />
+    );
+  }
+);
+
+const ObservedKeys: React.FunctionComponent<{}> = observer(({}) => {
+  const keys = getObservedKeys(root);
+  return (
+    <ol>
+      {[...keys.values()].map(key => (
+        <li key={key}>{key}</li>
+      ))}
+    </ol>
+  );
+});
+
+const SeenEvents: React.FunctionComponent<{}> = observer(({}) => {
+  return (
+    <ol>
+      {events.map((event, i) => (
+        <li key={i}>
+          {event.key}: {event.type} {event.type === 'update' && event.value}
+        </li>
+      ))}
+    </ol>
+  );
+});
+
 export const Dev: FunctionComponent<{}> = observer(({}) => {
-  const root = useRoot()();
-  return <Part object={root} recurseDepth={2} />;
+  // const root = useRoot()();
+  // return <Part object={root} recurseDepth={2} />;
+
+  const state = useObservable({
+    keys: observable.set<string>(['a', 'b']),
+    newName: '',
+  });
+  const { keys, newName } = state;
+
+  return (
+    <Box>
+      {[...keys.values()].map(key => (
+        <Box border key={key} direction="row">
+          {key}
+          <EditKey prop={key} />
+          <Button icon={<Close />} onClick={action(() => keys.delete(key))} />
+        </Box>
+      ))}
+
+      <Box border background="light-2" direction="row">
+        <TextInput
+          placeholder="add key"
+          value={newName}
+          onChange={({ target: { value } }) =>
+            runInAction(() => (state.newName = value))
+          }
+        />
+        <Button
+          icon={<Add />}
+          onClick={action(() => {
+            keys.add(state.newName);
+            state.newName = '';
+          })}
+        />
+      </Box>
+      <Box direction="row">
+        <ObservedKeys />
+        <SeenEvents />
+      </Box>
+    </Box>
+  );
 });

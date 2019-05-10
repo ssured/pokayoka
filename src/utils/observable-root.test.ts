@@ -6,99 +6,13 @@ import {
   onBecomeObserved,
   onBecomeUnobserved,
   ObservableMap,
+  isObservableArray,
+  isObservableSet,
+  ObservableSet,
 } from 'mobx';
-
-type RootHandler<T> = {
-  source: ObservableMap<string, T>;
-  onObserved: (key: string, set: (value: T) => void) => void;
-  onUnobserved: (key: string) => void;
-};
-
-function createRoot<T>({
-  source,
-  onObserved,
-  onUnobserved,
-}: RootHandler<T>): Record<string, T | undefined> {
-  const disposers: (() => void)[] = [];
-
-  const accessors = observable.map<
-    string,
-    IComputedValue<T | undefined> | undefined
-  >();
-
-  const keys = observable.array<string>([]);
-  let keysArrayIsWritable = false;
-  disposers.push(
-    keys.intercept(change => (keysArrayIsWritable ? change : null))
-  );
-
-  disposers.push(
-    accessors.observe(change => {
-      switch (change.type) {
-        case 'add': {
-          if (!keys.includes(change.name)) {
-            keysArrayIsWritable = true;
-            keys.push(change.name);
-            keysArrayIsWritable = false;
-          }
-          break;
-        }
-        case 'delete': {
-          const idx = keys.findIndex(key => key === change.name);
-          if (idx > -1) {
-            keysArrayIsWritable = true;
-            keys.splice(idx, 1);
-            keysArrayIsWritable = false;
-          }
-          break;
-        }
-      }
-    })
-  );
-
-  function getAccessor(key: string): IComputedValue<T | undefined> {
-    if (accessors.has(key)) return accessors.get(key)!;
-
-    const accessor = computed(() => source.get(key));
-    accessors.set(key, accessor);
-
-    onBecomeObserved(accessor, () =>
-      onObserved(key, source.set.bind(source, key))
-    );
-    onBecomeUnobserved(accessor, () => {
-      accessors.delete(key);
-      onUnobserved(key);
-    });
-
-    return accessor;
-  }
-
-  return new Proxy(Object.create(null) as any, {
-    get(target, key) {
-      if (typeof key !== 'string') return undefined;
-      return getAccessor(key).get();
-    },
-    set() {
-      throw new Error('cannot set root properties');
-    },
-    ownKeys() {
-      return keys;
-    },
-    has(_, key) {
-      if (typeof key !== 'string') return false;
-      return accessors.has(key);
-    },
-    getOwnPropertyDescriptor(_, key) {
-      if (typeof key === 'string') {
-        //   source.get(key); // this is not a no-op!
-        return {
-          configurable: true,
-          enumerable: true,
-        };
-      }
-    },
-  });
-}
+import { Omit } from './typescript';
+import SubscribableEvent from 'subscribableevent';
+import { createRoot, getObservedKeys } from './observable-root';
 
 describe('observableRoot allows for async key+value lookup', () => {
   test('root tracks observability of props', async () => {
@@ -106,7 +20,6 @@ describe('observableRoot allows for async key+value lookup', () => {
     let unobservedCount = 0;
 
     const root = createRoot({
-      source: observable.map<string, string>(),
       onObserved: key => (observedCount += 1),
       onUnobserved: key => (unobservedCount += 1),
     });
@@ -154,8 +67,7 @@ describe('observableRoot allows for async key+value lookup', () => {
   });
 
   test('set immediately to respond in sync', async () => {
-    const root = createRoot({
-      source: observable.map<string, string>(),
+    const root = createRoot<string>({
       onObserved: (key, set) => set('one'),
       onUnobserved: key => {},
     });
@@ -172,8 +84,7 @@ describe('observableRoot allows for async key+value lookup', () => {
   });
 
   test('set can update a value later', async () => {
-    const root = createRoot({
-      source: observable.map<string, string>(),
+    const root = createRoot<string>({
       onObserved: async (key, set) => {
         await new Promise(res => setTimeout(res, 5));
         set('one');
@@ -201,18 +112,21 @@ describe('observableRoot allows for async key+value lookup', () => {
   });
 
   test('set values fails', async () => {
-    const root = createRoot({
-      source: observable.map<string, string>(),
+    const rootNoSet = createRoot({
       onObserved: (key, set) => {},
       onUnobserved: key => {},
     });
 
-    expect(() => (root.test = 'value')).toThrow();
+    try {
+      rootNoSet.test = 'value';
+    } catch (e) {
+      console.log(e);
+    }
+    expect(() => (rootNoSet.test = 'value')).toThrowError();
   });
 
   test('exposes observed keys', async () => {
     const root = createRoot({
-      source: observable.map<string, string>(),
       onObserved: (key, set) => {
         console.log(key);
       },
@@ -228,6 +142,9 @@ describe('observableRoot allows for async key+value lookup', () => {
 
     expect('key1' in root).toBe(true);
     expect(Object.keys(root)).toEqual(['key1']);
+
+    expect(isObservableArray(Object.keys(root))).toBe(false);
+    expect(isObservableSet(getObservedKeys(root))).toBe(true);
 
     const disposer2 = autorun(() => {
       root.key2;
