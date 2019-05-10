@@ -7,8 +7,8 @@ import {
   create,
   MergableSerialized,
   serializeMany,
-  staticImplements,
-  Base,
+  letTypeScriptCheckStaticPropertiesOf,
+  UniversalObject,
 } from './object-live-crdt';
 
 const couch = nano('http://admin:admin@localhost:5984');
@@ -16,10 +16,9 @@ const testDbName = 'atest';
 
 configure({ enforceActions: 'always' });
 
-@staticImplements<Project>()
-class Project {
+@letTypeScriptCheckStaticPropertiesOf<Project>()
+class Project extends UniversalObject {
   static '@type' = 'Project';
-  constructor(readonly identifier: string = generateId()) {}
 
   static serialize({ name }: Project) {
     return { name };
@@ -34,8 +33,8 @@ class Project {
   }
 }
 
-@staticImplements<User>()
-class User extends Base {
+@letTypeScriptCheckStaticPropertiesOf<User>()
+class User extends UniversalObject {
   static '@type' = 'User';
 
   static serialize(user: User) {
@@ -59,7 +58,7 @@ class User extends Base {
 
   @action
   addProject(name: string) {
-    const project = new Project();
+    const project = new Project(generateId());
     project.setName(name);
     this.projects.set(project.identifier, project);
     return project;
@@ -112,6 +111,7 @@ describe('one class', () => {
 
     deepObserve(data, (change, path) => {
       console.log(path);
+      // @ts-ignore
       console.log(change.name);
       console.log(toJS(change));
       const update = new Promise(async (res, rej) => {

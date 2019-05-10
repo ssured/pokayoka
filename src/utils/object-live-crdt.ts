@@ -1,42 +1,37 @@
-import {
-  reaction,
-  runInAction,
-  ObservableMap,
-  isObservableMap,
-  toJS,
-} from 'mobx';
+import { isObservableMap, ObservableMap, reaction, runInAction } from 'mobx';
 import { isEqual } from './index';
 import {
   asMergeableObject,
   IMergeable,
   merge,
+  pickAt,
   ToMergeableObject,
   valueAt,
-  pickAt,
 } from './object-crdt';
-import { state, subj, isObject } from './spo';
-import { generateId } from './id';
+import { isObject, state, subj } from './spo';
 
 /**
  * Class decorator, used to let TypeScript check required static properties
  */
-export function staticImplements<T>() {
+export function letTypeScriptCheckStaticPropertiesOf<T>() {
   return (constructor: StaticConstructors<T>) => constructor;
 }
 
-export abstract class Base {
+export abstract class UniversalObject {
   constructor(readonly identifier: string) {}
-
-  static '@type' = 'Base';
 
   // for inheritance we need to define all args as any
   // maybe future TS will improve this.
   static create(idOrDataArg: any): any {
-    const idOrData = idOrDataArg as string | Serialized<Base>;
+    const idOrData = idOrDataArg as string | Serialized<UniversalObject>;
     const id = typeof idOrData === 'string' ? idOrData : idOrData.identifier;
     const data = typeof idOrData === 'string' ? null : idOrData;
 
-    if (data && '@type' in data && (data as any)['@type'] !== this['@type']) {
+    if (
+      data &&
+      '@type' in data &&
+      (data as any)['@type'] !== (this as any)['@type']
+    ) {
       throw new Error('create called on wrong @type');
     }
 
@@ -50,10 +45,13 @@ export abstract class Base {
     return instance;
   }
 
-  static merge(instance: Base, data: Partial<Serialized<Base>>) {
+  static merge<T extends UniversalObject>(
+    instance: T,
+    data: Partial<Serialized<T>>
+  ) {
     runInAction(() => {
       // make a mutable copy of data
-      const incomingData: Partial<Serialized<Base>> = { ...data };
+      const incomingData: Partial<Serialized<T>> = { ...data };
 
       // remove not updateable properties
       delete (incomingData as any)['@type'];
@@ -79,7 +77,7 @@ export abstract class Base {
             }
 
             for (const [itemId, incomingItemDatum] of Object.entries(
-              incomingDatum as Record<string, Partial<Serialized<Base>>>
+              incomingDatum as Record<string, Partial<Serialized<T>>>
             )) {
               if (map.has(itemId)) {
                 const currentItemValue = map.get(itemId)!;
@@ -118,7 +116,7 @@ export abstract class Base {
                 any
               >;
 
-              currentCtor.merge.merge(currentValue, incomingDatum);
+              currentCtor.merge(currentValue, incomingDatum);
             } else {
               (instance as any)[prop] = null;
 

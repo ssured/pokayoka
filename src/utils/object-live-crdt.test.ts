@@ -1,18 +1,16 @@
 import { action, isObservableMap, observable, runInAction, toJS } from 'mobx';
 import { asMergeableObject, merge, pickAt } from './object-crdt';
 import {
+  UniversalObject,
   create,
+  letTypeScriptCheckStaticPropertiesOf,
   MergableSerialized,
   serializeMany,
   serializeOne,
-  staticImplements,
-  many,
-  Base,
-  Serialized,
 } from './object-live-crdt';
 
-@staticImplements<Hello>()
-class Hello extends Base {
+@letTypeScriptCheckStaticPropertiesOf<Hello>()
+class Hello extends UniversalObject {
   static '@type' = 'Hello';
 
   static serialize(hello: Hello) {
@@ -34,8 +32,8 @@ class Hello extends Base {
   }
 }
 
-@staticImplements<Card>()
-class Card extends Base {
+@letTypeScriptCheckStaticPropertiesOf<Card>()
+class Card extends UniversalObject {
   static '@type' = 'Card';
 
   static constructors = {
@@ -209,8 +207,8 @@ describe('optional ref another class', () => {
   });
 });
 
-@staticImplements<Mail>()
-class Mail extends Base {
+@letTypeScriptCheckStaticPropertiesOf<Mail>()
+class Mail extends UniversalObject {
   static '@type' = 'Mail';
 
   static constructors = {
