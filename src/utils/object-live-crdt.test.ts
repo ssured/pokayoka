@@ -7,11 +7,9 @@ import {
   serializeOne,
   staticImplements,
   many,
+  Base,
+  Serialized,
 } from './object-live-crdt';
-
-abstract class Base {
-  constructor(readonly identifier: string) {}
-}
 
 @staticImplements<Hello>()
 class Hello extends Base {

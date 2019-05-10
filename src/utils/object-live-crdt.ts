@@ -18,6 +18,142 @@ import { state, subj, isObject } from './spo';
 import { generateId } from './id';
 
 /**
+ * Class decorator, used to let TypeScript check required static properties
+ */
+export function staticImplements<T>() {
+  return (constructor: StaticConstructors<T>) => constructor;
+}
+
+export abstract class Base {
+  constructor(readonly identifier: string) {}
+
+  static '@type' = 'Base';
+
+  // for inheritance we need to define all args as any
+  // maybe future TS will improve this.
+  static create(idOrDataArg: any): any {
+    const idOrData = idOrDataArg as string | Serialized<Base>;
+    const id = typeof idOrData === 'string' ? idOrData : idOrData.identifier;
+    const data = typeof idOrData === 'string' ? null : idOrData;
+
+    if (data && '@type' in data && (data as any)['@type'] !== this['@type']) {
+      throw new Error('create called on wrong @type');
+    }
+
+    const instance = new ((this as unknown) as (new (
+      identifier: string
+    ) => any))(id);
+
+    if (data) {
+      this.merge(instance, data as Partial<typeof data>);
+    }
+    return instance;
+  }
+
+  static merge(instance: Base, data: Partial<Serialized<Base>>) {
+    runInAction(() => {
+      // make a mutable copy of data
+      const incomingData: Partial<Serialized<Base>> = { ...data };
+
+      // remove not updateable properties
+      delete (incomingData as any)['@type'];
+      delete incomingData.identifier;
+
+      // check all references
+      for (const [prop, ctor] of Object.entries(((this as any).constructors ||
+        {}) as Record<string, StaticConstructors<any>>)) {
+        const incomingDatum = (incomingData as any)[prop] as any;
+        delete (incomingData as any)[prop];
+
+        const currentValue = (instance as any)[prop] as any;
+
+        if (isObservableMap(currentValue)) {
+          // it's a referene to a map
+          const map = currentValue as ObservableMap<string, any>;
+
+          if (incomingDatum == null) {
+            map.clear();
+          } else {
+            if (typeof incomingDatum !== 'object') {
+              throw new Error('incomingData must be an object');
+            }
+
+            for (const [itemId, incomingItemDatum] of Object.entries(
+              incomingDatum as Record<string, Partial<Serialized<Base>>>
+            )) {
+              if (map.has(itemId)) {
+                const currentItemValue = map.get(itemId)!;
+                const currentItemCtor = currentItemValue.constructor as StaticConstructors<
+                  any
+                >;
+                if (incomingItemDatum) {
+                  currentItemCtor.merge(currentItemValue, incomingItemDatum);
+                } else {
+                  map.delete(itemId);
+                  if (
+                    isEqual(pathOf(currentItemValue), [
+                      ...(pathOf(instance) || []),
+                      prop,
+                    ])
+                  ) {
+                    (currentItemValue.constructor as StaticConstructors<
+                      any
+                    >).destroy(currentItemValue);
+                  }
+                }
+              } else if (incomingItemDatum) {
+                // incomingItemDatum; // ?
+                // ctor['@type']; // ?
+                if (typeof incomingItemDatum.identifier === 'string') {
+                  map.set(itemId, ctor.create(incomingItemDatum as any));
+                }
+              }
+            }
+          }
+        } else {
+          // it's a reference to one object
+          if (currentValue) {
+            if (incomingDatum) {
+              const currentCtor = currentValue.constructor as StaticConstructors<
+                any
+              >;
+
+              currentCtor.merge.merge(currentValue, incomingDatum);
+            } else {
+              (instance as any)[prop] = null;
+
+              if (
+                isEqual(pathOf(currentValue), [
+                  ...(pathOf(instance) || []),
+                  prop,
+                ])
+              ) {
+                (currentValue.constructor as StaticConstructors<any>).destroy(
+                  currentValue
+                );
+              }
+            }
+          } else if (incomingDatum) {
+            if (typeof incomingDatum.identifier === 'string') {
+              (instance as any)[prop] = ctor.create(incomingDatum);
+            }
+          }
+        }
+      }
+
+      // assign remaining values, which should all be primitives
+      // incomingData; // ?
+      // toJS(instance); // ?
+      Object.assign(instance, incomingData);
+    });
+  }
+
+  // static serialize(source: Base): Omit<Serialized<Base>, 'identifier'> {
+  //   throw new Error('must be implemented');
+  // }
+}
+
+/**
  * Infer the serialized format from a mobx observable class
  */
 export type Serialized<T> = { identifier: string } & Pick<T, PrimitiveKeys<T>> &
@@ -30,13 +166,6 @@ export type Serialized<T> = { identifier: string } & Pick<T, PrimitiveKeys<T>> &
           : Serialized<Required<T>[K]>)
       | (undefined extends T[K] ? undefined : never)
   };
-
-/**
- * Class decorator, used to let TypeScript check required static properties
- */
-export function staticImplements<T>() {
-  return (constructor: StaticConstructors<T>) => constructor;
-}
 
 type InstanceShape<T> = T & {
   readonly identifier: string;
@@ -53,9 +182,9 @@ export function many<T>(ctor: T): Record<string, T> {
 export type StaticConstructors<T> = {
   new (identifier: string): InstanceShape<T>;
 
-  // create: (data: Serialized<T>) => T;
+  create: (data: Serialized<T> | string) => T;
   serialize: (source: T) => Omit<Serialized<T>, 'identifier'>;
-  // merge: (source: T, data: Partial<Serialized<T>>) => void;
+  merge: (source: T, data: Partial<Serialized<T>>) => void;
   // destroy: (source: T) => void;
 
   '@type': string;
@@ -113,123 +242,6 @@ const lookupObject = <
     objectPath,
   } as any;
 };
-
-export function defaultCreate<T>(
-  this: StaticConstructors<T>,
-  data: Serialized<T>
-): T {
-  if ('@type' in data && (data as any)['@type'] !== this['@type']) {
-    throw new Error('create called on wrong @type');
-  }
-  const instance = new this(data.identifier || generateId());
-  (this.merge || defaultMerge.bind(this as any))(instance, data as Partial<
-    typeof data
-  >);
-  return instance;
-}
-
-export function defaultMerge<T>(
-  this: StaticConstructors<T>,
-  card: T,
-  data: Partial<Serialized<T>>
-) {
-  runInAction(() => {
-    // make a mutable copy of data
-    const update: Partial<Serialized<T>> = { ...data };
-
-    // remove not updateable properties
-    delete (update as any)['@type'];
-    delete update.identifier;
-
-    // check all references
-    for (const [prop, ctor] of Object.entries(((this as any).constructors ||
-      {}) as Record<string, StaticConstructors<any>>)) {
-      const incomingData = (data as any)[prop] as any;
-
-      delete (update as any)[prop];
-
-      const currentValue = (card as any)[prop] as any;
-
-      if (isObservableMap(currentValue)) {
-        // it's a referene to a map
-        const map = currentValue as ObservableMap<string, any>;
-        if (incomingData == null) {
-          map.clear();
-        } else {
-          if (typeof incomingData !== 'object') {
-            throw new Error('incomingData must be an object');
-          }
-
-          for (const [id, data] of Object.entries(incomingData as Record<
-            string,
-            Partial<Serialized<T>>
-          >)) {
-            if (map.has(id)) {
-              const currentValue = map.get(id)!;
-              const currentCtor = currentValue.constructor as StaticConstructors<
-                any
-              >;
-              if (data) {
-                (currentCtor.merge || defaultMerge.bind(currentCtor))(
-                  currentValue,
-                  data
-                );
-              } else {
-                map.delete(id);
-                if (
-                  isEqual(pathOf(currentValue), [...(pathOf(card) || []), prop])
-                ) {
-                  (currentValue.constructor as StaticConstructors<any>).destroy(
-                    currentValue
-                  );
-                }
-              }
-            } else if (data) {
-              data; // ?
-              if (typeof data.identifier === 'string') {
-                map.set(
-                  id,
-                  (ctor.create || defaultCreate.bind(ctor))(data as any)
-                );
-              }
-            }
-          }
-        }
-      } else {
-        // it's a reference to one object
-        if (currentValue) {
-          if (incomingData) {
-            const currentCtor = currentValue.constructor as StaticConstructors<
-              any
-            >;
-            (currentCtor.merge || defaultMerge.bind(currentCtor)).merge(
-              currentValue,
-              incomingData
-            );
-          } else {
-            (card as any)[prop] = null;
-            if (
-              isEqual(pathOf(currentValue), [...(pathOf(card) || []), prop])
-            ) {
-              (currentValue.constructor as StaticConstructors<any>).destroy(
-                currentValue
-              );
-            }
-          }
-        } else if (incomingData) {
-          if (typeof incomingData.identifier === 'string') {
-            (card as any)[prop] = (ctor.create || defaultCreate.bind(ctor))(
-              incomingData
-            );
-          }
-        }
-      }
-    }
-
-    // assign remaining values, which should all be primitives
-    Object.assign(card, update);
-  });
-}
 
 const pathSymbol = Symbol('path of object');
 function pathOf(o: any): subj | undefined {
@@ -354,7 +366,7 @@ export const create = <T extends IMergeable>(
 
   let instance!: T;
   runInAction(() => {
-    instance = (ctor.create || defaultCreate.bind(ctor as any))(current) as T;
+    instance = ctor.create(current) as T;
   });
 
   setPathOf(instance, path);
@@ -370,9 +382,7 @@ export const create = <T extends IMergeable>(
 
       try {
         mutexLocked = true;
-        runInAction(() => {
-          (ctor.merge || defaultMerge.bind(ctor as any))(instance, current);
-        });
+        runInAction(() => ctor.merge(instance, current));
       } finally {
         mutexLocked = false;
       }

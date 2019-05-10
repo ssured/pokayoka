@@ -8,6 +8,7 @@ import {
   MergableSerialized,
   serializeMany,
   staticImplements,
+  Base,
 } from './object-live-crdt';
 
 const couch = nano('http://admin:admin@localhost:5984');
@@ -34,9 +35,8 @@ class Project {
 }
 
 @staticImplements<User>()
-class User {
+class User extends Base {
   static '@type' = 'User';
-  constructor(readonly identifier: string) {}
 
   static serialize(user: User) {
     const { name } = user;
