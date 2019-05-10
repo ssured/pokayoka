@@ -42,6 +42,14 @@ type InstanceShape<T> = T & {
   readonly identifier: string;
 };
 
+export function many<T>(ctor: T): Record<string, T> {
+  return new Proxy(Object.create(null), {
+    get() {
+      return ctor;
+    },
+  });
+}
+
 export type StaticConstructors<T> = {
   new (identifier: string): InstanceShape<T>;
 

@@ -6,6 +6,7 @@ import {
   serializeMany,
   serializeOne,
   staticImplements,
+  many,
 } from './object-live-crdt';
 
 abstract class Base {
