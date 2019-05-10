@@ -18,7 +18,7 @@ function createRoot<T>({
   source,
   onObserved,
   onUnobserved,
-}: RootHandler<T>): Record<string, IComputedValue<T | undefined>> {
+}: RootHandler<T>): Record<string, T | undefined> {
   const disposers: (() => void)[] = [];
 
   const accessors = observable.map<
@@ -76,7 +76,7 @@ function createRoot<T>({
   return new Proxy(Object.create(null) as any, {
     get(target, key) {
       if (typeof key !== 'string') return undefined;
-      return getAccessor(key);
+      return getAccessor(key).get();
     },
     set() {
       throw new Error('cannot set root properties');
@@ -114,17 +114,17 @@ describe('observableRoot allows for async key+value lookup', () => {
     expect(observedCount).toBe(0);
     expect(unobservedCount).toBe(0);
 
-    expect(root.test.get()).toBeUndefined();
+    expect(root.test).toBeUndefined();
 
     expect(observedCount).toBe(0);
     expect(unobservedCount).toBe(0);
 
     const disposer1 = autorun(() => {
-      root.test.get();
+      root.test;
     });
 
     const disposer2 = autorun(() => {
-      root.test.get();
+      root.test;
     });
 
     expect(observedCount).toBe(1);
@@ -141,7 +141,7 @@ describe('observableRoot allows for async key+value lookup', () => {
     expect(unobservedCount).toBe(1);
 
     const disposer3 = autorun(() => {
-      root.test.get();
+      root.test;
     });
 
     expect(observedCount).toBe(2);
@@ -163,7 +163,7 @@ describe('observableRoot allows for async key+value lookup', () => {
     const values: (string | undefined)[] = [];
 
     const disposer1 = autorun(() => {
-      values.push(root.test.get());
+      values.push(root.test);
     });
 
     expect(values).toEqual(['one']);
@@ -188,7 +188,7 @@ describe('observableRoot allows for async key+value lookup', () => {
     const values: (string | undefined)[] = [];
 
     const disposer1 = autorun(() => {
-      values.push(root.test.get());
+      values.push(root.test);
     });
 
     expect(values).toEqual([undefined]);
@@ -207,7 +207,7 @@ describe('observableRoot allows for async key+value lookup', () => {
       onUnobserved: key => {},
     });
 
-    expect(() => (root.test = 'value' as any)).toThrow();
+    expect(() => (root.test = 'value')).toThrow();
   });
 
   test('exposes observed keys', async () => {
@@ -223,14 +223,14 @@ describe('observableRoot allows for async key+value lookup', () => {
     expect('key1' in root).toBe(false);
 
     const disposer1 = autorun(() => {
-      console.log(root.key1.get());
+      root.key1;
     });
 
     expect('key1' in root).toBe(true);
     expect(Object.keys(root)).toEqual(['key1']);
 
     const disposer2 = autorun(() => {
-      root.key2.get();
+      root.key2;
     });
 
     expect(Object.keys(root)).toEqual(['key1', 'key2']);
