@@ -1,27 +1,27 @@
-import { action, observable, configure, runInAction, toJS } from 'mobx';
+import { action, configure, observable, runInAction, toJS } from 'mobx';
+import { deepObserve } from 'mobx-utils';
+import nano from 'nano';
+import { generateId } from '../../server/utils/snag-id';
+import { asMergeableObject, merge, pickAt } from './object-crdt';
 import {
   create,
-  staticImplements,
   MergableSerialized,
+  serializeMany,
+  staticImplements,
 } from './object-live-crdt';
-import nano from 'nano';
-import { asMergeableObject, valueAt, merge, pickAt } from './object-crdt';
-import { deepObserve } from 'mobx-utils';
 
 const couch = nano('http://admin:admin@localhost:5984');
 const testDbName = 'atest';
 
 configure({ enforceActions: 'always' });
 
-@staticImplements<User>()
-class User {
-  static '@type' = 'User';
-  constructor(readonly identifier: string) {}
+@staticImplements<Project>()
+class Project {
+  static '@type' = 'Project';
+  constructor(readonly identifier: string = generateId()) {}
 
-  static serialize(hello: User) {
-    return {
-      name: hello.name,
-    };
+  static serialize({ name }: Project) {
+    return { name };
   }
 
   @observable
@@ -30,6 +30,39 @@ class User {
   @action
   setName(name: string) {
     this.name = name;
+  }
+}
+
+@staticImplements<User>()
+class User {
+  static '@type' = 'User';
+  constructor(readonly identifier: string) {}
+
+  static serialize(user: User) {
+    const { name } = user;
+    return { name, ...serializeMany(user, 'projects') };
+  }
+
+  static constructors = {
+    projects: Project,
+  };
+
+  @observable
+  name = '';
+
+  @action
+  setName(name: string) {
+    this.name = name;
+  }
+
+  projects = observable.map<string, Project>();
+
+  @action
+  addProject(name: string) {
+    const project = new Project();
+    project.setName(name);
+    this.projects.set(project.identifier, project);
+    return project;
   }
 }
 
@@ -53,7 +86,7 @@ describe('one class', () => {
     runInAction(() => state.set(1));
   });
 
-  test.only('create', async () => {
+  test('create', async () => {
     const _id = 'user1';
 
     // create document
@@ -63,6 +96,7 @@ describe('one class', () => {
         '@type': 'User',
         identifier: _id,
         name: 'Sjoerd',
+        projects: {},
       }),
     });
 
@@ -75,7 +109,11 @@ describe('one class', () => {
     const hello = create(getState, [], User, data);
 
     const updates: Promise<any>[] = [];
+
     deepObserve(data, (change, path) => {
+      console.log(path);
+      console.log(change.name);
+      console.log(toJS(change));
       const update = new Promise(async (res, rej) => {
         try {
           await Promise.all(updates);
@@ -104,12 +142,16 @@ describe('one class', () => {
     expect(updates.length).toBe(1);
 
     runInAction(() => state.set(3));
-    hello.setName('Wieger');
+    const project = hello.addProject('Wieger');
     expect(updates.length).toBe(2);
+
+    runInAction(() => state.set(4));
+    project.setName('Joliens');
+    expect(updates.length).toBe(3);
 
     runInAction(() => state.set(5));
     hello.setName('Jolien');
-    expect(updates.length).toBe(3);
+    expect(updates.length).toBe(4);
 
     await Promise.all(updates);
   });

@@ -376,27 +376,31 @@ export const create = <T extends IMergeable>(
     () => ctor.serialize(instance),
     serialized => {
       if (mutexLocked) return;
-      const state = getState();
-      const currentValue = valueAt(state, source);
-
-      // current; // ?
-      // serialized; // ?
-
       try {
         mutexLocked = true;
-        const updates = {} as any;
-        let doMerge = false;
-        for (const [key, value] of Object.entries(serialized)) {
-          if (value !== (currentValue as any)[key]) {
-            updates[key] = asMergeableObject(state, value as any);
-            doMerge = true;
+
+        const state = getState();
+
+        function mergeSerialized(
+          source: Record<string, ToMergeableObject<any>>,
+          serialized: Omit<Serialized<any>, 'identifier'>
+        ) {
+          const current = valueAt(state, source);
+          const currentSource = pickAt(state, source)!;
+
+          for (const [key, incomingValue] of Object.entries(serialized)) {
+            const currentValue = (current as any)[key];
+            if (isObject(incomingValue) && isObject(currentValue)) {
+              mergeSerialized(currentSource[key], incomingValue);
+            } else if (!isEqual(incomingValue, currentValue)) {
+              merge(currentSource, {
+                [key]: asMergeableObject(state, incomingValue as any),
+              } as any);
+            }
           }
         }
-        // updates; // ?
-        if (doMerge) {
-          const current = pickAt(getState(), source)!;
-          runInAction(() => merge(current, updates));
-        }
+
+        runInAction(() => mergeSerialized(source, serialized));
       } finally {
         mutexLocked = false;
       }

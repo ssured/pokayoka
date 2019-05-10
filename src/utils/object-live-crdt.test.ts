@@ -8,10 +8,13 @@ import {
   staticImplements,
 } from './object-live-crdt';
 
-@staticImplements<Hello>()
-class Hello {
-  static '@type' = 'Hello';
+abstract class Base {
   constructor(readonly identifier: string) {}
+}
+
+@staticImplements<Hello>()
+class Hello extends Base {
+  static '@type' = 'Hello';
 
   static serialize(hello: Hello) {
     return {
@@ -33,9 +36,8 @@ class Hello {
 }
 
 @staticImplements<Card>()
-class Card {
+class Card extends Base {
   static '@type' = 'Card';
-  constructor(readonly identifier: string) {}
 
   static constructors = {
     contents: Hello,
@@ -209,9 +211,8 @@ describe('optional ref another class', () => {
 });
 
 @staticImplements<Mail>()
-class Mail {
+class Mail extends Base {
   static '@type' = 'Mail';
-  constructor(readonly identifier: string) {}
 
   static constructors = {
     contents: Card,

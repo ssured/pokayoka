@@ -1,15 +1,14 @@
-import React, { FunctionComponent, useState } from 'react';
-import { useRoot } from '../contexts/spo-hub';
-import { observer, useObservable } from 'mobx-react-lite';
-import { SPOShape } from '../utils/spo';
 import { Box, Button, Text, TextInput } from 'grommet';
-import { runInAction, observable, action } from 'mobx';
+import { Add, Close } from 'grommet-icons';
+import { action, observable, runInAction } from 'mobx';
+import { observer, useObservable } from 'mobx-react-lite';
+import React, { FunctionComponent } from 'react';
 import {
   createEmittingRoot,
   getObservedKeys,
   RootEventMsg,
 } from '../utils/observable-root';
-import { Close, Add } from 'grommet-icons';
+import { SPOShape } from '../utils/spo';
 
 const Part: React.FunctionComponent<{
   object: SPOShape;
