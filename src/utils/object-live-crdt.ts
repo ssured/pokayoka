@@ -45,13 +45,13 @@ export abstract class UniversalObject {
     return instance;
   }
 
-  static merge<T extends UniversalObject>(
-    instance: T,
-    data: Partial<Serialized<T>>
-  ) {
+  static merge(instanceArg: any, dataArg: any) {
+    const instance = instanceArg as UniversalObject;
+    const data = dataArg as Partial<Serialized<UniversalObject>>;
+
     runInAction(() => {
       // make a mutable copy of data
-      const incomingData: Partial<Serialized<T>> = { ...data };
+      const incomingData: Partial<Serialized<UniversalObject>> = { ...data };
 
       // remove not updateable properties
       delete (incomingData as any)['@type'];
@@ -77,7 +77,10 @@ export abstract class UniversalObject {
             }
 
             for (const [itemId, incomingItemDatum] of Object.entries(
-              incomingDatum as Record<string, Partial<Serialized<T>>>
+              incomingDatum as Record<
+                string,
+                Partial<Serialized<UniversalObject>>
+              >
             )) {
               if (map.has(itemId)) {
                 const currentItemValue = map.get(itemId)!;
@@ -94,16 +97,19 @@ export abstract class UniversalObject {
                       prop,
                     ])
                   ) {
-                    (currentItemValue.constructor as StaticConstructors<
-                      any
-                    >).destroy(currentItemValue);
+                    currentItemCtor.destroy(currentItemValue);
                   }
                 }
               } else if (incomingItemDatum) {
                 // incomingItemDatum; // ?
                 // ctor['@type']; // ?
                 if (typeof incomingItemDatum.identifier === 'string') {
-                  map.set(itemId, ctor.create(incomingItemDatum as any));
+                  map.set(
+                    itemId,
+                    ctor.constructors[incomingItemDatum.identifier].create(
+                      incomingItemDatum as any
+                    )
+                  );
                 }
               }
             }
@@ -169,12 +175,14 @@ type InstanceShape<T> = T & {
   readonly identifier: string;
 };
 
-export function many<T>(ctor: T): Record<string, T> {
-  return new Proxy(Object.create(null), {
-    get() {
-      return ctor;
-    },
-  });
+export function many<T>(ctor: T): { constructors: Record<string, T> } {
+  return {
+    constructors: new Proxy(Object.create(null), {
+      get() {
+        return ctor;
+      },
+    }),
+  };
 }
 
 export type StaticConstructors<T> = {
@@ -194,7 +202,7 @@ export type StaticConstructors<T> = {
           string,
           infer U
         >
-          ? StaticConstructors<U>
+          ? { constructors: Record<string, StaticConstructors<U>> }
           : StaticConstructors<Required<T>[K]>
       };
     }) & { [key: string]: any };

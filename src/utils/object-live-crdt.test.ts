@@ -7,6 +7,7 @@ import {
   MergableSerialized,
   serializeMany,
   serializeOne,
+  many,
 } from './object-live-crdt';
 
 @letTypeScriptCheckStaticPropertiesOf<Hello>()
@@ -212,7 +213,7 @@ class Mail extends UniversalObject {
   static '@type' = 'Mail';
 
   static constructors = {
-    contents: Card,
+    contents: many(Card),
   };
 
   static serialize(card: Mail) {
