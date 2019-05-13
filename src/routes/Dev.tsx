@@ -115,7 +115,7 @@ const ObservedKeys: React.FunctionComponent<{}> = observer(({}) => {
 const SeenEvents: React.FunctionComponent<{}> = observer(({}) => {
   return (
     <ol>
-      {events.map((event, i) => (
+      {events.reverse().map((event, i) => (
         <li key={i}>
           {event.key}: {event.type} {event.type === 'update' && event.value}
         </li>
