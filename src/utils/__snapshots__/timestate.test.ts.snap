@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`one class it supports zero or one 1`] = `
+Object {
+  "KJexisting@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "0": "Existing",
+      },
+      "projects": Object {
+        "0": Object {
+          "KJKJexisting@example.com??\\"Jprojects\\"Jp1!": Object {
+            "2": Object {
+              "@type": Object {
+                "2": "Project",
+              },
+              "identifier": Object {
+                "2": "KJKJexisting@example.com??\\"Jprojects\\"Jp1!",
+              },
+              "name": Object {
+                "2": "Two",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`one class it supports zero or one 2`] = `
+Object {
+  "KJexisting@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+        "3": Array [
+          "existing@example.com",
+          "projects",
+          "KJKJexisting@example.com??\\"Jprojects\\"Jp1!",
+        ],
+      },
+      "name": Object {
+        "0": "Existing",
+      },
+      "projects": Object {
+        "0": Object {
+          "KJKJexisting@example.com??\\"Jprojects\\"Jp1!": Object {
+            "2": Object {
+              "@type": Object {
+                "2": "Project",
+              },
+              "identifier": Object {
+                "2": "KJKJexisting@example.com??\\"Jprojects\\"Jp1!",
+              },
+              "name": Object {
+                "2": "Two",
+                "3": "Three",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;

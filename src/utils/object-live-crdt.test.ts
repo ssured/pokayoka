@@ -10,7 +10,7 @@ import { asMergeableObject, merge, pickAt } from './object-crdt';
 import {
   UniversalObject,
   create,
-  letTypeScriptCheckStaticPropertiesOf,
+  checkDefinitionOf,
   MergableSerialized,
   serializeMany,
   serializeOne,
@@ -27,7 +27,7 @@ abstract class Base extends UniversalObject {
   }
 }
 
-@letTypeScriptCheckStaticPropertiesOf<Hello>()
+@checkDefinitionOf<Hello>()
 class Hello extends Base {
   static '@type' = 'Hello';
 
@@ -50,7 +50,7 @@ class Hello extends Base {
   }
 }
 
-@letTypeScriptCheckStaticPropertiesOf<Card>()
+@checkDefinitionOf<Card>()
 class Card extends Base {
   static '@type' = 'Card';
 
@@ -227,7 +227,7 @@ describe('optional ref another class', () => {
   });
 });
 
-@letTypeScriptCheckStaticPropertiesOf<Mail>()
+@checkDefinitionOf<Mail>()
 class Mail extends Base {
   static '@type' = 'Mail';
 

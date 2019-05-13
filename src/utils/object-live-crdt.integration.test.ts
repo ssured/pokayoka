@@ -7,7 +7,7 @@ import {
   create,
   MergableSerialized,
   serializeMany,
-  letTypeScriptCheckStaticPropertiesOf,
+  checkDefinitionOf,
   UniversalObject,
   many,
 } from './object-live-crdt';
@@ -25,7 +25,7 @@ abstract class Base extends UniversalObject {
   }
 }
 
-@letTypeScriptCheckStaticPropertiesOf<Project>()
+@checkDefinitionOf<Project>()
 class Project extends Base {
   static '@type' = 'Project';
 
@@ -42,7 +42,7 @@ class Project extends Base {
   }
 }
 
-@letTypeScriptCheckStaticPropertiesOf<User>()
+@checkDefinitionOf<User>()
 class User extends Base {
   static '@type' = 'User';
 

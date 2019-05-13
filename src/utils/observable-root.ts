@@ -69,10 +69,10 @@ export function createRoot<T>({
     })
   );
 
-  function getAccessor(key: string): IComputedValue<T | undefined> {
+  function getAccessor(key: string): IComputedValue<T> {
     if (accessors.has(key)) return accessors.get(key)!;
 
-    const accessor = computed(() => source.get(key));
+    const accessor = computed(() => source.get(key)!);
     runInAction(() => accessors.set(key, accessor));
 
     onBecomeObserved(accessor, () =>

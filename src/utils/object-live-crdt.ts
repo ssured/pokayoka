@@ -19,7 +19,7 @@ import { isObject, state, subj } from './spo';
 /**
  * Class decorator, used to let TypeScript check required static properties
  */
-export function letTypeScriptCheckStaticPropertiesOf<T>() {
+export function checkDefinitionOf<T>() {
   return (constructor: StaticConstructors<T>) => constructor;
 }
 

@@ -14,7 +14,7 @@ import {
 import { isObject } from 'util';
 import { generateId } from '../../server/utils/snag-id';
 import {
-  letTypeScriptCheckStaticPropertiesOf,
+  checkDefinitionOf,
   many,
   serializeMany,
   UniversalObject,
@@ -62,7 +62,7 @@ abstract class Base extends UniversalObject {
   }
 }
 
-@letTypeScriptCheckStaticPropertiesOf<Project>()
+@checkDefinitionOf<Project>()
 class Project extends Base {
   static '@type' = 'Project';
 
@@ -79,7 +79,7 @@ class Project extends Base {
   }
 }
 
-@letTypeScriptCheckStaticPropertiesOf<User>()
+@checkDefinitionOf<User>()
 class User extends Base {
   static '@type' = 'User';
 
