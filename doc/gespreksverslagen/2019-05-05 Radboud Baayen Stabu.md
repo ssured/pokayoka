@@ -33,6 +33,7 @@ slides basis elementen
 woningbouwverenigingen grote behoefte aan informatie
 asset managers weten niet welke informatie ze nodig hebben
 
+12build
 planon
 loek online blockchain
 archibus
