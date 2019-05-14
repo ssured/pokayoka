@@ -24,6 +24,8 @@ export function checkDefinitionOf<T>() {
 }
 
 export abstract class UniversalObject {
+  constructor(readonly identifier: string) {}
+
   // for inheritance we need to define all args as any
   // maybe future TS will improve this.
   static create(idOrDataArg: any): any {
@@ -87,22 +89,14 @@ export abstract class UniversalObject {
               >
             )) {
               if (map.has(itemId)) {
-                const currentItemValue = map.get(itemId)!;
-                const currentItemCtor = currentItemValue.constructor as StaticConstructors<
-                  any
-                >;
                 if (incomingItemDatum) {
+                  const currentItemValue = map.get(itemId)!;
+                  const currentItemCtor = currentItemValue.constructor as StaticConstructors<
+                    any
+                  >;
                   currentItemCtor.merge(currentItemValue, incomingItemDatum);
                 } else {
                   map.delete(itemId);
-                  if (
-                    isEqual(pathOf(currentItemValue), [
-                      ...(pathOf(instance) || []),
-                      prop,
-                    ])
-                  ) {
-                    currentItemCtor.destroy(currentItemValue);
-                  }
                 }
               } else if (incomingItemDatum) {
                 // incomingItemDatum; // ?
@@ -129,17 +123,6 @@ export abstract class UniversalObject {
               currentCtor.merge(currentValue, incomingDatum);
             } else {
               (instance as any)[prop] = null;
-
-              if (
-                isEqual(pathOf(currentValue), [
-                  ...(pathOf(instance) || []),
-                  prop,
-                ])
-              ) {
-                (currentValue.constructor as StaticConstructors<any>).destroy(
-                  currentValue
-                );
-              }
             }
           } else if (incomingDatum) {
             if (typeof incomingDatum.identifier === 'string') {
@@ -166,13 +149,9 @@ export abstract class UniversalObject {
  */
 export type Serialized<T> = { identifier: string } & Pick<T, PrimitiveKeys<T>> &
   {
-    [K in RefKeys<T>]:
-      | null
-      | subj
-      | ((Required<T>[K]) extends ObservableMap<string, infer U>
-          ? Record<string, subj | Serialized<U> | null>
-          : Serialized<Required<T>[K]>)
-      | (undefined extends T[K] ? undefined : never)
+    [K in RefKeys<T>]: ((Required<T>[K]) extends ObservableMap
+      ? Record<string, string[]>
+      : null | string[])
   };
 
 type InstanceShape<T> = T & {
@@ -195,7 +174,6 @@ export type StaticConstructors<T> = {
   create: (data: Serialized<T> | string) => T;
   serialize: (source: T) => Omit<Serialized<T>, 'identifier'>;
   merge: (source: T, data: Partial<Serialized<T>>) => void;
-  // destroy: (source: T) => void;
 
   '@type': string;
 } & (RefKeys<T> extends never
@@ -211,125 +189,15 @@ export type StaticConstructors<T> = {
       };
     }) & { [key: string]: any };
 
-type LookupInfoObject<T> = {
-  objectType: 'object';
-  object: T;
-  owns: boolean;
-  objectPath: subj;
-};
-
-type LookupInfoPrimitive<T> = {
-  objectType: 'primitive';
-  object: T;
-};
-
-type LookupInfo<T> = LookupInfoObject<T> | LookupInfoPrimitive<T>;
-
-const lookupObject = <
-  Subject extends object,
-  Pred extends RequiredWritableKeysOf<Subject>
->(
-  subject: Subject,
-  pred: Pred
-): LookupInfo<Subject[Pred]> => {
-  const object = isObservableMap(subject) ? subject.get(pred) : subject[pred];
-  const objectType = isObject(object) ? 'object' : 'primitive';
-
-  if (objectType === 'primitive') return { object, objectType } as any;
-
-  const subjectPath = pathOf(subject);
-  if (subjectPath == null) throw new Error('subjectPath not set');
-
-  const targetPath = [...subjectPath, pred] as string[];
-
-  const objectPath =
-    pathOf(object) || setPathOf((object as unknown) as object, targetPath);
-
-  return {
-    objectType,
-    object,
-    owns: isEqual(objectPath, targetPath),
-    objectPath,
-  } as any;
-};
-
-const pathSymbol = Symbol('path of object');
-function pathOf(o: any): subj | undefined {
-  // @ts-ignore
-  return o[pathSymbol];
-}
-export function setPathOf<O extends object>(o: O, subj: subj) {
-  // @ts-ignore
-  o[pathSymbol] = subj;
-  return subj;
-}
-
-const asReferenceOrEmbedded = <
-  Subject extends object,
-  Pred extends RefKeys<Subject>
->(
-  subject: Subject,
-  pred: Pred
-):
-  | null
-  | string[]
-  | (undefined extends Subject[Pred]
-      ? undefined | Serialized<Exclude<Subject[Pred], undefined>>
-      : Serialized<Subject[Pred]>) => {
-  const objectInfo = lookupObject(
-    subject,
-    (pred as unknown) as RequiredWritableKeysOf<Subject>
-  );
-
-  if (objectInfo.object == null) return null;
-
-  if (objectInfo.objectType === 'primitive') {
-    throw new Error('object must be an object');
-  }
-
-  const { owns, object, objectPath } = objectInfo;
-
-  // check if this subject owns the object at pred.
-  if (owns) {
-    if (isObservableMap(object)) {
-      const result = {} as any;
-      for (const key of object.keys()) {
-        result[key] = asReferenceOrEmbedded(object, key);
-      }
-      return result;
-    }
-
-    // embed the object
-    const ctor = (object as any).constructor as StaticConstructors<
-      typeof object
-    >;
-    return {
-      '@type': ctor['@type'],
-      identifier: (object as any).identifier,
-      ...ctor.serialize(object),
-    } as any;
-  }
-
-  // make a reference
-  return objectPath;
-};
-
 export const serializeOne = <
   ParentObject,
   RefProp extends RefKeys<ParentObject>
 >(
   object: ParentObject,
   prop: RefProp
-): {
-  [K in RefProp]:
-    | null
-    | string[]
-    | (undefined extends ParentObject[RefProp]
-        ? undefined | Serialized<Exclude<ParentObject[RefProp], undefined>>
-        : Serialized<ParentObject[RefProp]>)
-} => {
+): { [K in RefProp]: null | string[] } => {
   // @ts-ignore
-  return { [prop]: asReferenceOrEmbedded(object, prop) };
+  return { [prop]: object[prop] ? object[prop].identifier : null };
 };
 
 export const serializeMany = <
@@ -338,22 +206,20 @@ export const serializeMany = <
 >(
   object: ParentObject,
   prop: RefProp
-): {
-  [K in RefProp]:
-    | null
-    | string[]
-    | Record<
-        string,
-        | null
-        | string[]
-        | ((ParentObject[RefProp]) extends ObservableMap<string, infer U>
-            ? Serialized<U>
-            : never)
-      >
-} => {
-  const value = asReferenceOrEmbedded(object, prop);
-  // @ts-ignore
-  return { [prop]: value };
+): { [K in RefProp]: Record<string, string[]> } => {
+  const result: any = {};
+
+  for (const [key, value] of (object[prop] as any)
+    ? (object[prop] as any).entries()
+    : []) {
+    // console.log(key)
+    // console.log(toJS(value))
+    result[prop] = result[prop] || {};
+    result[prop][key] = [value.identifier];
+  }
+
+  // console.log(result);
+  return result;
 };
 
 export type MergableSerialized<T extends IMergeable> = ToMergeableObject<
@@ -402,8 +268,6 @@ export const create = <T extends IMergeable>(
   runInAction(() => {
     instance = Class.create(current) as T;
   });
-
-  setPathOf(instance, path);
 
   // manage live updates
   let mutexLocked = false;

@@ -7,9 +7,6 @@ Object {
       "name": Object {
         "2": "Two",
       },
-      "projects": Object {
-        "2": Object {},
-      },
     },
   },
 }
@@ -22,9 +19,6 @@ Object {
       "name": Object {
         "2": "Two",
         "3": "Three",
-      },
-      "projects": Object {
-        "2": Object {},
       },
     },
   },

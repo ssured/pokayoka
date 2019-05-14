@@ -21,7 +21,6 @@ import {
   MergableSerialized,
   mergeSerialized,
   Serialized,
-  setPathOf,
 } from './object-live-crdt';
 import { createEmittingRoot, RootEventMsg } from './observable-root';
 import { isLink, subj } from './spo';
@@ -50,15 +49,8 @@ function isTopLevel(key: string) {
 }
 
 abstract class Base extends UniversalObject {
-  constructor(readonly identifier: string) {
-    super(); // make ts-lint happy
-
-    // only sync on top level objects
-    // deeper objects will be synced from top
-    if (!isTopLevel(identifier)) return;
-
-    // TODO remove path logic and use identifier for all paths
-    setPathOf(this, key2path(identifier));
+  constructor(identifier: string = generateId()) {
+    super(identifier);
   }
 }
 

@@ -8,6 +8,7 @@ import {
   onBecomeObserved,
   onBecomeUnobserved,
   runInAction,
+  action,
 } from 'mobx';
 import SubscribableEvent from 'subscribableevent';
 import { Omit } from './typescript';
@@ -111,7 +112,6 @@ export function createRoot<T>({
     },
     getOwnPropertyDescriptor(_, key) {
       if (typeof key === 'string') {
-        //   source.get(key); // this is not a no-op!
         return {
           configurable: true,
           enumerable: true,

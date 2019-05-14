@@ -1,91 +1,73 @@
-import charwise from 'charwise';
 import {
   action,
-  autorun,
   configure,
-  observable,
-  runInAction,
   IObservableValue,
-  ObservableMap,
-  toJS,
+  observable,
   reaction,
+  runInAction,
+  toJS,
+  autorun,
   when,
 } from 'mobx';
-import { isObject } from 'util';
-import { generateId } from '../../server/utils/snag-id';
+import { generateId } from './id';
+import { ensureNever } from './index';
+import { valueAt } from './object-crdt';
 import {
   checkDefinitionOf,
   many,
-  serializeMany,
-  UniversalObject,
   MergableSerialized,
   mergeSerialized,
   Serialized,
-  setPathOf,
+  serializeMany,
   serializeOne,
+  UniversalObject,
 } from './object-live-crdt';
-import {
-  createEmittingRoot,
-  RootEventMsg,
-  createRoot,
-} from './observable-root';
-import { isLink, subj } from './spo';
-import SubscribableEvent, { SubscriptionToken } from 'subscribableevent';
-import { ensureNever } from './index';
-import { valueAt, IMergeable } from './object-crdt';
+import { createEmittingRoot, RootEventMsg } from './observable-root';
 
-configure({ enforceActions: 'always', disableErrorBoundaries: true });
+configure({ enforceActions: 'observed', disableErrorBoundaries: true });
 
 // state is global for the system
-let state!: IObservableValue<number>;
+const state = observable.box(1);
 const getState = () => String(state.get());
 
-let timeState!: ObservableMap<
+const timeState = observable.map<
   string,
   Record<string, MergableSerialized<AnyInstance>>
->;
-
-runInAction(() => {
-  timeState = observable.map<
-    string,
-    Record<string, MergableSerialized<AnyInstance>>
-  >([
-    [
-      path2key(['existing@example.com']),
-      {
-        '0': {
-          name: {
-            '0': 'Existing',
-          },
-          projects: {
-            '0': {},
-          },
-        },
-      } as any,
-    ],
-  ]);
-});
+>();
 
 function getTimeStateThread(identifier: string) {
   if (!timeState.has(identifier)) {
-    runInAction(() => timeState.set(identifier, { '0': {} } as any));
+    runInAction(() => timeState.set(identifier, { [getState()]: {} } as any));
   }
   return timeState.get(identifier)!;
 }
-function isTopLevel(key: string) {
-  return key2path(key).length === 1;
-}
+
+// Helpers for the shape of internal state
+type AnyClass = (typeof allClasses)[number];
+type AnyInstance = InstanceType<AnyClass>;
+
+const source = observable.map<string, AnyInstance>();
+const { root, subscribe } = createEmittingRoot({
+  source,
+  onRootSet: () => true,
+  onSet: action((key: string, value: T) => {
+    source.set(key, value);
+  }),
+});
+
+/**
+ *
+ *
+ *
+ *
+ *
+ */
 
 abstract class Base extends UniversalObject {
-  constructor(readonly identifier: string) {
-    super();
-
-    // only sync on top level objects
-    // deeper objects will be synced from top
-    if (!isTopLevel(identifier)) return;
-
-    // TODO remove path logic and use identifier for all paths
-    setPathOf(this, key2path(identifier));
+  constructor(public identifier: string = generateId()) {
+    super(identifier);
+    // register with root
+    root[this.identifier] = (this as unknown) as AnyInstance;
   }
 }
 
@@ -112,7 +94,7 @@ class User extends Base {
 
   static constructors = {
     projects: many(Project),
-    defaultProject: Project,
+    mainProject: Project,
   };
 
   static serialize(user: User) {
@@ -120,7 +102,7 @@ class User extends Base {
     return {
       name,
       ...serializeMany(user, 'projects'),
-      ...serializeOne(user, 'defaultProject'),
+      ...serializeOne(user, 'mainProject'),
     };
   }
 
@@ -133,14 +115,13 @@ class User extends Base {
   }
 
   @observable
-  defaultProject?: Project;
+  mainProject?: Project;
 
   projects = observable.map<string, Project>();
 
   @action
-  addProject(id: string, name: string) {
-    const key = path2key([this.identifier, 'projects', id]);
-    const project = new Project(key);
+  addProject(id: string = generateId(), name: string) {
+    const project = new Project(id);
     project.setName(name);
     this.projects.set(project.identifier, project);
     return project;
@@ -148,114 +129,100 @@ class User extends Base {
 
   @action
   selectProject(project?: Project) {
-    this.defaultProject = project;
+    this.mainProject = project;
   }
 }
 
-// Helpers for the shape of internal state
-type AnyClass = typeof User | typeof Project;
-type AnyInstance = InstanceType<AnyClass>;
-const rootShape = many(User);
-const lookupClassFromPath = (path: subj): AnyClass => {
-  if (path.length === 0) throw new Error('root has no constructor');
-  let ctor = rootShape as any;
+/**
+ *
+ *
+ *
+ *
+ *
+ */
 
-  for (const part of path) {
-    if (!isObject(ctor.constructors)) {
-      throw new Error(
-        `could not find constructors at path ${JSON.stringify(path)}`
-      );
-    }
-    ctor = ctor.constructors[part];
-    if (!ctor || typeof ctor['@type'] !== 'string') {
-      throw new Error(
-        `no or wrong constructor at path ${JSON.stringify(path)}`
-      );
-    }
-  }
+const allClasses = [Project, User] as const;
 
-  return ctor;
-};
-function key2path(key: string): subj {
-  let path!: subj | unknown;
-  try {
-    path = charwise.decode(key) as unknown;
-  } catch (e) {
-    throw new Error(`Key is properly encoded: ${key}`);
-  }
-  if (!isLink(path)) {
-    throw new Error(`key is not a valid path ${JSON.stringify(key)}`);
-  }
-  return path;
-}
-function path2key(path: subj): string {
-  return charwise.encode(path);
-}
+const classFromType = allClasses.reduce(
+  (lookup, Class) => {
+    lookup[Class['@type']] = Class;
+    return lookup;
+  },
+  {} as Record<string, AnyClass>
+);
 
 const timeStateHandler = () => {
   const disposersMap: Record<string, (() => void)[]> = {};
   const instancesMap = observable.map<string, AnyInstance>();
+
   return async (msg: RootEventMsg<AnyInstance>) => {
     const { key } = msg;
-    if (!isTopLevel(key)) return;
+
+    let mutexLocked = false;
+    const stateThread = getTimeStateThread(key);
+
+    const storeSerialized = (
+      serialized: Omit<Serialized<any>, 'identifier'>
+    ) => {
+      if (serialized == null || mutexLocked) return;
+      try {
+        mutexLocked = true;
+        mergeSerialized(getState(), stateThread, serialized);
+      } finally {
+        mutexLocked = false;
+      }
+    };
 
     switch (msg.type) {
+      case 'update':
+        runInAction(() => {
+          instancesMap.set(key, msg.value);
+          // storeSerialized((msg.value.constructor as any).serialize(msg.value))
+        });
       case 'observed': {
-        const store = getTimeStateThread(key);
+        if (disposersMap[key] == null) {
+          disposersMap[key] = [];
+          disposersMap[key].push(
+            reaction(
+              () =>
+                valueAt(getState(), stateThread) as Partial<Serialized<any>>,
+              current => {
+                const instance = instancesMap.get(key);
+                if (current == null || instance == null || mutexLocked) {
+                  return;
+                }
+                const Class = instance.constructor as any;
 
-        let mutexLocked = false;
+                try {
+                  mutexLocked = true;
+                  Class.merge(instance, current);
+                } finally {
+                  mutexLocked = false;
+                }
+              },
+              { fireImmediately: true }
+            )
+          );
 
-        disposersMap[key] = [];
-        disposersMap[key].push(
-          reaction(
-            () => valueAt(getState(), store) as Partial<Serialized<any>>,
-            current => {
-              const instance = instancesMap.get(key);
-              if (current == null || instance == null || mutexLocked) {
-                return;
-              }
-              const Class = instance.constructor as any;
-
-              try {
-                mutexLocked = true;
-                Class.merge(instance, current);
-              } finally {
-                mutexLocked = false;
-              }
-            },
-            { fireImmediately: true }
-          )
-        );
-
-        disposersMap[key].push(
-          reaction(
-            () => {
-              const instance = instancesMap.get(key);
-              if (instance == null) return;
-              const Class = instance.constructor as any;
-              return Class.serialize(instance);
-            },
-            serialized => {
-              if (serialized == null || mutexLocked) return;
-              try {
-                mutexLocked = true;
-                mergeSerialized(getState(), store, serialized);
-              } finally {
-                mutexLocked = false;
-              }
-            },
-            { fireImmediately: false }
-          )
-        );
-
+          disposersMap[key].push(
+            reaction(
+              () => {
+                const instance = instancesMap.get(key);
+                if (instance == null) return;
+                const Class = instance.constructor as any;
+                return Class.serialize(instance);
+              },
+              storeSerialized,
+              { fireImmediately: false }
+            )
+          );
+        }
         break;
       }
 
       case 'unobserved':
         disposersMap[key].forEach(disposer => disposer());
-        break;
-      case 'update':
-        runInAction(() => instancesMap.set(key, msg.value));
+        delete disposersMap[key];
         break;
       default:
         ensureNever(msg);
@@ -263,118 +230,143 @@ const timeStateHandler = () => {
   };
 };
 
+subscribe(timeStateHandler());
+
+// const isEmail = (v: unknown) => typeof v === 'string' && v.indexOf('@') > -1;
+// const classFactory = () => {
+//   const knownObjects: Record<string, boolean> = {};
+//   return async (msg: RootEventMsg<AnyInstance>) => {
+//     switch (msg.type) {
+//       case 'observed': {
+//         const { key, set } = msg;
+//         if (!knownObjects[key] && isEmail(key)) {
+//           set(new User(key));
+//         }
+//         break;
+//       }
+//       case 'update': {
+//         const { key, value } = msg;
+//         if (value) knownObjects[key] = true;
+//         break;
+//       }
+//       case 'unobserved': {
+//         const { key } = msg;
+//         delete knownObjects[key];
+//         break;
+//       }
+//       default:
+//         ensureNever(msg);
+//     }
+//   };
+// };
+// subscribe(classFactory());
+
 describe('one class', () => {
-  type Message = RootEventMsg<AnyInstance>;
-  let root!: Record<string, AnyInstance>;
-  let subscribe!: (callback: (msg: Message) => void) => SubscriptionToken;
+  test.only('timeState boots', async () => {
+    runInAction(() => new User('username'));
 
-  beforeEach(() => {
-    state = observable.box(1);
-    const rootBag = createEmittingRoot<AnyInstance>({
-      onObserved: (key, set) =>
-        runInAction(() => {
-          const Class = lookupClassFromPath(key2path(key));
-          const instance = new Class(key);
-          set(instance);
-        }),
+    const keepAlive = when(() => {
+      const user = root['username'] as User;
+      return user.name === 'done' || user.projects.size === 5;
     });
-    root = rootBag.root;
-    subscribe = rootBag.subscribe;
-  });
 
-  test('it allows external updates', async () => {
-    subscribe(timeStateHandler());
+    const user = root['username'] as User;
+    expect(user).toBeInstanceOf(User);
 
-    const username = 'test@example.com';
-    const key = path2key([username]);
+    user.setName('TEST');
+    const project = user.addProject('dude', 'Dude');
 
-    const keepAlive = when(() => root[key].name === 'done');
+    autorun(() => {
+      console.log(root['dude'].name);
+    })();
+    project.setName('test2');
 
-    const user = root[key] as User;
-    expect(user.name).toBe('');
+    console.log(JSON.stringify(toJS(timeState)));
 
-    runInAction(() => state.set(2));
-    user.setName('Two');
-    expect(toJS(timeState)).toMatchSnapshot();
-    // console.log(toJS(globalStore));
-
-    runInAction(() => state.set(3));
-    user.setName('Three');
-    expect(toJS(timeState)).toMatchSnapshot();
-
-    mergeSerialized('4', getTimeStateThread(key), { name: 'Four' });
-
-    expect(user.name).toBe('Three');
-    runInAction(() => state.set(4));
-    expect(user.name).toBe('Four');
-
-    setTimeout(() => root[key]!.setName('done'), 10);
-
-    // expect(1).toBe(2)
-
+    user.setName('done');
     await keepAlive;
-    console.log('done');
+    console.log('hello');
   });
-
-  test('it supports one to many', async () => {
-    subscribe(timeStateHandler());
-
-    const username = 'existing@example.com';
-    const key = path2key([username]);
-
-    const keepAlive = when(() => root[key].name === 'done');
-
-    const user = root[key] as User;
-    expect(user.name).toBe('Existing');
-
-    runInAction(() => state.set(2));
-    user.addProject('p1', 'Two');
-    expect(toJS(timeState)).toMatchSnapshot();
-
-    runInAction(() => state.set(3));
-    user.projects
-      .values()
-      .next()
-      .value.setName('Three');
-    expect(toJS(timeState)).toMatchSnapshot();
-
-    setTimeout(() => root[key]!.setName('done'), 10);
-
-    // expect(1).toBe(2)
-
-    await keepAlive;
-    console.log('done');
-  });
-
-  test.only('it supports zero or one', async () => {
-    subscribe(timeStateHandler());
-
-    const username = 'existing@example.com';
-    const key = path2key([username]);
-
-    const keepAlive = when(() => root[key].name === 'done');
-
-    const user = root[key] as User;
-    expect(user.name).toBe('Existing');
-
-    runInAction(() => state.set(2));
-    const project = user.addProject('p1', 'Two');
-
-    expect(toJS(timeState)).toMatchSnapshot();
-
-    runInAction(() => state.set(3));
-    user.projects
-      .values()
-      .next()
-      .value.setName('Three');
-    user.selectProject(project);
-    expect(toJS(timeState)).toMatchSnapshot();
-
-    setTimeout(() => root[key]!.setName('done'), 10);
-
-    // expect(1).toBe(2)
-
-    await keepAlive;
-    console.log('done');
-  });
+  // type Message = RootEventMsg<AnyInstance>;
+  // let root!: Record<string, AnyInstance>;
+  // let subscribe!: (callback: (msg: Message) => void) => SubscriptionToken;
+  // beforeEach(() => {
+  //   state = observable.box(1);
+  //   const rootBag = createEmittingRoot<AnyInstance>({
+  //     onObserved: (key, set) =>
+  //       runInAction(() => {
+  //         const Class = lookupClassFromPath(key2path(key));
+  //         const instance = new Class(key);
+  //         set(instance);
+  //       }),
+  //   });
+  //   root = rootBag.root;
+  //   subscribe = rootBag.subscribe;
+  // });
+  // test('it allows external updates', async () => {
+  //   subscribe(timeStateHandler());
+  //   const username = 'test@example.com';
+  //   const key = path2key([username]);
+  //   const keepAlive = when(() => root[key].name === 'done');
+  //   const user = root[key] as User;
+  //   expect(user.name).toBe('');
+  //   runInAction(() => state.set(2));
+  //   user.setName('Two');
+  //   expect(toJS(timeState)).toMatchSnapshot();
+  //   // console.log(toJS(globalStore));
+  //   runInAction(() => state.set(3));
+  //   user.setName('Three');
+  //   expect(toJS(timeState)).toMatchSnapshot();
+  //   mergeSerialized('4', getTimeStateThread(key), { name: 'Four' });
+  //   expect(user.name).toBe('Three');
+  //   runInAction(() => state.set(4));
+  //   expect(user.name).toBe('Four');
+  //   setTimeout(() => root[key]!.setName('done'), 10);
+  //   // expect(1).toBe(2)
+  //   await keepAlive;
+  //   console.log('done');
+  // });
+  // test('it supports one to many', async () => {
+  //   subscribe(timeStateHandler());
+  //   const username = 'existing@example.com';
+  //   const key = path2key([username]);
+  //   const keepAlive = when(() => root[key].name === 'done');
+  //   const user = root[key] as User;
+  //   expect(user.name).toBe('Existing');
+  //   runInAction(() => state.set(2));
+  //   user.addProject('p1', 'Two');
+  //   expect(toJS(timeState)).toMatchSnapshot();
+  //   runInAction(() => state.set(3));
+  //   user.projects
+  //     .values()
+  //     .next()
+  //     .value.setName('Three');
+  //   expect(toJS(timeState)).toMatchSnapshot();
+  //   setTimeout(() => root[key]!.setName('done'), 10);
+  //   // expect(1).toBe(2)
+  //   await keepAlive;
+  //   console.log('done');
+  // });
+  // test('it supports zero or one', async () => {
+  //   subscribe(timeStateHandler());
+  //   const username = 'existing@example.com';
+  //   const key = path2key([username]);
+  //   const keepAlive = when(() => root[key].name === 'done');
+  //   const user = root[key] as User;
+  //   expect(user.name).toBe('Existing');
+  //   runInAction(() => state.set(2));
+  //   const project = user.addProject('p1', 'Two');
+  //   expect(toJS(timeState)).toMatchSnapshot();
+  //   runInAction(() => state.set(3));
+  //   user.projects
+  //     .values()
+  //     .next()
+  //     .value.setName('Three');
+  //   user.selectProject(project);
+  //   expect(toJS(timeState)).toMatchSnapshot();
+  //   setTimeout(() => root[key]!.setName('done'), 10);
+  //   // expect(1).toBe(2)
+  //   await keepAlive;
+  //   console.log('done');
+  // });
 });

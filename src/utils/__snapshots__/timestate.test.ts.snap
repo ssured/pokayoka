@@ -1,6 +1,63 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`one class it supports zero or one 1`] = `
+exports[`one class it allows external updates 1`] = `
+Object {
+  "KJexisting@example.com!": Object {
+    "0": Object {
+      "name": Object {
+        "0": "Existing",
+      },
+      "projects": Object {
+        "0": Object {},
+      },
+    },
+  },
+  "KJtest@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "2": "Two",
+      },
+      "projects": Object {
+        "2": Object {},
+      },
+    },
+  },
+}
+`;
+
+exports[`one class it allows external updates 2`] = `
+Object {
+  "KJexisting@example.com!": Object {
+    "0": Object {
+      "name": Object {
+        "0": "Existing",
+      },
+      "projects": Object {
+        "0": Object {},
+      },
+    },
+  },
+  "KJtest@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "2": "Two",
+        "3": "Three",
+      },
+      "projects": Object {
+        "2": Object {},
+      },
+    },
+  },
+}
+`;
+
+exports[`one class it supports one to many 1`] = `
 Object {
   "KJexisting@example.com!": Object {
     "0": Object {
@@ -26,6 +83,117 @@ Object {
             },
           },
         },
+      },
+    },
+  },
+  "KJtest@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "2": "Two",
+        "3": "Three",
+        "4": "Four",
+      },
+      "projects": Object {
+        "2": Object {},
+      },
+    },
+  },
+}
+`;
+
+exports[`one class it supports one to many 2`] = `
+Object {
+  "KJexisting@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "0": "Existing",
+      },
+      "projects": Object {
+        "0": Object {
+          "KJKJexisting@example.com??\\"Jprojects\\"Jp1!": Object {
+            "2": Object {
+              "@type": Object {
+                "2": "Project",
+              },
+              "identifier": Object {
+                "2": "KJKJexisting@example.com??\\"Jprojects\\"Jp1!",
+              },
+              "name": Object {
+                "2": "Two",
+                "3": "Three",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "KJtest@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "2": "Two",
+        "3": "Three",
+        "4": "Four",
+      },
+      "projects": Object {
+        "2": Object {},
+      },
+    },
+  },
+}
+`;
+
+exports[`one class it supports zero or one 1`] = `
+Object {
+  "KJexisting@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "0": "Existing",
+      },
+      "projects": Object {
+        "0": Object {
+          "KJKJexisting@example.com??\\"Jprojects\\"Jp1!": Object {
+            "2": Object {
+              "@type": Object {
+                "2": "Project",
+              },
+              "identifier": Object {
+                "2": "KJKJexisting@example.com??\\"Jprojects\\"Jp1!",
+              },
+              "name": Object {
+                "2": "Two",
+                "3": "Three",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  "KJtest@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "2": "Two",
+        "3": "Three",
+        "4": "Four",
+      },
+      "projects": Object {
+        "2": Object {},
       },
     },
   },
@@ -64,6 +232,21 @@ Object {
             },
           },
         },
+      },
+    },
+  },
+  "KJtest@example.com!": Object {
+    "0": Object {
+      "defaultProject": Object {
+        "2": null,
+      },
+      "name": Object {
+        "2": "Two",
+        "3": "Three",
+        "4": "Four",
+      },
+      "projects": Object {
+        "2": Object {},
       },
     },
   },
