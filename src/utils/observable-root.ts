@@ -17,10 +17,11 @@ const observedKeys = Symbol('root observed keys');
 
 export type RootHandler<T> = {
   source?: {
+    has(key: string): boolean;
     get(key: string): T | undefined;
     set(key: string, value: T): void;
   };
-
+  create?: (key: string) => T;
   onRootSet?: (key: string, value: T) => boolean;
 
   onObserved: (key: string, set: (value: T) => void) => void;
@@ -39,6 +40,7 @@ export function getObservedKeys(
 export function createRoot<T>({
   source = observable.map<string, T>(),
   onRootSet = () => false,
+  create,
 
   onObserved,
   onUnobserved,
@@ -75,6 +77,10 @@ export function createRoot<T>({
 
   function getAccessor(key: string): IComputedValue<T> {
     if (accessors.has(key)) return accessors.get(key)!;
+
+    if (!source.has(key) && create) {
+      source.set(key, create(key));
+    }
 
     const accessor = computed(() => source.get(key)!);
     runInAction(() => accessors.set(key, accessor));

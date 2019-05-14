@@ -51,6 +51,7 @@ type AnyInstance = InstanceType<AnyClass>;
 const source = observable.map<string, AnyInstance>();
 const { root, subscribe } = createEmittingRoot({
   source,
+  create: key => new User(key),
   onRootSet: () => true,
   onSet: action((key: string, value: AnyInstance) => {
     source.set(key, value);
@@ -264,6 +265,56 @@ describe('one class', () => {
     setState(2);
 
     user.selectProject(project);
+
+    // console.log(JSON.stringify(toJS(timeState)));
+    expect(toJS(timeState)).toEqual({
+      username: {
+        '1': {
+          name: { '1': 'TEST' },
+          mainProject: { '1': null, '2': ['dude'] },
+          projects: { '1': { dude: { '1': ['dude'] } } },
+        },
+      },
+      dude: { '1': { name: { '1': 'Dude' } } },
+    });
+
+    user.setName('done');
+    await keepObserved;
+    console.log('hello');
+  });
+
+  test('timeState reads', async () => {
+    runInAction(() =>
+      timeState.merge({
+        username: {
+          '1': {
+            name: { '1': 'TEST' },
+            mainProject: { '1': null, '2': ['dude'] },
+            projects: { '1': { dude: { '1': ['dude'] } } },
+          },
+        },
+        dude: { '1': { name: { '1': 'Dude' } } },
+      })
+    );
+
+    const keepObserved = when(() => {
+      const user = root['username'] as User;
+      return user.name === 'done';
+    });
+
+    const user = root['username'] as User;
+    expect(user).toBeInstanceOf(User);
+
+    expect(getState()).toBe('1');
+    expect(user.projects.size).toBe(1);
+
+    // user.setName('TEST');
+
+    // const project = user.addProject('dude', 'Dude');
+
+    // setState(2);
+
+    // user.selectProject(project);
 
     // console.log(JSON.stringify(toJS(timeState)));
     expect(toJS(timeState)).toEqual({
