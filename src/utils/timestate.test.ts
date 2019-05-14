@@ -8,10 +8,18 @@ import {
   toJS,
   autorun,
   when,
+  computed,
+  comparer,
 } from 'mobx';
 import { generateId } from './id';
-import { ensureNever } from './index';
-import { valueAt } from './object-crdt';
+import { ensureNever, isEqual } from './index';
+import {
+  valueAt,
+  ToMergeableObject,
+  merge,
+  pickAt,
+  asMergeableObject,
+} from './object-crdt';
 import {
   checkDefinitionOf,
   many,
@@ -26,6 +34,110 @@ import { createEmittingRoot, RootEventMsg } from './observable-root';
 import { live } from './mobx';
 
 configure({ enforceActions: 'observed', disableErrorBoundaries: true });
+
+describe('simple example', () => {
+  test.only('minimal', () => {
+    const { getState, setState } = (() => {
+      const state = observable.box('1');
+      return {
+        getState: () => state.get(),
+        setState: action((s: string) => state.set(s)),
+      };
+    })();
+
+    type Shape = { name: string };
+
+    const timeState = (() => {
+      const all = observable.map<
+        string,
+        Record<string, ToMergeableObject<Shape>>
+      >();
+
+      return (key: string = '') => {
+        if (key == '') {
+          return toJS(all);
+        }
+        if (!all.has(key)) {
+          all.set(
+            key,
+            observable.object<Record<string, ToMergeableObject<Shape>>>({})
+          );
+        }
+        return all.get(key)!;
+      };
+    })();
+
+    const names: string[] = [];
+
+    const getCurrent = (identifier: string) => {
+      const ts = timeState(identifier);
+      const box = computed(() => valueAt(getState(), ts), {
+        set: (newValue: Shape | null) => {
+          const current = box.get();
+          const currentSource = pickAt(getState(), ts)!;
+
+          if (newValue) {
+            if (current == null) {
+              merge(ts as any, asMergeableObject(getState(), newValue) as any);
+            } else {
+              for (const [key, value] of Object.entries(newValue)) {
+                if (!isEqual((current as any)[key], value)) {
+                  merge(currentSource, {
+                    [key]: { [getState()]: value as any },
+                  } as any);
+                }
+              }
+            }
+          } else {
+            merge(ts as any, asMergeableObject(getState(), null as any) as any);
+          }
+        },
+        equals: comparer.structural,
+      });
+      return box;
+    };
+
+    const getShape = getCurrent('shape');
+
+    const disposer = autorun(() => {
+      const current = getShape.get();
+      if (current) {
+        names.push(current.name);
+      }
+    });
+    getShape.set({ name: 'one' });
+
+    expect(names).toEqual(['one']);
+    setState('2');
+    expect(names).toEqual(['one']);
+
+    getShape.set({ name: 'two' });
+
+    expect(names).toEqual(['one', 'two']);
+
+    setState('3');
+
+    getShape.set({ name: 'three' });
+
+    expect(names).toEqual(['one', 'two', 'three']);
+
+    setState('4');
+
+    getShape.set(null);
+
+    expect(names).toEqual(['one', 'two', 'three']);
+
+    setState('5');
+
+    getShape.set({ name: 'five' });
+
+    expect(names).toEqual(['one', 'two', 'three', 'five']);
+
+    disposer();
+
+    expect(timeState()).toMatchSnapshot();
+  });
+});
 
 // state is global for the system
 const state = observable.box(1);
@@ -51,7 +163,7 @@ type AnyInstance = InstanceType<AnyClass>;
 const source = observable.map<string, AnyInstance>();
 const { root, subscribe } = createEmittingRoot({
   source,
-  create: key => new User(key),
+  create: key => new User(key, root),
   onRootSet: () => true,
   onSet: action((key: string, value: AnyInstance) => {
     source.set(key, value);
@@ -67,7 +179,10 @@ const { root, subscribe } = createEmittingRoot({
  */
 
 abstract class Base extends UniversalObject {
-  constructor(public identifier: string = generateId()) {
+  constructor(
+    public identifier: string = generateId(),
+    private root: Record<string, any>
+  ) {
     super(identifier);
     // register with root
     runInAction(
@@ -76,7 +191,6 @@ abstract class Base extends UniversalObject {
   }
 }
 
-@checkDefinitionOf<Project>()
 class Project extends Base {
   static '@type' = 'Project';
 
@@ -93,7 +207,6 @@ class Project extends Base {
   }
 }
 
-@checkDefinitionOf<User>()
 class User extends Base {
   static '@type' = 'User';
 

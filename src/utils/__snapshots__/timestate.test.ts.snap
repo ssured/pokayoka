@@ -252,3 +252,23 @@ Object {
   },
 }
 `;
+
+exports[`simple example minimal 1`] = `
+Object {
+  "shape": Object {
+    "1": Object {
+      "name": Object {
+        "1": "one",
+        "2": "two",
+        "3": "three",
+      },
+    },
+    "4": null,
+    "5": Object {
+      "name": Object {
+        "5": "five",
+      },
+    },
+  },
+}
+`;
