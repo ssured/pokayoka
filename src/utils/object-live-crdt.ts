@@ -197,7 +197,7 @@ export const serializeOne = <
   prop: RefProp
 ): { [K in RefProp]: null | string[] } => {
   // @ts-ignore
-  return { [prop]: object[prop] ? object[prop].identifier : null };
+  return { [prop]: object[prop] ? [object[prop].identifier] : null };
 };
 
 export const serializeMany = <
@@ -241,7 +241,7 @@ export function mergeSerialized(
     const current = valueAt(state, source) || {};
     const currentSource = pickAt(state, source)!;
 
-    console.log(toJS(source));
+    // console.log(toJS(source));
 
     for (const [key, incomingValue] of Object.entries(serialized)) {
       const currentValue = (current as any)[key];

@@ -23,12 +23,14 @@ import {
   UniversalObject,
 } from './object-live-crdt';
 import { createEmittingRoot, RootEventMsg } from './observable-root';
+import { live } from './mobx';
 
 configure({ enforceActions: 'observed', disableErrorBoundaries: true });
 
 // state is global for the system
 const state = observable.box(1);
 const getState = () => String(state.get());
+const setState = action((n: number) => state.set(n));
 
 const timeState = observable.map<
   string,
@@ -50,7 +52,7 @@ const source = observable.map<string, AnyInstance>();
 const { root, subscribe } = createEmittingRoot({
   source,
   onRootSet: () => true,
-  onSet: action((key: string, value: T) => {
+  onSet: action((key: string, value: AnyInstance) => {
     source.set(key, value);
   }),
 });
@@ -67,7 +69,9 @@ abstract class Base extends UniversalObject {
   constructor(public identifier: string = generateId()) {
     super(identifier);
     // register with root
-    root[this.identifier] = (this as unknown) as AnyInstance;
+    runInAction(
+      () => (root[this.identifier] = (this as unknown) as AnyInstance)
+    );
   }
 }
 
@@ -151,78 +155,87 @@ const classFromType = allClasses.reduce(
   {} as Record<string, AnyClass>
 );
 
+const isEmpty = (v: unknown): boolean => {
+  switch (typeof v) {
+    case 'object':
+      return (
+        v == null || (Array.isArray(v) ? v.length : Object.keys(v).length) === 0
+      );
+    case 'string':
+      return v === '';
+  }
+  return false;
+};
+
 const timeStateHandler = () => {
-  const disposersMap: Record<string, (() => void)[]> = {};
+  const observedDisposers: Record<string, () => void> = {};
+
   const instancesMap = observable.map<string, AnyInstance>();
+
+  const instancesDisposers: Record<string, () => void> = {};
+  instancesMap.observe(change => {
+    const instance = change.type === 'delete' ? null : change.newValue;
+    const key = change.name;
+
+    if (instancesDisposers[key]) {
+      instancesDisposers[key]();
+    }
+    if (instance) {
+      instancesDisposers[key] = reaction(
+        () => (instance.constructor as any).serialize(instance),
+        serialized => {
+          if (isEmpty(serialized)) {
+            return;
+          }
+          mergeSerialized(getState(), getTimeStateThread(key), serialized);
+        },
+        { fireImmediately: true }
+      );
+    }
+  });
 
   return async (msg: RootEventMsg<AnyInstance>) => {
     const { key } = msg;
-
-    let mutexLocked = false;
     const stateThread = getTimeStateThread(key);
 
-    const storeSerialized = (
-      serialized: Omit<Serialized<any>, 'identifier'>
-    ) => {
-      if (serialized == null || mutexLocked) return;
-      try {
-        mutexLocked = true;
-        mergeSerialized(getState(), stateThread, serialized);
-      } finally {
-        mutexLocked = false;
+    const getSerializedFromTimeState = () => {
+      const instance = instancesMap.get(key);
+      if (instance == null) {
+        return;
       }
+      const current = valueAt(getState(), stateThread) as Partial<
+        Serialized<any>
+      >;
+      return isEmpty(current) ? undefined : current;
+    };
+
+    const mergeSerializedIntoInstance = (serialized: any) => {
+      const instance = instancesMap.get(key);
+      if (instance == null) {
+        return;
+      }
+      (instance.constructor as any).merge(instance, serialized);
     };
 
     switch (msg.type) {
       case 'update':
         runInAction(() => {
           instancesMap.set(key, msg.value);
-          // storeSerialized((msg.value.constructor as any).serialize(msg.value))
         });
+        break;
       case 'observed': {
-        if (disposersMap[key] == null) {
-          disposersMap[key] = [];
-          disposersMap[key].push(
-            reaction(
-              () =>
-                valueAt(getState(), stateThread) as Partial<Serialized<any>>,
-              current => {
-                const instance = instancesMap.get(key);
-                if (current == null || instance == null || mutexLocked) {
-                  return;
-                }
-                const Class = instance.constructor as any;
-
-                try {
-                  mutexLocked = true;
-                  Class.merge(instance, current);
-                } finally {
-                  mutexLocked = false;
-                }
-              },
-              { fireImmediately: true }
-            )
-          );
-
-          disposersMap[key].push(
-            reaction(
-              () => {
-                const instance = instancesMap.get(key);
-                if (instance == null) return;
-                const Class = instance.constructor as any;
-                return Class.serialize(instance);
-              },
-              storeSerialized,
-              { fireImmediately: false }
-            )
-          );
-        }
+        observedDisposers[key] = reaction(
+          getSerializedFromTimeState,
+          mergeSerializedIntoInstance,
+          {
+            fireImmediately: true,
+          }
+        );
         break;
       }
-
       case 'unobserved':
-        disposersMap[key].forEach(disposer => disposer());
-        delete disposersMap[key];
+        observedDisposers[key]();
+        delete observedDisposers[key];
         break;
       default:
         ensureNever(msg);
@@ -232,141 +245,40 @@ const timeStateHandler = () => {
 
 subscribe(timeStateHandler());
 
-// const isEmail = (v: unknown) => typeof v === 'string' && v.indexOf('@') > -1;
-// const classFactory = () => {
-//   const knownObjects: Record<string, boolean> = {};
-//   return async (msg: RootEventMsg<AnyInstance>) => {
-//     switch (msg.type) {
-//       case 'observed': {
-//         const { key, set } = msg;
-//         if (!knownObjects[key] && isEmail(key)) {
-//           set(new User(key));
-//         }
-//         break;
-//       }
-//       case 'update': {
-//         const { key, value } = msg;
-//         if (value) knownObjects[key] = true;
-//         break;
-//       }
-//       case 'unobserved': {
-//         const { key } = msg;
-//         delete knownObjects[key];
-//         break;
-//       }
-//       default:
-//         ensureNever(msg);
-//     }
-//   };
-// };
-// subscribe(classFactory());
-
 describe('one class', () => {
-  test.only('timeState boots', async () => {
+  test('timeState boots', async () => {
     runInAction(() => new User('username'));
 
-    const keepAlive = when(() => {
+    const keepObserved = when(() => {
       const user = root['username'] as User;
-      return user.name === 'done' || user.projects.size === 5;
+      return user.name === 'done';
     });
 
     const user = root['username'] as User;
     expect(user).toBeInstanceOf(User);
 
     user.setName('TEST');
+
     const project = user.addProject('dude', 'Dude');
 
-    autorun(() => {
-      console.log(root['dude'].name);
-    })();
-    project.setName('test2');
+    setState(2);
 
-    console.log(JSON.stringify(toJS(timeState)));
+    user.selectProject(project);
+
+    // console.log(JSON.stringify(toJS(timeState)));
+    expect(toJS(timeState)).toEqual({
+      username: {
+        '1': {
+          name: { '1': 'TEST' },
+          mainProject: { '1': null, '2': ['dude'] },
+          projects: { '1': { dude: { '1': ['dude'] } } },
+        },
+      },
+      dude: { '1': { name: { '1': 'Dude' } } },
+    });
 
     user.setName('done');
-    await keepAlive;
+    await keepObserved;
     console.log('hello');
   });
-  // type Message = RootEventMsg<AnyInstance>;
-  // let root!: Record<string, AnyInstance>;
-  // let subscribe!: (callback: (msg: Message) => void) => SubscriptionToken;
-  // beforeEach(() => {
-  //   state = observable.box(1);
-  //   const rootBag = createEmittingRoot<AnyInstance>({
-  //     onObserved: (key, set) =>
-  //       runInAction(() => {
-  //         const Class = lookupClassFromPath(key2path(key));
-  //         const instance = new Class(key);
-  //         set(instance);
-  //       }),
-  //   });
-  //   root = rootBag.root;
-  //   subscribe = rootBag.subscribe;
-  // });
-  // test('it allows external updates', async () => {
-  //   subscribe(timeStateHandler());
-  //   const username = 'test@example.com';
-  //   const key = path2key([username]);
-  //   const keepAlive = when(() => root[key].name === 'done');
-  //   const user = root[key] as User;
-  //   expect(user.name).toBe('');
-  //   runInAction(() => state.set(2));
-  //   user.setName('Two');
-  //   expect(toJS(timeState)).toMatchSnapshot();
-  //   // console.log(toJS(globalStore));
-  //   runInAction(() => state.set(3));
-  //   user.setName('Three');
-  //   expect(toJS(timeState)).toMatchSnapshot();
-  //   mergeSerialized('4', getTimeStateThread(key), { name: 'Four' });
-  //   expect(user.name).toBe('Three');
-  //   runInAction(() => state.set(4));
-  //   expect(user.name).toBe('Four');
-  //   setTimeout(() => root[key]!.setName('done'), 10);
-  //   // expect(1).toBe(2)
-  //   await keepAlive;
-  //   console.log('done');
-  // });
-  // test('it supports one to many', async () => {
-  //   subscribe(timeStateHandler());
-  //   const username = 'existing@example.com';
-  //   const key = path2key([username]);
-  //   const keepAlive = when(() => root[key].name === 'done');
-  //   const user = root[key] as User;
-  //   expect(user.name).toBe('Existing');
-  //   runInAction(() => state.set(2));
-  //   user.addProject('p1', 'Two');
-  //   expect(toJS(timeState)).toMatchSnapshot();
-  //   runInAction(() => state.set(3));
-  //   user.projects
-  //     .values()
-  //     .next()
-  //     .value.setName('Three');
-  //   expect(toJS(timeState)).toMatchSnapshot();
-  //   setTimeout(() => root[key]!.setName('done'), 10);
-  //   // expect(1).toBe(2)
-  //   await keepAlive;
-  //   console.log('done');
-  // });
-  // test('it supports zero or one', async () => {
-  //   subscribe(timeStateHandler());
-  //   const username = 'existing@example.com';
-  //   const key = path2key([username]);
-  //   const keepAlive = when(() => root[key].name === 'done');
-  //   const user = root[key] as User;
-  //   expect(user.name).toBe('Existing');
-  //   runInAction(() => state.set(2));
-  //   const project = user.addProject('p1', 'Two');
-  //   expect(toJS(timeState)).toMatchSnapshot();
-  //   runInAction(() => state.set(3));
-  //   user.projects
-  //     .values()
-  //     .next()
-  //     .value.setName('Three');
-  //   user.selectProject(project);
-  //   expect(toJS(timeState)).toMatchSnapshot();
-  //   setTimeout(() => root[key]!.setName('done'), 10);
-  //   // expect(1).toBe(2)
-  //   await keepAlive;
-  //   console.log('done');
-  // });
 });

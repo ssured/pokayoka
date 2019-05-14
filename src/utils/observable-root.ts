@@ -16,7 +16,10 @@ import { Omit } from './typescript';
 const observedKeys = Symbol('root observed keys');
 
 export type RootHandler<T> = {
-  source?: ObservableMap<string, T>;
+  source?: {
+    get(key: string): T | undefined;
+    set(key: string, value: T): void;
+  };
 
   onRootSet?: (key: string, value: T) => boolean;
 
