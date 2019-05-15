@@ -9,9 +9,10 @@ import {
   RootEventMsg,
 } from '../utils/observable-root';
 import { SPOShape } from '../utils/spo';
-import { NProject, NUser, getNUser } from '../utils/couchdb-doc';
+import { NProject, NUser, getNUser, getDoc } from '../utils/couchdb-doc';
 import { deserialize } from 'serializr';
 import { FunctionC } from 'io-ts';
+import { projectRelations } from '../model/Project/model';
 
 const Part: React.FunctionComponent<{
   object: SPOShape;
@@ -127,7 +128,7 @@ const SeenEvents: React.FunctionComponent<{}> = observer(({}) => {
   );
 });
 
-const user = getNUser('nuser-user2');
+const user = getDoc<NUser>('nuser-user2');
 
 const RenderProject: FunctionComponent<{ project: NProject }> = observer(
   ({ project }) => {
@@ -168,20 +169,24 @@ const RenderUser: FunctionComponent<{ user: NUser }> = observer(({ user }) => {
       <Button
         label="Add project"
         onClick={action(() => {
-          const project = deserialize(NProject, {
-            _id: NProject.generateId(),
+          const project = new NProject({
             name: local.newProjectName,
           });
-          project.persist();
-          user.projects.push(project);
+          local.newProjectName = '';
+          user.addProject(project);
         })}
       />
       Got {user.projects.length} projectscd
-      {user.projects.map(project => (
-        <Box key={project._id}>
-          <RenderProject project={project} />
-        </Box>
-      ))}
+      {user.projects$.map(proj => proj.name).join('+')}
+      {user.projects$.map(task =>
+        task.match({
+          pending: () => 'loading',
+          rejected: err => `error ${err.message}`,
+          resolved: project => (
+            <RenderProject key={project._id} project={project} />
+          ),
+        })
+      )}
     </Box>
   );
 });

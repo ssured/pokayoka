@@ -17,8 +17,12 @@ import {
   deserialize,
   list,
   reference,
+  primitive,
 } from 'serializr';
-import { async } from 'q';
+import { async, all } from 'q';
+import { conditionalExpression } from '@babel/types';
+import { VoidC } from 'io-ts';
+import { merge } from './object-crdt';
 
 const settings = observable({
   serverUrl: 'http://localhost:5984',
@@ -62,10 +66,10 @@ const api = observable({
   },
 });
 
-function rawGet(identifier: string) {
-  const [type, id] = identifier.split('-');
+const allDocs = observable.map<string, AnyInstance>();
 
-  const Classes = [NProject, NUser];
+function rawGet(identifier: string) {
+  const [type] = identifier.split('-');
 
   const Class = Classes.find(Class => Class.type === type);
   if (Class == null) {
@@ -73,8 +77,15 @@ function rawGet(identifier: string) {
   }
 
   const doc = task(async () => {
+    if (allDocs.has(identifier)) {
+      return allDocs.get(identifier)!;
+    }
     const data = api.load(identifier);
     await when(() => !data.pending);
+    // protect against race conditions
+    if (allDocs.has(identifier)) {
+      return allDocs.get(identifier)!;
+    }
     if (data.error) {
       console.error('got loading error', data.error);
       throw data.error;
@@ -90,13 +101,20 @@ function rawGet(identifier: string) {
   doc();
   return doc;
 }
-export const getNUser = computedFn(rawGet) as (
-  id: string
-) => TaskStatusAware<NUser, [string]>;
 
-export const getNProject = computedFn(rawGet) as (
+type AnyClass = (typeof Classes)[number];
+type AnyInstance = InstanceType<AnyClass>;
+type DocShape = {
+  _id?: string;
+  _rev?: string;
+  [key: string]: undefined | null | boolean | number | string | string[];
+};
+
+export const getDoc = computedFn(rawGet) as <
+  T extends AnyInstance = AnyInstance
+>(
   id: string
-) => TaskStatusAware<NProject, [string]>;
+) => TaskStatusAware<T, [string]>;
 
 export class Document {
   static type = 'document';
@@ -106,22 +124,27 @@ export class Document {
 
   @serializable(identifier())
   @observable
-  _id?: string;
+  readonly _id: string;
 
   @observable
   _rev?: string;
 
-  constructor() {
-    reaction(
-      () => this.serialized,
-      serialized => {
-        // console.log('serialized: ' + JSON.stringify(this.serialized));
-        api
-          .persist({ _rev: this._rev, ...serialized })
-          .then(action(({ ok, rev }) => ok && (this._rev = rev)));
-      },
-      { fireImmediately: false }
-    );
+  constructor(props: DocShape = {}) {
+    const {
+      _id = (this.constructor as typeof Document).generateId(),
+      ...other
+    } = props;
+    this._id = _id;
+    this.merge(props);
+
+    runInAction(() => {
+      allDocs.set(this._id, this as any);
+    });
+  }
+
+  @action
+  merge(props: DocShape) {
+    Object.assign(this, props);
   }
 
   @computed
@@ -135,7 +158,7 @@ export class Document {
   }
 
   persist() {
-    api
+    return api
       .persist({ _rev: this._rev, ...this.serialized })
       .then(action(({ ok, rev }) => ok && (this._rev = rev)));
   }
@@ -154,15 +177,15 @@ export class NProject extends Document {
   }
 }
 
-const findNProject = async (
-  id: string,
-  callback: (err: any, value: any) => void
-) => {
-  console.log('findNProject', id);
-  const project = getNProject(id);
-  await when(() => !project.pending);
-  runInAction(() => callback(project.error || null, project.result));
-};
+// const findNProject = async (
+//   id: string,
+//   callback: (err: any, value: any) => void
+// ) => {
+//   console.log('findNProject', id);
+//   const project = getNProject(id);
+//   await when(() => !project.pending);
+//   runInAction(() => callback(project.error || null, project.result));
+// };
 
 export class NUser extends Document {
   static type = 'nuser';
@@ -176,7 +199,44 @@ export class NUser extends Document {
     this.name = name;
   }
 
-  @serializable(list(reference(NProject, findNProject)))
+  @serializable
   @observable
-  projects: NProject[] = [];
+  selectedProject: string | null = null;
+
+  @computed
+  get selectedProject$() {
+    return this.selectedProject && getDoc<NProject>(this.selectedProject);
+  }
+
+  @action
+  selectProject(project: NProject | null) {
+    this.selectedProject = project && project._id;
+  }
+
+  @serializable(list(primitive()))
+  @observable
+  projects: string[] = [];
+
+  @computed
+  get projects$() {
+    return this.projects.map(project => getDoc<NProject>(project));
+  }
+
+  @action
+  addProject(project: NProject) {
+    const idx = this.projects.indexOf(project._id);
+    if (idx === -1) {
+      this.projects.push(project._id);
+    }
+  }
+
+  @action
+  removeProject(project: NProject) {
+    const idx = this.projects.indexOf(project._id);
+    if (idx > -1) {
+      this.projects.splice(idx, 1);
+    }
+  }
 }
+
+const Classes = [NProject, NUser] as [typeof NProject, typeof NUser];
