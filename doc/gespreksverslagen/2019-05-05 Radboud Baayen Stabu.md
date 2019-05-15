@@ -25,6 +25,12 @@ oppoetsen werksoorten (activiteiten) stabu en nl/sfb
 stabu2 beschrijft resultaat, waarmee gemaakt en waar terecht
 stabu2 webservice
 
+http://www.buildingsmart.nl/
+
+# de STABU standaarden
+
+http://stabu.nl/standaarden/profile.aspx
+
 nieuwe stabu2 voor bouwvak
 september "stabu element" klaar
 preview gevraagd, gaat proberen dingen bij elkaar te vegen voor beeld

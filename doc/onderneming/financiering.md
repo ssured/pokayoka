@@ -140,3 +140,9 @@ _Rockstart_
 750K waardering
 60K investering
 8% aandeel
+
+# Tijdelijke klus
+
+Tip van Lorette Plettenburg
+https://code14.nl/projecten
+https://www.linkedin.com/in/jellesmeijers/?originalSubdomain=nl
