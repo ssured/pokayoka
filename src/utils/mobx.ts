@@ -5,11 +5,7 @@ export const safeEntries = <T extends object>(obj: T) =>
 
 export function live(fn: (done: () => void) => Promise<void>) {
   const done = autorun(() => {
-    try {
-      fn(() => done());
-    } catch (e) {
-      done();
-    }
+    fn(() => setTimeout(() => done(), 0));
   });
   return done;
 }

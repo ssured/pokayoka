@@ -79,7 +79,7 @@ export function createRoot<T>({
     if (accessors.has(key)) return accessors.get(key)!;
 
     if (!source.has(key) && create) {
-      source.set(key, create(key));
+      runInAction(() => source.set(key, create(key)));
     }
 
     const accessor = computed(() => source.get(key)!);
