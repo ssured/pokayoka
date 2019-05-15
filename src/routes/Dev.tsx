@@ -9,10 +9,7 @@ import {
   RootEventMsg,
 } from '../utils/observable-root';
 import { SPOShape } from '../utils/spo';
-import { NProject, NUser, getNUser, getDoc } from '../utils/couchdb-doc';
-import { deserialize } from 'serializr';
-import { FunctionC } from 'io-ts';
-import { projectRelations } from '../model/Project/model';
+import { Project, User, getDoc } from '../models';
 
 const Part: React.FunctionComponent<{
   object: SPOShape;
@@ -128,9 +125,9 @@ const SeenEvents: React.FunctionComponent<{}> = observer(({}) => {
   );
 });
 
-const user = getDoc<NUser>('nuser-user2');
+const user = getDoc<User>('nuser-user2');
 
-const RenderProject: FunctionComponent<{ project: NProject }> = observer(
+const RenderProject: FunctionComponent<{ project: Project }> = observer(
   ({ project }) => {
     return (
       <Box>
@@ -146,7 +143,7 @@ const RenderProject: FunctionComponent<{ project: NProject }> = observer(
     );
   }
 );
-const RenderUser: FunctionComponent<{ user: NUser }> = observer(({ user }) => {
+const RenderUser: FunctionComponent<{ user: User }> = observer(({ user }) => {
   const local = useObservable({
     newProjectName: '',
   });
@@ -169,7 +166,7 @@ const RenderUser: FunctionComponent<{ user: NUser }> = observer(({ user }) => {
       <Button
         label="Add project"
         onClick={action(() => {
-          const project = new NProject({
+          const project = new Project({
             name: local.newProjectName,
           });
           local.newProjectName = '';
