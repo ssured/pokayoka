@@ -10,7 +10,14 @@ import {
 import { computedFn } from 'mobx-utils';
 import { task, TaskStatusAware } from 'mobx-task';
 import { generateId as globalGenerateId } from './id';
-import { serializable, serialize, identifier, deserialize } from 'serializr';
+import {
+  serializable,
+  serialize,
+  identifier,
+  deserialize,
+  list,
+  reference,
+} from 'serializr';
 import { async } from 'q';
 
 const settings = observable({
@@ -58,7 +65,12 @@ const api = observable({
 function rawGet(identifier: string) {
   const [type, id] = identifier.split('-');
 
-  const Class = type === 'project' ? NProject : NUser;
+  const Classes = [NProject, NUser];
+
+  const Class = Classes.find(Class => Class.type === type);
+  if (Class == null) {
+    throw new Error(`Cannot find class for id: ${identifier}`);
+  }
 
   const doc = task(async () => {
     const data = api.load(identifier);
@@ -70,6 +82,7 @@ function rawGet(identifier: string) {
     let object: any;
     runInAction(() => {
       object = deserialize(Class, data.result);
+      object._id = identifier;
       object._rev = data.result._rev;
     });
     return object;
@@ -81,6 +94,10 @@ export const getNUser = computedFn(rawGet) as (
   id: string
 ) => TaskStatusAware<NUser, [string]>;
 
+export const getNProject = computedFn(rawGet) as (
+  id: string
+) => TaskStatusAware<NProject, [string]>;
+
 export class Document {
   static type = 'document';
   static generateId() {
@@ -88,7 +105,8 @@ export class Document {
   }
 
   @serializable(identifier())
-  readonly _id?: string;
+  @observable
+  _id?: string;
 
   @observable
   _rev?: string;
@@ -115,7 +133,36 @@ export class Document {
   get serialized() {
     return serialize(this);
   }
+
+  persist() {
+    api
+      .persist({ _rev: this._rev, ...this.serialized })
+      .then(action(({ ok, rev }) => ok && (this._rev = rev)));
+  }
 }
+
+export class NProject extends Document {
+  static type = 'nproject';
+
+  @serializable
+  @observable
+  name = '';
+
+  @action
+  setName(name: string) {
+    this.name = name;
+  }
+}
+
+const findNProject = async (
+  id: string,
+  callback: (err: any, value: any) => void
+) => {
+  console.log('findNProject', id);
+  const project = getNProject(id);
+  await when(() => !project.pending);
+  runInAction(() => callback(project.error || null, project.result));
+};
 
 export class NUser extends Document {
   static type = 'nuser';
@@ -124,14 +171,12 @@ export class NUser extends Document {
   @observable
   name = '';
 
-  @action setName(name: string) {
+  @action
+  setName(name: string) {
     this.name = name;
   }
-}
 
-export class NProject extends Document {
-  static type = 'nproject';
-
+  @serializable(list(reference(NProject, findNProject)))
   @observable
-  name = '';
+  projects: NProject[] = [];
 }

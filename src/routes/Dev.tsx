@@ -10,6 +10,8 @@ import {
 } from '../utils/observable-root';
 import { SPOShape } from '../utils/spo';
 import { NProject, NUser, getNUser } from '../utils/couchdb-doc';
+import { deserialize } from 'serializr';
+import { FunctionC } from 'io-ts';
 
 const Part: React.FunctionComponent<{
   object: SPOShape;
@@ -125,27 +127,72 @@ const SeenEvents: React.FunctionComponent<{}> = observer(({}) => {
   );
 });
 
-const user = getNUser('user2');
+const user = getNUser('nuser-user2');
+
+const RenderProject: FunctionComponent<{ project: NProject }> = observer(
+  ({ project }) => {
+    return (
+      <Box>
+        <h2>
+          Project-{project._id} {project._rev}-
+        </h2>
+        <pre>{JSON.stringify(project.serialized, null, 2)}</pre>
+        <TextInput
+          value={project.name}
+          onChange={({ target: { value } }) => project.setName(value)}
+        />
+      </Box>
+    );
+  }
+);
+const RenderUser: FunctionComponent<{ user: NUser }> = observer(({ user }) => {
+  const local = useObservable({
+    newProjectName: '',
+  });
+
+  return (
+    <Box>
+      <h1>User</h1>-{user._id} {user._rev}-
+      <pre>{JSON.stringify(user.serialized, null, 2)}</pre>
+      <TextInput
+        value={user.name}
+        onChange={({ target: { value } }) => user.setName(value)}
+      />
+      NewProject{' '}
+      <TextInput
+        value={local.newProjectName}
+        onChange={({ target: { value } }) =>
+          runInAction(() => (local.newProjectName = value))
+        }
+      />
+      <Button
+        label="Add project"
+        onClick={action(() => {
+          const project = deserialize(NProject, {
+            _id: NProject.generateId(),
+            name: local.newProjectName,
+          });
+          project.persist();
+          user.projects.push(project);
+        })}
+      />
+      Got {user.projects.length} projectscd
+      {user.projects.map(project => (
+        <Box key={project._id}>
+          <RenderProject project={project} />
+        </Box>
+      ))}
+    </Box>
+  );
+});
 
 export const Dev: FunctionComponent<{}> = observer(({}) => {
-  // const root = useRoot()();
-  // return <Part object={root} recurseDepth={2} />;
-
   return (
     <Box>
       {user.match({
         pending: () => 'loading',
         rejected: err => `error ${err.message}`,
-        resolved: user => (
-          <Box>
-            <h1>User</h1>-{user._id} {user._rev}-
-            <pre>{JSON.stringify(user.serialized, null, 2)}</pre>
-            <TextInput
-              value={user.name}
-              onChange={({ target: { value } }) => user.setName(value)}
-            />
-          </Box>
-        ),
+        resolved: user => <RenderUser user={user} />,
       })}
     </Box>
   );
