@@ -9711,10 +9711,10 @@ mobx-task@^1.0.3:
   resolved "https://registry.yarnpkg.com/mobx-task/-/mobx-task-1.0.3.tgz#409047148fff8437457f88168297c461309a72c1"
   integrity sha512-YuaWx0sjEWIlk/t4F4yUl96EWhWo9KTRKZco48KU8WXsGbn7TmyyhtYdDCZd4ZfWB8j3yvNPqsAUJfJnlFNvHA==
 
-mobx-utils@^5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/mobx-utils/-/mobx-utils-5.2.0.tgz#6065f15a110c02fa9686ce79c15d4e181904272f"
-  integrity sha512-+znjgZ0oedSPmiN08Ong4NgkEAKif/7de4vp4Noc/C7Wt7LNNBUyiR1Ea3GCAbwPdRNPSGkRpcS9Din5jQqQsQ==
+mobx-utils@^5.4.0:
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/mobx-utils/-/mobx-utils-5.4.0.tgz#ddc66e9edafedaa3762a42ec9da9c4c33ced74c4"
+  integrity sha512-VqGQhWegEmw7h+7B0Pn1kajl1T40xEUDM76enrBaIGfwWhZvqV2YhTqjXEuTmlLPXv7Ll/git/XL65XDFB/G7Q==
 
 mobx@^5.9.4:
   version "5.9.4"
@@ -12334,6 +12334,11 @@ serialize-javascript@^1.4.0:
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-1.6.1.tgz#4d1f697ec49429a847ca6f442a2a755126c4d879"
   integrity sha512-A5MOagrPFga4YaKQSWHryl7AXvbQkEqpw4NNYMTNYUNV51bA8ABHgYFpqKx+YFFrw59xMV1qGH1R4AgoNIVgCw==
+
+serializr@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/serializr/-/serializr-1.5.1.tgz#8967c8af868f05d8ba6a651a9866c8797533e49b"
+  integrity sha512-ygrOOOB+eaYYiFCLSS1kzu2KtmhP1ZzLFsv+GPWIdhtuDMBTN3H0ldnswPLqIExrEyQWQhiExFlC9Gu8pCT9Uw==
 
 serve-favicon@^2.5.0:
   version "2.5.0"

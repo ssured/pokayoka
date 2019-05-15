@@ -9,6 +9,7 @@ import {
   RootEventMsg,
 } from '../utils/observable-root';
 import { SPOShape } from '../utils/spo';
+import { NProject, NUser, getNUser } from '../utils/couchdb-doc';
 
 const Part: React.FunctionComponent<{
   object: SPOShape;
@@ -124,46 +125,28 @@ const SeenEvents: React.FunctionComponent<{}> = observer(({}) => {
   );
 });
 
+const user = getNUser('user2');
+
 export const Dev: FunctionComponent<{}> = observer(({}) => {
   // const root = useRoot()();
   // return <Part object={root} recurseDepth={2} />;
 
-  const state = useObservable({
-    keys: observable.set<string>(['a', 'b']),
-    newName: '',
-  });
-  const { keys, newName } = state;
-
   return (
     <Box>
-      {[...keys.values()].map(key => (
-        <Box border key={key} direction="row">
-          {key}
-          <EditKey prop={key} />
-          <Button icon={<Close />} onClick={action(() => keys.delete(key))} />
-        </Box>
-      ))}
-
-      <Box border background="light-2" direction="row">
-        <TextInput
-          placeholder="add key"
-          value={newName}
-          onChange={({ target: { value } }) =>
-            runInAction(() => (state.newName = value))
-          }
-        />
-        <Button
-          icon={<Add />}
-          onClick={action(() => {
-            keys.add(state.newName);
-            state.newName = '';
-          })}
-        />
-      </Box>
-      <Box direction="row">
-        <ObservedKeys />
-        <SeenEvents />
-      </Box>
+      {user.match({
+        pending: () => 'loading',
+        rejected: err => `error ${err.message}`,
+        resolved: user => (
+          <Box>
+            <h1>User</h1>-{user._id} {user._rev}-
+            <pre>{JSON.stringify(user.serialized, null, 2)}</pre>
+            <TextInput
+              value={user.name}
+              onChange={({ target: { value } }) => user.setName(value)}
+            />
+          </Box>
+        ),
+      })}
     </Box>
   );
 });
