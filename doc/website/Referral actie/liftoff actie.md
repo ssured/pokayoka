@@ -1,13 +1,35 @@
-# Verliesaversie strategie (SEEDING)
+# Opvolging van acties
 
-- met 3 maanden increments pro licentie:
+1. Introductie actie (lifetime gratis account na doorlopen challenge)
+2. Prijs langzaam (maandelijks) verhogen naar doelprijs
+3. Na 4 maanden introductie afgerond
+
+- Free trial die over gaat in freemium
+- Referral programma
+
+## 1. Introductie actie
+
+De eerste 1000 mensen die de challenge doorlopen, krijgen een levenslang gratis pro account
+_"Jij krijgt levenslang een heleboel waarde, door ons nu te helpen"_
+
+Mailtje laten sturen met hun eigen account? Link met code erin laten kopieren? Dan krijgen wij geen nieuwe e-mailadressen. Ook makkelijk te gamen door gebruikers door link in andere browsers te openen.
+
+## 2. Verliesaversie
+
+- met 1/2/3 maanden increments pro licentie:
   - €15
   - €25
-  - €35 (na 6 maanden op einddoel)
+  - €35 (op einddoel)
 
 Grote kreet WIJ GAAN DE PRIJS VERHOGEN!
+De prijs is nu X en wordt over 4 dagen X+10! Door nu te registreren bespaar je dus 120 euro!
 
-# Referral program
+## 3. Introductie afgerond
+
+**Free trial**
+1 maand lang pro/expert gebruiker. Na maand terug naar Basis. Mensen kunnen de free trial met 2 maand verlengen door de challenge af te ronden.
+
+**Referral program**
 
 Inspiratie: dropbox referral program: https://www.referralcandy.com/blog/dropbox-referral-program/
 
@@ -30,12 +52,9 @@ voltooide invite = has taken the tour
 
 pricing neuromarketing tips: https://www.neurosciencemarketing.com/blog/articles/round-pricing.htm
 
-# wordt een pokayoka guru
+# wordt een pokayoka guru / challenge
 
-1. take the tour
-
-2. challenge
-
+- take the tour
 - upload plattegrond
 - maak bevindingen aan
 - voeg foto toe aan een bevinding
@@ -44,4 +63,9 @@ pricing neuromarketing tips: https://www.neurosciencemarketing.com/blog/articles
 - maak rapport
 - wijs bevinding toe aan iemand
 
-3. invite collega's. Elke collega die de challenge doorloopt krijgt 5% korting op de stickerprijs
+# intro challenge
+
+- challenge +
+- tell your friends: nodig 3 mensen uit. Per persoon die zich registreert 33% korting, tot 100% korting
+
+Elke collega die de challenge doorloopt krijgt 5% korting op de stickerprijs

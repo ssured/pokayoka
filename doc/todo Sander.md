@@ -1,13 +1,12 @@
 # development
 
-- [ ] intake afmaken
-- [ ] nl/sfb bimloket radbout baayen via dik spekkink 015-720 08 20
+- [ ] liftoff actie uitschrijven
 - [ ] website afmaken
   - privacy policy en algemene voorwaarden toevoegen
-  - eigen foto's maken en gebruiken
+  - eigen foto's maken en gebruiken (https://www.gettyimages.nl/collaboration/boards/4YpMkQVaF0OkLGgZpd5xxA)
   - seo (1 week voor opzetten uittrekken)
+- [ ] nl/sfb bimloket radboud baayen via dik spekkink 015-720 08 20
 - [ ] rapporteren mockups
-- [ ] liftoff actie uitschrijven
 
 # business
 
