@@ -1,3 +1,7 @@
+https://imotions.com/blog/neuromarketing-examples/
+https://blog.acolyer.org/2017/09/26/seven-rules-of-thumb-for-web-site-experimenters/
+https://medium.com/s/story/7-counterintuitive-rules-for-growing-your-business-super-fast-9dcdc2bfc649
+
 # Opvolging van acties
 
 1. Introductie actie (lifetime gratis account na doorlopen challenge)
