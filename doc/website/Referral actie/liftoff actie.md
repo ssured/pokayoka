@@ -13,16 +13,18 @@ https://medium.com/s/story/7-counterintuitive-rules-for-growing-your-business-su
 
 ## 1. Introductie actie
 
-De eerste 1000 mensen die de intro challenge doorlopen, krijgen een levenslang gratis pro account
+De eerste 250 mensen die de intro challenge doorlopen, krijgen een levenslang gratis pro account
 _"Jij krijgt levenslang een heleboel waarde, door ons nu te helpen"_
+
+Aantal accounts ook begrenzen tot 250. Als vol, dan kunnen de geinteresseerden zichtzelf in de wachtrij plaatsen.
 
 Mailtje laten sturen met hun eigen account? Link met code erin laten kopieren? Dan krijgen wij geen nieuwe e-mailadressen. Ook makkelijk te gamen door gebruikers door link in andere browsers te openen.
 
 ## 2. Verliesaversie
 
 - met 1/2/3 maanden increments pro licentie:
-  - €15
-  - €25
+  - €15 - gelimiteerd tot 250 accounts
+  - €25 - gelimiteerd tot 500 accounts
   - €35 (op einddoel)
 
 Grote kreet WIJ GAAN DE PRIJS VERHOGEN!
