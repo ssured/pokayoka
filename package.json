@@ -127,7 +127,7 @@
     "@types/styled-system": "^3.1.0",
     "@types/tough-cookie": "^2.3.5",
     "@types/validator": "^10.9.0",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "babel-polyfill": "^6.26.0",
     "charwise": "^3.0.1",
     "codemirror": "^5.42.2",
