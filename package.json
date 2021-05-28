@@ -75,7 +75,7 @@
     "webpack-hot-middleware": "^2.24.3",
     "workbox-webpack-plugin": "^4.1.0",
     "worker-loader": "^2.0.0",
-    "ws": "^6.1.2"
+    "ws": "^7.4.5"
   },
   "scripts": {
     "type-check": "tsc --noEmit",
