@@ -231,7 +231,7 @@
     "typescript-collections": "^1.3.2",
     "use-machine": "^1.0.1",
     "use-onclickoutside": "^0.2.2",
-    "validator": "^10.11.0",
+    "validator": "^13.7.0",
     "writable-async-iterable-stream": "^5.1.0",
     "xstate": "^4.3.0"
   }
